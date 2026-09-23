@@ -54,11 +54,7 @@ final class QuizServiceTest extends TestCase
             'status' => 'published',
         ], 10);
         $this->assertTrue($quiz['success']);
-<<<<<<< Updated upstream
-        $this->assertSame('draft', $quiz['data']['status']);
-=======
         $this->assertSame('draft', strtolower((string) ($quiz['data']['status'] ?? '')));
->>>>>>> Stashed changes
 
         $question = $this->service->addQuestion(1, [
             'question_text' => 'What does PHP stand for?',
