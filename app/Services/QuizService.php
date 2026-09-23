@@ -72,11 +72,13 @@ final class QuizService
             return ['success' => false, 'code' => 'validation_failed', 'message' => 'A quiz must contain at least one question before publishing.'];
         }
 
-        if ($this->quizRepository instanceof \App\Repositories\QuizRepository) {
-            // Publishing is intentionally kept in the repository layer for PDO-backed state.
-        }
+        $updated = $this->quizRepository->updateStatus($quizId, 'published');
 
-        return ['success' => false, 'code' => 'not_implemented', 'message' => 'Quiz publishing requires a repository update operation.'];
+        return [
+            'success' => $updated !== null,
+            'message' => $updated !== null ? 'Quiz published.' : 'Quiz could not be published.',
+            'data' => $updated,
+        ];
     }
 
     public function addQuestion(int $quizId, array $data, ?int $actorId = null): array
