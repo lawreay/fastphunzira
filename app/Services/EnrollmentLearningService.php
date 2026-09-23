@@ -223,7 +223,16 @@ final class EnrollmentLearningService
         }
 
         $total = count($lessons);
-        $percent = $total === 0 ? 100.0 : round(($completed / $total) * 100, 1);
+        if ($total === 0) {
+            return [
+                'course_id' => $courseId,
+                'percent' => 0.0,
+                'completed_lessons' => 0,
+                'total_lessons' => 0,
+            ];
+        }
+
+        $percent = round(($completed / $total) * 100, 1);
 
         return [
             'course_id' => $courseId,

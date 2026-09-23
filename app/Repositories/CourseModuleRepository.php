@@ -2,37 +2,72 @@
 
 namespace App\Repositories;
 
+use PDO;
+
 final class CourseModuleRepository implements CourseModuleRepositoryInterface
 {
-    private array $modules = [];
+    public function __construct(private PDO $pdo)
+    {
+    }
 
     public function create(array $module): array
     {
-        $id = count($this->modules) + 1;
-        $module['id'] = $id;
-        $this->modules[$id] = $module;
+        $statement = $this->pdo->prepare(
+            'INSERT INTO course_modules (course_id, title, description, sort_order)
+            VALUES (:course_id, :title, :description, :sort_order)'
+        );
+
+        $statement->execute([
+            ':course_id' => (int) ($module['course_id'] ?? 0),
+            ':title' => trim((string) ($module['title'] ?? '')),
+            ':description' => trim((string) ($module['description'] ?? '')),
+            ':sort_order' => (int) ($module['sort_order'] ?? 0),
+        ]);
+
+        $module['id'] = (int) $this->pdo->lastInsertId();
 
         return $module;
     }
 
     public function update(int $id, array $data): ?array
     {
-        if (!isset($this->modules[$id])) {
+        $existing = $this->findById($id);
+        if ($existing === null) {
             return null;
         }
 
-        $this->modules[$id] = array_merge($this->modules[$id], $data);
+        $fields = [];
+        $params = [':id' => $id];
 
-        return $this->modules[$id];
+        foreach ($data as $key => $value) {
+            $fields[] = sprintf('%s = :%s', $key, $key);
+            $params[':' . $key] = $value;
+        }
+
+        if ($fields === []) {
+            return $existing;
+        }
+
+        $statement = $this->pdo->prepare('UPDATE course_modules SET ' . implode(', ', $fields) . ' WHERE id = :id');
+        $statement->execute($params);
+
+        return $this->findById($id);
     }
 
     public function findById(int $id): ?array
     {
-        return $this->modules[$id] ?? null;
+        $statement = $this->pdo->prepare('SELECT * FROM course_modules WHERE id = :id LIMIT 1');
+        $statement->execute([':id' => $id]);
+        $module = $statement->fetch();
+
+        return $module === false ? null : $module;
     }
 
     public function findByCourse(int $courseId): array
     {
-        return array_values(array_filter($this->modules, static fn (array $module) => (int) ($module['course_id'] ?? 0) === $courseId));
+        $statement = $this->pdo->prepare('SELECT * FROM course_modules WHERE course_id = :course_id ORDER BY sort_order ASC, id ASC');
+        $statement->execute([':course_id' => $courseId]);
+
+        return $statement->fetchAll() ?: [];
     }
 }

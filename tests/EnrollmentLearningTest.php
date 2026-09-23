@@ -180,4 +180,16 @@ final class EnrollmentLearningTest extends TestCase
         $this->assertSame(100.0, $progress['percent']);
         $this->assertSame(1, $progress['completed_lessons']);
     }
+
+    public function testCourseWithNoLessonsIsNotMarkedComplete(): void
+    {
+        Auth::login(['id' => 20, 'email' => 'student@example.com', 'role' => 'student']);
+        $this->service->enrollStudentInCourse(20, 1);
+
+        $progress = $this->service->getCourseProgress(20, 1);
+
+        $this->assertSame(0.0, $progress['percent']);
+        $this->assertSame(0, $progress['completed_lessons']);
+        $this->assertSame(0, $progress['total_lessons']);
+    }
 }

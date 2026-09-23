@@ -8,11 +8,20 @@ use App\Core\Database;
 use App\Core\Env;
 use App\Core\Session;
 use App\Controllers\CourseController;
+use App\Repositories\CourseModuleRepository;
 use App\Repositories\CourseRepository;
+use App\Repositories\EnrollmentRepository;
+use App\Repositories\InMemoryCourseModuleRepository;
+use App\Repositories\InMemoryEnrollmentRepository;
+use App\Repositories\InMemoryLessonProgressRepository;
+use App\Repositories\InMemoryLessonRepository;
 use App\Repositories\InMemoryUserRepository;
+use App\Repositories\LessonProgressRepository;
+use App\Repositories\LessonRepository;
 use App\Repositories\UserRepository;
 use App\Services\AuthService;
 use App\Services\CourseService;
+use App\Services\EnrollmentLearningService;
 
 Env::load(__DIR__ . '/../.env');
 
@@ -31,8 +40,19 @@ try {
 $userRepository = $pdo !== null ? new UserRepository($pdo) : new InMemoryUserRepository();
 $authService = new AuthService($userRepository);
 $courseRepository = $pdo !== null ? new CourseRepository($pdo) : new \App\Repositories\InMemoryCourseRepository();
+$moduleRepository = $pdo !== null ? new CourseModuleRepository($pdo) : new InMemoryCourseModuleRepository();
+$lessonRepository = $pdo !== null ? new LessonRepository($pdo) : new InMemoryLessonRepository();
+$enrollmentRepository = $pdo !== null ? new EnrollmentRepository($pdo) : new InMemoryEnrollmentRepository();
+$progressRepository = $pdo !== null ? new LessonProgressRepository($pdo) : new InMemoryLessonProgressRepository();
 $courseService = new CourseService($courseRepository);
 $courseController = new CourseController($courseService);
+$enrollmentLearningService = new EnrollmentLearningService(
+    $courseRepository,
+    $enrollmentRepository,
+    $moduleRepository,
+    $lessonRepository,
+    $progressRepository
+);
 
 return [
     'config' => $config,
@@ -41,4 +61,10 @@ return [
     'auth' => $authService,
     'courseService' => $courseService,
     'courseController' => $courseController,
+    'courseRepository' => $courseRepository,
+    'moduleRepository' => $moduleRepository,
+    'lessonRepository' => $lessonRepository,
+    'enrollmentRepository' => $enrollmentRepository,
+    'progressRepository' => $progressRepository,
+    'enrollmentLearningService' => $enrollmentLearningService,
 ];
