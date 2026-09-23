@@ -50,6 +50,25 @@ Rather than focusing on unnecessary complexity, the platform is designed around 
 
 FastPhunzira is intended to start as a lightweight web application and gradually grow with additional features based on the needs of learners and institutions.
 
+### Documentation
+
+The product documentation set is organized in the `docs/` folder and includes the core product, architecture, database, API, security, exam, certificate, and deployment specifications.
+
+- [docs/01-PROJECT-REQUIREMENTS.md](docs/01-PROJECT-REQUIREMENTS.md)
+- [docs/02-PRODUCT-ROADMAP.md](docs/02-PRODUCT-ROADMAP.md)
+- [docs/03-SYSTEM-ARCHITECTURE.md](docs/03-SYSTEM-ARCHITECTURE.md)
+- [docs/04-DATABASE-DESIGN.md](docs/04-DATABASE-DESIGN.md)
+- [docs/05-API-SPECIFICATION.md](docs/05-API-SPECIFICATION.md)
+- [docs/06-SCREEN-SPECIFICATION.md](docs/06-SCREEN-SPECIFICATION.md)
+- [docs/07-USER-FLOWS.md](docs/07-USER-FLOWS.md)
+- [docs/08-EXAM-ENGINE-SPECIFICATION.md](docs/08-EXAM-ENGINE-SPECIFICATION.md)
+- [docs/09-CERTIFICATE-SPECIFICATION.md](docs/09-CERTIFICATE-SPECIFICATION.md)
+- [docs/10-SECURITY-REQUIREMENTS.md](docs/10-SECURITY-REQUIREMENTS.md)
+- [docs/11-UI-DESIGN-SYSTEM.md](docs/11-UI-DESIGN-SYSTEM.md)
+- [docs/12-TESTING-STRATEGY.md](docs/12-TESTING-STRATEGY.md)
+- [docs/13-GIT-WORKFLOW.md](docs/13-GIT-WORKFLOW.md)
+- [docs/14-DEPLOYMENT-GUIDE.md](docs/14-DEPLOYMENT-GUIDE.md)
+
 ### Technology
 
 The initial platform can be developed using:
