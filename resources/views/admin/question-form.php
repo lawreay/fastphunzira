@@ -24,3 +24,12 @@ use App\Support\Csrf;
         <button class="btn" type="submit">Add Question</button>
     </form>
 </section>
+
+<?php if (($quiz['status'] ?? 'draft') !== 'published'): ?>
+<form method="post" action="/admin/quizzes/<?= (int) $quiz['id'] ?>/publish" style="margin-top:16px;">
+    <?= Csrf::input() ?>
+    <button class="btn" type="submit">Publish Quiz</button>
+</form>
+<?php else: ?>
+<p><strong>Status:</strong> Published</p>
+<?php endif; ?>
