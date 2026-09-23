@@ -54,7 +54,11 @@ final class QuizServiceTest extends TestCase
             'status' => 'published',
         ], 10);
         $this->assertTrue($quiz['success']);
+<<<<<<< Updated upstream
         $this->assertSame('draft', $quiz['data']['status']);
+=======
+        $this->assertSame('draft', strtolower((string) ($quiz['data']['status'] ?? '')));
+>>>>>>> Stashed changes
 
         $question = $this->service->addQuestion(1, [
             'question_text' => 'What does PHP stand for?',
@@ -66,6 +70,10 @@ final class QuizServiceTest extends TestCase
             ],
         ], 10);
         $this->assertTrue($question['success']);
+
+        $published = $this->service->publishQuiz(1);
+        $this->assertTrue($published['success']);
+        $this->assertSame('published', strtolower((string) ($published['data']['status'] ?? '')));
 
         Auth::login(['id' => 20, 'email' => 'student@example.com', 'role' => 'student']);
         $this->getEnrollmentRepository()->create([
@@ -90,6 +98,31 @@ final class QuizServiceTest extends TestCase
         $this->assertNotNull($quiz);
         $this->assertCount(1, $quiz['questions']);
         $this->assertArrayNotHasKey('is_correct', $quiz['questions'][0]['options'][0]);
+    }
+
+    public function testBlankQuestionOptionIsRejected(): void
+    {
+        Auth::login(['id' => 10, 'email' => 'admin@example.com', 'role' => 'admin']);
+
+        $draftQuiz = $this->service->createQuiz(1, [
+            'title' => 'Draft quiz',
+            'description' => 'Draft quiz for validation',
+            'pass_percentage' => 50,
+            'attempts_allowed' => 1,
+        ], 10);
+
+        $this->assertTrue($draftQuiz['success']);
+
+        $result = $this->service->addQuestion((int) $draftQuiz['data']['id'], [
+            'question_text' => 'Test question',
+            'options' => [
+                ['option_text' => 'Correct answer', 'is_correct' => true],
+                ['option_text' => ' ', 'is_correct' => false],
+            ],
+        ], 10);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('validation_failed', $result['code']);
     }
 
     public function testStudentCanStartAndSubmitQuiz(): void

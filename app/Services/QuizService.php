@@ -92,6 +92,10 @@ final class QuizService
             return ['success' => false, 'code' => 'not_found', 'message' => 'Quiz not found.'];
         }
 
+        if (strtolower((string) ($quiz['status'] ?? 'draft')) === 'published') {
+            return ['success' => false, 'code' => 'forbidden', 'message' => 'Published quizzes cannot be edited.'];
+        }
+
         $text = trim((string) ($data['question_text'] ?? ''));
         $options = $data['options'] ?? [];
         if ($text === '' || !is_array($options) || count($options) < 2) {
@@ -106,6 +110,11 @@ final class QuizService
 
         $correctCount = 0;
         foreach ($options as $option) {
+            $optionText = trim((string) ($option['option_text'] ?? ''));
+            if ($optionText === '') {
+                return ['success' => false, 'code' => 'validation_failed', 'message' => 'Each answer option must contain text.'];
+            }
+
             if (!empty($option['is_correct'])) {
                 $correctCount++;
             }
@@ -155,13 +164,15 @@ final class QuizService
         }
 
         $quiz['questions'] = $this->questionRepository->findByQuiz($quizId);
-        foreach ($quiz['questions'] as &$question) {
-            foreach (($question['options'] ?? []) as &$option) {
-                unset($option['is_correct']);
+        foreach ($quiz['questions'] as $questionIndex => $question) {
+            $sanitizedOptions = [];
+            foreach (($question['options'] ?? []) as $option) {
+                $sanitized = $option;
+                unset($sanitized['is_correct']);
+                $sanitizedOptions[] = $sanitized;
             }
-            unset($option);
+            $quiz['questions'][$questionIndex]['options'] = $sanitizedOptions;
         }
-        unset($question);
 
         return $quiz;
     }
