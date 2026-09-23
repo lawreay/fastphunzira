@@ -54,6 +54,9 @@ FastPhunzira is intended to start as a lightweight web application and gradually
 
 The product documentation set is organized in the `docs/` folder. The authoritative product specification is [docs/00-AUTHORITATIVE-SPECIFICATION.md](docs/00-AUTHORITATIVE-SPECIFICATION.md). All implementation work should align to this source of truth.
 
+AI and coding agents must also follow [AGENTS.md](AGENTS.md) before modifying code or infrastructure.
+
+- [AGENTS.md](AGENTS.md)
 - [docs/00-AUTHORITATIVE-SPECIFICATION.md](docs/00-AUTHORITATIVE-SPECIFICATION.md)
 - [docs/01-PROJECT-REQUIREMENTS.md](docs/01-PROJECT-REQUIREMENTS.md)
 - [docs/02-PRODUCT-ROADMAP.md](docs/02-PRODUCT-ROADMAP.md)
