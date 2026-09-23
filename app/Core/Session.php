@@ -6,12 +6,16 @@ final class Session
 {
     public static function start(array $config = []): void
     {
+        if (!isset($_SESSION) || !is_array($_SESSION)) {
+            $_SESSION = [];
+        }
+
         if (session_status() === PHP_SESSION_ACTIVE) {
             return;
         }
 
         if (session_status() === PHP_SESSION_DISABLED || PHP_SAPI === 'cli' || headers_sent()) {
-            $_SESSION ??= [];
+            $_SESSION = [];
 
             return;
         }

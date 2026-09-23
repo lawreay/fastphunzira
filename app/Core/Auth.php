@@ -27,6 +27,44 @@ final class Auth
         return (int) $userId;
     }
 
+    public static function userHasRole(string $role): bool
+    {
+        $user = self::user();
+        if ($user === null) {
+            return false;
+        }
+
+        return strtolower((string) ($user['role'] ?? '')) === strtolower($role);
+    }
+
+    public static function isAdmin(): bool
+    {
+        return self::userHasRole('admin');
+    }
+
+    public static function userCan(string $permission): bool
+    {
+        if (!self::check()) {
+            return false;
+        }
+
+        $role = strtolower((string) (self::user()['role'] ?? ''));
+
+        if ($permission === 'courses.manage') {
+            return $role === 'admin';
+        }
+
+        if ($permission === 'courses.view') {
+            return in_array($role, ['admin', 'student'], true);
+        }
+
+        if ($permission === 'dashboard.view') {
+            return in_array($role, ['admin', 'student'], true);
+        }
+
+        return false;
+    }
+
     public static function login(array $user): void
     {
         Session::start();

@@ -2,6 +2,7 @@
 
 $app = require __DIR__ . '/../bootstrap/app.php';
 $authService = $app['auth'];
+$courseController = $app['courseController'];
 
 use App\Core\Auth;
 use App\Support\Csrf;
@@ -13,6 +14,20 @@ return [
             'title' => 'FastPhunzira',
         ];
     }],
+    ['GET', '/courses', [$courseController, 'catalogue']],
+    ['GET', '/courses/{id}', [$courseController, 'detail']],
+    ['GET', '/admin/courses', [$courseController, 'adminIndex']],
+    ['GET', '/admin/courses/create', [$courseController, 'createForm']],
+    ['GET', '/admin/courses/{id}/edit', [$courseController, 'editForm']],
+    ['POST', '/admin/courses/store', function () use ($courseController) {
+        return $courseController->store($_POST);
+    }],
+    ['POST', '/admin/courses/update', function () use ($courseController) {
+        $id = (int) ($_POST['id'] ?? 0);
+
+        return $courseController->update($id, $_POST);
+    }],
+    ['POST', '/admin/courses/publish', [$courseController, 'publish']],
     ['GET', '/login', function () {
         return [
             'view' => 'auth/login',

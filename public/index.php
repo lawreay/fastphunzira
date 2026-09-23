@@ -9,11 +9,26 @@ $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
 $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
 
 $route = null;
+$routeParams = [];
 foreach ($routes as $candidate) {
     [$allowedMethod, $path, $handler] = $candidate;
-    if ($allowedMethod === $method && $path === $uri) {
+    if ($allowedMethod !== $method) {
+        continue;
+    }
+
+    if ($path === $uri) {
         $route = $handler;
         break;
+    }
+
+    if (str_contains($path, '{')) {
+        $regex = preg_quote($path, '/');
+        $regex = preg_replace('/\\{[a-zA-Z0-9_]+\\}/', '([^/]+)', $regex);
+        if (preg_match('#^' . $regex . '$#', $uri, $matches) === 1) {
+            $route = $handler;
+            $routeParams = array_slice($matches, 1);
+            break;
+        }
     }
 }
 
@@ -23,7 +38,7 @@ if ($route === null) {
     exit;
 }
 
-$result = $route();
+$result = $route(...$routeParams);
 
 if (isset($result['redirect'])) {
     header('Location: ' . $result['redirect']);

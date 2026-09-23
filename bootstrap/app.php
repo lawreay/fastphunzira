@@ -7,9 +7,12 @@ require __DIR__ . '/../vendor/autoload.php';
 use App\Core\Database;
 use App\Core\Env;
 use App\Core\Session;
+use App\Controllers\CourseController;
+use App\Repositories\CourseRepository;
 use App\Repositories\InMemoryUserRepository;
 use App\Repositories\UserRepository;
 use App\Services\AuthService;
+use App\Services\CourseService;
 
 Env::load(__DIR__ . '/../.env');
 
@@ -27,10 +30,15 @@ try {
 
 $userRepository = $pdo !== null ? new UserRepository($pdo) : new InMemoryUserRepository();
 $authService = new AuthService($userRepository);
+$courseRepository = $pdo !== null ? new CourseRepository($pdo) : new \App\Repositories\InMemoryCourseRepository();
+$courseService = new CourseService($courseRepository);
+$courseController = new CourseController($courseService);
 
 return [
     'config' => $config,
     'db' => $pdo,
     'security' => $securityConfig,
     'auth' => $authService,
+    'courseService' => $courseService,
+    'courseController' => $courseController,
 ];
