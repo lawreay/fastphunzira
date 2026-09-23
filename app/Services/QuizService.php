@@ -56,6 +56,29 @@ final class QuizService
         return ['success' => true, 'message' => 'Quiz created.', 'data' => $quiz];
     }
 
+
+    public function publishQuiz(int $quizId): array
+    {
+        if (!Auth::userCan('courses.manage')) {
+            return ['success' => false, 'code' => 'forbidden', 'message' => 'Only administrators can publish quizzes.'];
+        }
+
+        $quiz = $this->quizRepository->findById($quizId);
+        if ($quiz === null) {
+            return ['success' => false, 'code' => 'not_found', 'message' => 'Quiz not found.'];
+        }
+
+        if (count($this->questionRepository->findByQuiz($quizId)) === 0) {
+            return ['success' => false, 'code' => 'validation_failed', 'message' => 'A quiz must contain at least one question before publishing.'];
+        }
+
+        if ($this->quizRepository instanceof \App\Repositories\QuizRepository) {
+            // Publishing is intentionally kept in the repository layer for PDO-backed state.
+        }
+
+        return ['success' => false, 'code' => 'not_implemented', 'message' => 'Quiz publishing requires a repository update operation.'];
+    }
+
     public function addQuestion(int $quizId, array $data, ?int $actorId = null): array
     {
         if (!Auth::userCan('courses.manage')) {
