@@ -464,6 +464,21 @@ return [
 
         return ['redirect' => '/admin/quizzes/' . (int) $quizId . '/questions/create'];
     }],
+    ['POST', '/admin/quizzes/{id}/publish', function (string $quizId) use ($quizService) {
+        if (!Auth::userCan('courses.manage')) {
+            return ['redirect' => '/login'];
+        }
+
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+            return ['redirect' => '/dashboard'];
+        }
+
+        $result = $quizService->publishQuiz((int) $quizId);
+        $_SESSION[$result['success'] ? 'flash_success' : 'flash_error'] = $result['message'];
+
+        return ['redirect' => '/admin/quizzes/' . (int) $quizId . '/questions/create'];
+    }],
     ['GET', '/dashboard', function () {
         if (!Auth::check()) {
             $_SESSION['flash_error'] = 'Please log in to continue.';
