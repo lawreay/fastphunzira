@@ -372,6 +372,98 @@ return [
             'attempt' => $attempt,
         ];
     }],
+
+    ['GET', '/admin/courses/{id}/quizzes/create', function (string $courseId) use ($courseRepository) {
+        if (!Auth::userCan('courses.manage')) {
+            return ['redirect' => '/login'];
+        }
+
+        $course = $courseRepository->findById((int) $courseId);
+        if ($course === null) {
+            return ['view' => 'errors/not_found', 'title' => 'Course not found'];
+        }
+
+        return [
+            'view' => 'admin/quiz-form',
+            'title' => 'Create Quiz',
+            'course' => $course,
+        ];
+    }],
+    ['POST', '/admin/quizzes/store', function () use ($quizService) {
+        if (!Auth::userCan('courses.manage')) {
+            return ['redirect' => '/login'];
+        }
+
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+            return ['redirect' => '/dashboard'];
+        }
+
+        $courseId = (int) ($_POST['course_id'] ?? 0);
+        $result = $quizService->createQuiz($courseId, $_POST, (int) Auth::userId());
+
+        if (!$result['success']) {
+            $_SESSION['flash_error'] = $result['message'];
+            return ['redirect' => '/admin/courses/' . $courseId . '/quizzes/create'];
+        }
+
+        $_SESSION['flash_success'] = 'Quiz created. Add questions before publishing it for learners.';
+        return ['redirect' => '/admin/quizzes/' . (int) $result['data']['id'] . '/questions/create'];
+    }],
+    ['GET', '/admin/quizzes/{id}/questions/create', function (string $quizId) use ($quizRepository) {
+        if (!Auth::userCan('courses.manage')) {
+            return ['redirect' => '/login'];
+        }
+
+        $quiz = $quizRepository->findById((int) $quizId);
+        if ($quiz === null) {
+            return ['view' => 'errors/not_found', 'title' => 'Quiz not found'];
+        }
+
+        return [
+            'view' => 'admin/question-form',
+            'title' => 'Add Quiz Question',
+            'quiz' => $quiz,
+        ];
+    }],
+    ['POST', '/admin/quizzes/{id}/questions/store', function (string $quizId) use ($quizService) {
+        if (!Auth::userCan('courses.manage')) {
+            return ['redirect' => '/login'];
+        }
+
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+            return ['redirect' => '/dashboard'];
+        }
+
+        $correct = (string) ($_POST['correct_option'] ?? '');
+        $rawOptions = is_array($_POST['options'] ?? null) ? $_POST['options'] : [];
+        $options = [];
+
+        foreach ($rawOptions as $letter => $option) {
+            $options[] = [
+                'option_text' => trim((string) ($option['option_text'] ?? '')),
+                'is_correct' => $letter === $correct,
+            ];
+        }
+
+        $result = $quizService->addQuestion(
+            (int) $quizId,
+            [
+                'question_text' => $_POST['question_text'] ?? '',
+                'options' => $options,
+            ],
+            (int) Auth::userId()
+        );
+
+        if (!$result['success']) {
+            $_SESSION['flash_error'] = $result['message'];
+        } else {
+            $_SESSION['flash_success'] = 'Question added successfully.';
+        }
+
+        return ['redirect' => '/admin/quizzes/' . (int) $quizId . '/questions/create'];
+    }],
     ['GET', '/dashboard', function () {
         if (!Auth::check()) {
             $_SESSION['flash_error'] = 'Please log in to continue.';
