@@ -44,6 +44,17 @@ final class CourseManagementTest extends TestCase
                 return $this->courses[$id] ?? null;
             }
 
+            public function findBySlug(string $slug): ?array
+            {
+                foreach ($this->courses as $course) {
+                    if (strtolower((string) ($course['slug'] ?? '')) === strtolower($slug)) {
+                        return $course;
+                    }
+                }
+
+                return null;
+            }
+
             public function findAll(): array
             {
                 return array_values($this->courses);
@@ -62,6 +73,11 @@ final class CourseManagementTest extends TestCase
             public function getPublished(): array
             {
                 return $this->findPublished();
+            }
+
+            public function getBySlug(string $slug): ?array
+            {
+                return $this->findBySlug($slug);
             }
         });
     }
@@ -91,6 +107,56 @@ final class CourseManagementTest extends TestCase
             'description' => 'No access',
             'status' => 'draft',
         ], 20);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('forbidden', $result['code']);
+    }
+
+    public function testUnpublishedCourseDetailIsHiddenFromPublicView(): void
+    {
+        $created = $this->courseService->createCourse([
+            'title' => 'Draft course',
+            'slug' => 'draft-course',
+            'description' => 'Hidden from public',
+            'status' => 'draft',
+        ], 10, true);
+
+        $this->assertNull($this->courseService->getCourseDetail((int) $created['data']['id']));
+        $this->assertNotNull($this->courseService->getCourseDetail((int) $created['data']['id'], true));
+    }
+
+    public function testDuplicateSlugIsRejected(): void
+    {
+        $this->courseService->createCourse([
+            'title' => 'Course One',
+            'slug' => 'shared-slug',
+            'description' => 'First version',
+            'status' => 'draft',
+        ], 10, true);
+
+        $result = $this->courseService->createCourse([
+            'title' => 'Course Two',
+            'slug' => 'shared-slug',
+            'description' => 'Second version',
+            'status' => 'draft',
+        ], 10, true);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('duplicate_slug', $result['code']);
+    }
+
+    public function testStudentCannotModifyCourse(): void
+    {
+        Auth::login(['id' => 20, 'email' => 'student@example.com', 'role' => 'student']);
+
+        $created = $this->courseService->createCourse([
+            'title' => 'Course to protect',
+            'slug' => 'course-to-protect',
+            'description' => 'Draft course',
+            'status' => 'draft',
+        ], 10, true);
+
+        $result = $this->courseService->updateCourse((int) $created['data']['id'], ['status' => 'published'], 20);
 
         $this->assertFalse($result['success']);
         $this->assertSame('forbidden', $result['code']);

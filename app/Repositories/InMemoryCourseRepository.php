@@ -32,6 +32,17 @@ final class InMemoryCourseRepository implements CourseRepositoryInterface
         return $this->courses[$id] ?? null;
     }
 
+    public function findBySlug(string $slug): ?array
+    {
+        foreach ($this->courses as $course) {
+            if (strtolower((string) ($course['slug'] ?? '')) === strtolower($slug)) {
+                return $course;
+            }
+        }
+
+        return null;
+    }
+
     public function findAll(): array
     {
         return $this->getAll();
@@ -50,5 +61,10 @@ final class InMemoryCourseRepository implements CourseRepositoryInterface
     public function getPublished(): array
     {
         return array_values(array_filter($this->courses, static fn (array $course) => ($course['status'] ?? 'draft') === 'published'));
+    }
+
+    public function getBySlug(string $slug): ?array
+    {
+        return $this->findBySlug($slug);
     }
 }

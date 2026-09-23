@@ -24,7 +24,7 @@ final class CourseService
         }
 
         $title = trim((string) ($data['title'] ?? ''));
-        $slug = trim((string) ($data['slug'] ?? ''));
+        $slug = $this->normalizeSlug((string) ($data['slug'] ?? ''));
         $description = trim((string) ($data['description'] ?? ''));
         $status = strtolower((string) ($data['status'] ?? 'draft'));
 
@@ -33,6 +33,14 @@ final class CourseService
                 'success' => false,
                 'code' => 'validation_failed',
                 'message' => 'Course title, slug, and description are required.',
+            ];
+        }
+
+        if ($this->courseRepository->findBySlug($slug) !== null) {
+            return [
+                'success' => false,
+                'code' => 'duplicate_slug',
+                'message' => 'A course with this slug already exists.',
             ];
         }
 
@@ -79,7 +87,7 @@ final class CourseService
         }
 
         if (isset($data['slug'])) {
-            $updates['slug'] = trim((string) $data['slug']);
+            $updates['slug'] = $this->normalizeSlug((string) $data['slug']);
         }
 
         if (isset($data['description'])) {
@@ -95,6 +103,27 @@ final class CourseService
             $updates['created_by'] = (int) $data['created_by'];
         }
 
+        foreach (['title', 'slug', 'description'] as $field) {
+            if (array_key_exists($field, $updates) && trim((string) $updates[$field]) === '') {
+                return [
+                    'success' => false,
+                    'code' => 'validation_failed',
+                    'message' => 'Course title, slug, and description are required.',
+                ];
+            }
+        }
+
+        if (isset($updates['slug'])) {
+            $duplicate = $this->courseRepository->findBySlug($updates['slug']);
+            if ($duplicate !== null && (int) ($duplicate['id'] ?? 0) !== $courseId) {
+                return [
+                    'success' => false,
+                    'code' => 'duplicate_slug',
+                    'message' => 'A course with this slug already exists.',
+                ];
+            }
+        }
+
         $updated = $this->courseRepository->update($courseId, $updates);
 
         return [
@@ -104,9 +133,19 @@ final class CourseService
         ];
     }
 
-    public function getCourseDetail(int $courseId): ?array
+    public function getCourseDetail(int $courseId, bool $includeDraft = false): ?array
     {
-        return $this->courseRepository->findById($courseId);
+        $course = $this->courseRepository->findById($courseId);
+
+        if ($course === null) {
+            return null;
+        }
+
+        if (!$includeDraft && strtolower((string) ($course['status'] ?? 'draft')) !== 'published') {
+            return null;
+        }
+
+        return $course;
     }
 
     public function getPublishedCourses(): array
@@ -117,5 +156,14 @@ final class CourseService
     public function getAdminCourses(): array
     {
         return $this->courseRepository->findAll();
+    }
+
+    private function normalizeSlug(string $slug): string
+    {
+        $normalized = strtolower(trim($slug));
+        $normalized = preg_replace('/[^a-z0-9]+/', '-', $normalized) ?? '';
+        $normalized = trim($normalized, '-');
+
+        return $normalized;
     }
 }

@@ -10,6 +10,8 @@ interface CourseRepositoryInterface
 
     public function findById(int $id): ?array;
 
+    public function findBySlug(string $slug): ?array;
+
     public function findAll(): array;
 
     public function findPublished(): array;
@@ -17,4 +19,6 @@ interface CourseRepositoryInterface
     public function getAll(): array;
 
     public function getPublished(): array;
+
+    public function getBySlug(string $slug): ?array;
 }

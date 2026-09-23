@@ -67,6 +67,22 @@ final class CourseRepository implements CourseRepositoryInterface
         return $course === false ? null : $course;
     }
 
+    public function findBySlug(string $slug): ?array
+    {
+        $statement = $this->pdo->prepare(
+            'SELECT c.*, u.full_name AS created_by_name
+             FROM courses c
+             LEFT JOIN users u ON u.id = c.created_by
+             WHERE c.slug = :slug
+             LIMIT 1'
+        );
+
+        $statement->execute([':slug' => $slug]);
+        $course = $statement->fetch();
+
+        return $course === false ? null : $course;
+    }
+
     public function findAll(): array
     {
         return $this->getAll();
@@ -102,5 +118,10 @@ final class CourseRepository implements CourseRepositoryInterface
         $statement->execute([':status' => 'published']);
 
         return $statement->fetchAll() ?: [];
+    }
+
+    public function getBySlug(string $slug): ?array
+    {
+        return $this->findBySlug($slug);
     }
 }

@@ -23,7 +23,7 @@ final class CourseController
 
     public function detail(int $id): array
     {
-        $course = $this->courseService->getCourseDetail($id);
+        $course = $this->courseService->getCourseDetail($id, Auth::userCan('courses.manage'));
 
         if ($course === null) {
             return [
@@ -90,7 +90,13 @@ final class CourseController
             return ['redirect' => '/login'];
         }
 
-        $course = $this->courseService->getCourseDetail($id);
+        $course = $this->courseService->getCourseDetail($id, true);
+
+        if ($course === null) {
+            $_SESSION['flash_error'] = 'Course not found.';
+
+            return ['redirect' => '/admin/courses'];
+        }
 
         return [
             'view' => 'admin/courses/form',
