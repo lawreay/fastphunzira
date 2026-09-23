@@ -49,7 +49,7 @@ final class QuizService
             'description' => trim((string) ($data['description'] ?? '')),
             'pass_percentage' => $passPercentage,
             'attempts_allowed' => $attemptsAllowed,
-            'status' => $data['status'] ?? 'draft',
+            'status' => 'draft',
             'created_by' => $actorId ?? (int) Auth::userId(),
         ]);
 
@@ -96,6 +96,12 @@ final class QuizService
         $options = $data['options'] ?? [];
         if ($text === '' || !is_array($options) || count($options) < 2) {
             return ['success' => false, 'code' => 'validation_failed', 'message' => 'A question and at least two options are required.'];
+        }
+
+        foreach ($options as $option) {
+            if (trim((string) ($option['option_text'] ?? '')) === '') {
+                return ['success' => false, 'code' => 'validation_failed', 'message' => 'All question options must contain text.'];
+            }
         }
 
         $correctCount = 0;
