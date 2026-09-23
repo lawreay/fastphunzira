@@ -37,6 +37,13 @@ final class QuizRepository implements QuizRepositoryInterface
         return $quiz === false ? null : $quiz;
     }
 
+    public function updateStatus(int $id, string $status): ?array
+    {
+        $statement = $this->pdo->prepare('UPDATE quizzes SET status = :status WHERE id = :id');
+        $statement->execute([':status' => $status, ':id' => $id]);
+        return $this->findById($id);
+    }
+
     public function findByCourse(int $courseId): array
     {
         $statement = $this->pdo->prepare(
