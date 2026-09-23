@@ -7,6 +7,9 @@ require __DIR__ . '/../vendor/autoload.php';
 use App\Core\Database;
 use App\Core\Env;
 use App\Core\Session;
+use App\Repositories\InMemoryUserRepository;
+use App\Repositories\UserRepository;
+use App\Services\AuthService;
 
 Env::load(__DIR__ . '/../.env');
 
@@ -22,8 +25,12 @@ try {
     $pdo = null;
 }
 
+$userRepository = $pdo !== null ? new UserRepository($pdo) : new InMemoryUserRepository();
+$authService = new AuthService($userRepository);
+
 return [
     'config' => $config,
     'db' => $pdo,
     'security' => $securityConfig,
+    'auth' => $authService,
 ];

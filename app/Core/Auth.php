@@ -29,6 +29,12 @@ final class Auth
 
     public static function login(array $user): void
     {
+        Session::start();
+
+        if (session_status() === PHP_SESSION_ACTIVE && PHP_SAPI !== 'cli') {
+            session_regenerate_id(true);
+        }
+
         Session::set('user_id', (int) ($user['id'] ?? 0));
         Session::set('user', $user);
     }

@@ -24,6 +24,12 @@ if ($route === null) {
 }
 
 $result = $route();
+
+if (isset($result['redirect'])) {
+    header('Location: ' . $result['redirect']);
+    exit;
+}
+
 $view = $result['view'] ?? 'landing';
 $title = $result['title'] ?? 'FastPhunzira';
 
