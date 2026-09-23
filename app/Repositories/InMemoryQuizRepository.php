@@ -19,6 +19,15 @@ final class InMemoryQuizRepository implements QuizRepositoryInterface
         return $this->quizzes[$id] ?? null;
     }
 
+    public function updateStatus(int $id, string $status): ?array
+    {
+        if (!isset($this->quizzes[$id])) {
+            return null;
+        }
+        $this->quizzes[$id]['status'] = $status;
+        return $this->quizzes[$id];
+    }
+
     public function findByCourse(int $courseId): array
     {
         return array_values(array_filter($this->quizzes, fn(array $quiz): bool => (int) $quiz['course_id'] === $courseId));
