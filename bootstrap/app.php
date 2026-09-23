@@ -18,10 +18,14 @@ use App\Repositories\InMemoryLessonRepository;
 use App\Repositories\InMemoryUserRepository;
 use App\Repositories\LessonProgressRepository;
 use App\Repositories\LessonRepository;
+use App\Repositories\QuestionRepository;
+use App\Repositories\QuizAttemptRepository;
+use App\Repositories\QuizRepository;
 use App\Repositories\UserRepository;
 use App\Services\AuthService;
 use App\Services\CourseService;
 use App\Services\EnrollmentLearningService;
+use App\Services\QuizService;
 
 Env::load(__DIR__ . '/../.env');
 
@@ -44,8 +48,18 @@ $moduleRepository = $pdo !== null ? new CourseModuleRepository($pdo) : new InMem
 $lessonRepository = $pdo !== null ? new LessonRepository($pdo) : new InMemoryLessonRepository();
 $enrollmentRepository = $pdo !== null ? new EnrollmentRepository($pdo) : new InMemoryEnrollmentRepository();
 $progressRepository = $pdo !== null ? new LessonProgressRepository($pdo) : new InMemoryLessonProgressRepository();
+$quizRepository = $pdo !== null ? new QuizRepository($pdo) : new \App\Repositories\InMemoryQuizRepository();
+$questionRepository = $pdo !== null ? new QuestionRepository($pdo) : new \App\Repositories\InMemoryQuestionRepository();
+$quizAttemptRepository = $pdo !== null ? new QuizAttemptRepository($pdo) : new \App\Repositories\InMemoryQuizAttemptRepository();
 $courseService = new CourseService($courseRepository);
 $courseController = new CourseController($courseService);
+$quizService = new QuizService(
+    $courseRepository,
+    $enrollmentRepository,
+    $quizRepository,
+    $questionRepository,
+    $quizAttemptRepository
+);
 $enrollmentLearningService = new EnrollmentLearningService(
     $courseRepository,
     $enrollmentRepository,
@@ -67,4 +81,8 @@ return [
     'enrollmentRepository' => $enrollmentRepository,
     'progressRepository' => $progressRepository,
     'enrollmentLearningService' => $enrollmentLearningService,
+    'quizRepository' => $quizRepository,
+    'questionRepository' => $questionRepository,
+    'quizAttemptRepository' => $quizAttemptRepository,
+    'quizService' => $quizService,
 ];
