@@ -10,6 +10,7 @@ $enrollmentRepository = $app['enrollmentRepository'];
 $progressRepository = $app['progressRepository'];
 $learningService = $app['enrollmentLearningService'];
 $quizService = $app['quizService'];
+$quizAttemptRepository = $app['quizAttemptRepository'];
 
 use App\Core\Auth;
 use App\Support\Csrf;
@@ -288,7 +289,7 @@ return [
             'quizzes' => $quizzes,
         ];
     }],
-    ['GET', '/quizzes/{id}', function (string $quizId) use ($quizService) {
+    ['GET', '/quizzes/{id}', function (string $quizId) use ($quizService, $quizAttemptRepository) {
         $studentId = Auth::userId();
         if ($studentId === null) {
             $_SESSION['flash_error'] = 'Please log in to continue.';
@@ -300,10 +301,13 @@ return [
             return ['view' => 'errors/not_found', 'title' => 'Quiz not found'];
         }
 
+        $attempt = $quizAttemptRepository->findActiveByStudentAndQuiz((int) $studentId, (int) $quizId);
+
         return [
             'view' => 'student/quiz',
             'title' => $quiz['title'],
             'quiz' => $quiz,
+            'attempt' => $attempt,
         ];
     }],
     ['POST', '/quizzes/{id}/start', function (string $quizId) use ($quizService) {
