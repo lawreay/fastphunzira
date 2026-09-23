@@ -9,6 +9,7 @@ $lessonRepository = $app['lessonRepository'];
 $enrollmentRepository = $app['enrollmentRepository'];
 $progressRepository = $app['progressRepository'];
 $learningService = $app['enrollmentLearningService'];
+$quizService = $app['quizService'];
 
 use App\Core\Auth;
 use App\Support\Csrf;
@@ -256,6 +257,116 @@ return [
         $_SESSION['flash_success'] = 'Lesson marked complete.';
 
         return ['redirect' => '/lessons/' . (int) $lessonId];
+    }],
+
+    ['GET', '/courses/{id}/quizzes', function (string $courseId) use ($courseRepository, $quizRepository, $enrollmentRepository) {
+        if (!Auth::check()) {
+            $_SESSION['flash_error'] = 'Please log in to continue.';
+            return ['redirect' => '/login'];
+        }
+
+        $studentId = (int) Auth::userId();
+        $course = $courseRepository->findById((int) $courseId);
+        if ($course === null) {
+            return ['view' => 'errors/not_found', 'title' => 'Course not found'];
+        }
+
+        if ($enrollmentRepository->findByStudentAndCourse($studentId, (int) $courseId) === null) {
+            $_SESSION['flash_error'] = 'You must enroll in the course first.';
+            return ['redirect' => '/courses/' . (int) $courseId];
+        }
+
+        $quizzes = array_values(array_filter(
+            $quizRepository->findByCourse((int) $courseId),
+            fn(array $quiz): bool => strtolower((string) ($quiz['status'] ?? 'draft')) === 'published'
+        ));
+
+        return [
+            'view' => 'student/quizzes',
+            'title' => 'Course Quizzes',
+            'course' => $course,
+            'quizzes' => $quizzes,
+        ];
+    }],
+    ['GET', '/quizzes/{id}', function (string $quizId) use ($quizService) {
+        $studentId = Auth::userId();
+        if ($studentId === null) {
+            $_SESSION['flash_error'] = 'Please log in to continue.';
+            return ['redirect' => '/login'];
+        }
+
+        $quiz = $quizService->getQuizForStudent((int) $studentId, (int) $quizId);
+        if ($quiz === null) {
+            return ['view' => 'errors/not_found', 'title' => 'Quiz not found'];
+        }
+
+        return [
+            'view' => 'student/quiz',
+            'title' => $quiz['title'],
+            'quiz' => $quiz,
+        ];
+    }],
+    ['POST', '/quizzes/{id}/start', function (string $quizId) use ($quizService) {
+        $studentId = Auth::userId();
+        if ($studentId === null) {
+            $_SESSION['flash_error'] = 'Please log in to continue.';
+            return ['redirect' => '/login'];
+        }
+
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+            return ['redirect' => '/quizzes/' . (int) $quizId];
+        }
+
+        $result = $quizService->startAttempt((int) $studentId, (int) $quizId);
+        if (!$result['success']) {
+            $_SESSION['flash_error'] = $result['message'];
+            return ['redirect' => '/quizzes/' . (int) $quizId];
+        }
+
+        return ['redirect' => '/quizzes/' . (int) $quizId . '?attempt=' . (int) $result['data']['id']];
+    }],
+    ['POST', '/quiz-attempts/{id}/submit', function (string $attemptId) use ($quizService) {
+        $studentId = Auth::userId();
+        if ($studentId === null) {
+            $_SESSION['flash_error'] = 'Please log in to continue.';
+            return ['redirect' => '/login'];
+        }
+
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+            return ['redirect' => '/dashboard'];
+        }
+
+        $result = $quizService->submitAttempt(
+            (int) $studentId,
+            (int) $attemptId,
+            is_array($_POST['answers'] ?? null) ? $_POST['answers'] : []
+        );
+
+        if (!$result['success']) {
+            $_SESSION['flash_error'] = $result['message'];
+            return ['redirect' => '/dashboard'];
+        }
+
+        return ['redirect' => '/quiz-attempts/' . (int) $attemptId . '/result'];
+    }],
+    ['GET', '/quiz-attempts/{id}/result', function (string $attemptId) use ($quizService) {
+        $studentId = Auth::userId();
+        if ($studentId === null) {
+            return ['redirect' => '/login'];
+        }
+
+        $attempt = $quizService->getAttemptForStudent((int) $studentId, (int) $attemptId);
+        if ($attempt === null) {
+            return ['view' => 'errors/not_found', 'title' => 'Result not found'];
+        }
+
+        return [
+            'view' => 'student/quiz-result',
+            'title' => 'Quiz Result',
+            'attempt' => $attempt,
+        ];
     }],
     ['GET', '/dashboard', function () {
         if (!Auth::check()) {
