@@ -116,93 +116,218 @@ Flow:
 ## 4. Student Screens
 
 ### S01. Student Dashboard
+Purpose: Provide a summary of learning progress and current activity.
+
+Components:
 * Welcome summary
 * Enrolled courses
 * Current progress
 * Upcoming tasks
 * Recent results
 
+States:
+* default view
+* empty enrollment state
+* active course state
+* result summary state
+
 ### S02. My Courses
-* Course list
-* Status indicators
-* Continue learning button
-* Completion progress
+Purpose: Show course inventory and access state.
+
+Components:
+* course list
+* status indicators
+* continue learning button
+* completion progress
+
+States:
+* not enrolled
+* enrolled and active
+* completed course
 
 ### S03. Lesson View
-* Course/lesson navigation
-* Lesson content area
-* Previous/next lesson controls
-* Quiz links
+Purpose: Display learning content and navigate between instructional units.
+
+Components:
+* course/lesson navigation
+* lesson content area
+* previous/next lesson controls
+* quiz links
+
+States:
+* lesson content
+* lesson complete
+* next lesson unavailable
 
 ### S04. Quiz Interface
-* Question display
-* Options selection
-* Timer info
-* Submit quiz button
+Purpose: Present assessment questions and collect answers.
+
+Components:
+* question display
+* option selection
+* timer info
+* submit quiz button
+
+States:
+* quiz instructions
+* active question state
+* submitted state
+* time expired state
 
 ### S05. Exam Interface
-* Attempt information
-* Question list and answers
-* Timer and expiry status
-* Final submission confirmation
+Purpose: Deliver the final assessment with time enforcement and validation.
+
+Components:
+* attempt information
+* question list and answers
+* timer and expiry status
+* final submission confirmation
+
+States:
+* exam instructions
+* active exam session
+* save draft state
+* submit confirmation modal
+* submitted state
+* expired state
 
 ### S06. Results Page
-* Total score
-* Percentage
-* Pass/fail
-* Review summary
+Purpose: Present attempt outcomes after the assessment is complete.
+
+Components:
+* total score
+* percentage
+* pass/fail status
+* review summary
+
+States:
+* pass
+* fail
+* no result yet
 
 ### S07. Certificates
-* Issued certificates
-* Download or view option
-* Verification code visibility when appropriate
+Purpose: Show earned credentials and verification options.
+
+Components:
+* issued certificates
+* download or view option
+* verification code visibility when appropriate
+
+States:
+* certificate available
+* waiting for issuance
+* certificate invalid or revoked
 
 ### S08. Profile
-* Personal details
-* Security settings
-* Activity status
+Purpose: Allow users to manage their personal account data.
+
+Components:
+* personal details
+* security settings
+* activity status
+
+States:
+* view profile
+* edit profile
+* password update flow
 
 ## 5. Admin Screens
 
 ### A01. Admin Dashboard
-* Overview metrics
-* Student counts
-* Course counts
-* Exam activity
-* Recent certificate issuance
+Purpose: Summarize platform operations and key metrics.
+
+Components:
+* overview metrics
+* student counts
+* course counts
+* exam activity
+* recent certificate issuance
+
+States:
+* default dashboard view
+* filter by date or role
+* empty dataset state
 
 ### A02. Courses Management
-* Create/edit courses
-* Publish or archive courses
-* Manage modules and lessons
+Purpose: Support course creation, editing, publishing, and lifecycle control.
+
+Components:
+* create/edit courses
+* publish or archive courses
+* manage modules and lessons
+
+States:
+* create form
+* edit form
+* published/unpublished status
 
 ### A03. Students Management
-* Search students
-* View profiles
-* Review enrollments
-* View results
+Purpose: Review and manage learners and their enrollments.
+
+Components:
+* search students
+* view profiles
+* review enrollments
+* view results
+
+States:
+* list view
+* single student detail
+* no records found
 
 ### A04. Exams Management
-* Create exams
-* Configure time limits
-* Set pass rules
-* Manage questions
+Purpose: Configure and maintain assessment sessions.
+
+Components:
+* create exams
+* configure time limits
+* set pass rules
+* manage questions
+
+States:
+* exam draft
+* published exam
+* archived exam
 
 ### A05. Results and Attempts
-* Review submissions
-* Filter results
-* Check scoring and issues
+Purpose: Review assessment submissions and scoring.
+
+Components:
+* review submissions
+* filter results
+* check scoring and issues
+
+States:
+* all attempts
+* flagged attempt
+* reviewed result
 
 ### A06. Certificates Management
-* Issue certificates
-* Review certificate status
-* Revoke or renew when rules allow
+Purpose: Track and maintain issued credentials.
+
+Components:
+* issue certificates
+* review certificate status
+* revoke or renew when rules allow
+
+States:
+* pending issuance
+* active certificate
+* revoked or invalid
 
 ### A07. System Settings
-* Platform configuration
-* Mail settings
-* Security preferences
-* Audit logs
+Purpose: Manage operational and security configuration.
+
+Components:
+* platform configuration
+* mail settings
+* security preferences
+* audit logs
+
+States:
+* default settings
+* saved settings
+* validation error state
 
 ## 6. Screen Development Order
 

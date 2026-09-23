@@ -183,12 +183,29 @@ Returns all student results.
 
 ## 12. Certificate Endpoints
 
+### Public Verification Page
+
+The human-facing browser route is:
+
+```text
+GET /verify/{certificate_number}
+```
+
+Example:
+```text
+/verify/FP-2026-000001
+```
+
+This page may load certificate metadata and then call the API endpoint below for verification.
+
 ### GET /api/certificates/verify
 Public endpoint. Accepts certificate number and verification code.
 
 Query parameters:
 * certificate_number
 * verification_code
+
+This is the backend verification contract used by the public page or a frontend client.
 
 ### GET /api/users/me/certificates
 Returns the current user’s certificates.

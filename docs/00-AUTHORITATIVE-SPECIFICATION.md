@@ -218,6 +218,8 @@ The system should use a relational MySQL schema with the following core domains:
 ### 11.3 Assessment
 * quizzes
 * questions
+* quiz_questions
+* exam_questions
 * question_options
 * quiz_attempts
 * exams
@@ -229,6 +231,10 @@ The system should use a relational MySQL schema with the following core domains:
 
 ### 11.5 Audit and platform activity
 * audit_logs
+
+### Question bank rule
+
+Questions must exist in a shared question bank and be connected to quizzes or exams using join tables rather than storing both `quiz_id` and `exam_id` directly on the question record. This keeps the schema normalized and supports reuse across assessments.
 
 ### Critical database rules
 
@@ -248,6 +254,15 @@ The repository defines a logical API layer. The core expected endpoints include:
 * POST /api/auth/logout
 * POST /api/auth/forgot-password
 * POST /api/auth/reset-password
+
+### Verification route distinction
+
+The platform has two distinct verification interfaces:
+
+* Human-facing browser route: `GET /verify/{certificate_number}`
+* Backend API route: `GET /api/certificates/verify?certificate_number=...&verification_code=...`
+
+The browser route may call the API route internally after loading the certificate page.
 
 ### Courses and enrollment
 * GET /api/courses
@@ -368,6 +383,8 @@ The current documentation set is rich and mostly coherent, but the repository co
 * FastPhunzira Technical Architecture & Database Specification.md overlaps with 03 and 04
 * FastPhunzira Screen Map.md overlaps with 06
 * Recommended FastPhunzira Documentation Set.md is a meta-document explaining the documentation model rather than a product specification
+
+Historical planning and duplicate documents are now archived under `docs/archive/` and should not be treated as the active specification unless required for historical reference.
 
 ## 18. Implementation Priority
 

@@ -44,8 +44,17 @@ Deliver the minimum product that supports the complete learning and certificatio
 ### Goal
 Stabilize the platform and improve operational quality.
 
+### MVP Admin Baseline
+The MVP includes the minimum admin functionality required to operate the platform safely:
+* course management
+* exam management
+* student oversight
+* result review
+* certificate status review
+* audit access for operational checks
+
 ### Planned Features
-* Better admin reporting
+* Advanced admin reporting and analytics dashboards
 * More robust exam lifecycle management
 * Improved user and course analytics
 * Role-based permission refinement

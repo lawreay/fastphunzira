@@ -126,14 +126,36 @@ Key fields:
 * status
 
 ### questions
-Stores individual quiz or exam questions.
+Stores the shared question bank used by quizzes and exams.
 
 Key fields:
 * id
-* quiz_id or exam_id
 * question_text
 * question_type
 * points
+* status
+* created_at
+* updated_at
+
+### quiz_questions
+Maps questions to a specific quiz and preserves ordering.
+
+Key fields:
+* id
+* quiz_id
+* question_id
+* sort_order
+* created_at
+
+### exam_questions
+Maps questions to a specific exam and preserves scoring or ordering details.
+
+Key fields:
+* id
+* exam_id
+* question_id
+* marks
+* sort_order
 * created_at
 
 ### question_options
@@ -230,10 +252,17 @@ Key fields:
 * One user may have many enrollments
 * One course may have many modules
 * One course may have many lessons and exams
+* One question may belong to many quizzes and many exams through join tables
+* One quiz may have many questions via `quiz_questions`
+* One exam may have many questions via `exam_questions`
 * One exam may have many attempts
 * One user may have many certificate records
 * One exam attempt may have many answer records
 * One user may have many audit log records
+
+### Question Bank Model
+
+This project should use a reusable question bank rather than attaching a question directly to both quiz and exam records. The shared question record keeps the database normalized and makes both quiz and exam authoring easier to manage.
 
 ## 6. Indexing Strategy
 
