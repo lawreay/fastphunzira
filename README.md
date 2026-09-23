@@ -52,8 +52,9 @@ FastPhunzira is intended to start as a lightweight web application and gradually
 
 ### Documentation
 
-The product documentation set is organized in the `docs/` folder and includes the core product, architecture, database, API, security, exam, certificate, and deployment specifications.
+The product documentation set is organized in the `docs/` folder. The authoritative product specification is [docs/00-AUTHORITATIVE-SPECIFICATION.md](docs/00-AUTHORITATIVE-SPECIFICATION.md). All implementation work should align to this source of truth.
 
+- [docs/00-AUTHORITATIVE-SPECIFICATION.md](docs/00-AUTHORITATIVE-SPECIFICATION.md)
 - [docs/01-PROJECT-REQUIREMENTS.md](docs/01-PROJECT-REQUIREMENTS.md)
 - [docs/02-PRODUCT-ROADMAP.md](docs/02-PRODUCT-ROADMAP.md)
 - [docs/03-SYSTEM-ARCHITECTURE.md](docs/03-SYSTEM-ARCHITECTURE.md)
