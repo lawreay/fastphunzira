@@ -54,6 +54,7 @@ final class QuizServiceTest extends TestCase
             'status' => 'published',
         ], 10);
         $this->assertTrue($quiz['success']);
+        $this->assertSame('draft', $quiz['data']['status']);
 
         $question = $this->service->addQuestion(1, [
             'question_text' => 'What does PHP stand for?',
