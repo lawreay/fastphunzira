@@ -20,6 +20,7 @@ use App\Support\Csrf;
                     <p><strong>Progress:</strong> <?= (float) ($progress['percent'] ?? 0.0) ?>%</p>
                     <div style="margin-top: 12px;">
                         <a class="btn" href="/courses/<?= (int) ($course['id'] ?? 0) ?>/learn">Continue learning</a>
+                        <a class="btn" href="/courses/<?= (int) ($course['id'] ?? 0) ?>/quizzes">Practice quizzes</a>
                     </div>
                 </article>
             <?php endforeach; ?>
