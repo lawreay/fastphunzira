@@ -1,3 +1,6 @@
+<?php
+use App\Support\Csrf;
+?>
 <section class="card">
     <h1><?= htmlspecialchars((string) $quiz['title'], ENT_QUOTES, 'UTF-8') ?></h1>
     <p><?= htmlspecialchars((string) ($quiz['description'] ?? ''), ENT_QUOTES, 'UTF-8') ?></p>
