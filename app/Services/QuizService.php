@@ -124,6 +124,14 @@ final class QuizService
         }
 
         $quiz['questions'] = $this->questionRepository->findByQuiz($quizId);
+        foreach ($quiz['questions'] as &$question) {
+            foreach (($question['options'] ?? []) as &$option) {
+                unset($option['is_correct']);
+            }
+            unset($option);
+        }
+        unset($question);
+
         return $quiz;
     }
 
@@ -172,8 +180,9 @@ final class QuizService
             return ['success' => false, 'code' => 'forbidden', 'message' => 'Quiz is no longer available.'];
         }
 
+        $rawQuestions = $this->questionRepository->findByQuiz((int) $attempt['quiz_id']);
         $questions = [];
-        foreach ($quiz['questions'] as $question) {
+        foreach ($rawQuestions as $question) {
             $questions[(int) $question['id']] = $question;
         }
 
