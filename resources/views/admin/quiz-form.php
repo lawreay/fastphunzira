@@ -1,3 +1,6 @@
+<?php
+use App\Support\Csrf;
+?>
 <section class="card">
     <h1>Create Quiz</h1>
     <form method="post" action="/admin/quizzes/store">
