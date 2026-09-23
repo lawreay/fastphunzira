@@ -1,5 +1,7 @@
 # FastPhunzira AI Agent Governance
 
+Developed By LawrencePhuka(LoyalNexus Apps)
+
 ## 1. Project Identity
 
 Project: FastPhunzira
