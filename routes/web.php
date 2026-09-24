@@ -594,6 +594,12 @@ return [
 
         $questionId = (int) ($_POST['question_id'] ?? 0);
         $selectedOptionId = (int) ($_POST['selected_option_id'] ?? 0);
+        $attempt = $examAttemptRepository->findById((int) $attemptId);
+
+        if ($attempt === null || (int) ($attempt['user_id'] ?? 0) !== (int) $studentId) {
+            $_SESSION['flash_error'] = 'Attempt not found.';
+            return redirect_to('/dashboard');
+        }
 
         $result = $examService->saveAnswer((int) $studentId, (int) $attemptId, [
             'question_id' => $questionId,
@@ -605,7 +611,7 @@ return [
             $_SESSION['flash_error'] = $result['message'];
         }
 
-        return redirect_to('/exams/' . (int) ($_POST['exam_id'] ?? 0));
+        return redirect_to('/exams/' . (int) ($attempt['exam_id'] ?? 0));
     }],
     ['POST', '/exam-attempts/{id}/submit', function (string $attemptId) use ($examService, $examAttemptRepository) {
         $studentId = Auth::userId();
