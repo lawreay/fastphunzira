@@ -21,6 +21,7 @@ use App\Support\Csrf;
                     <div style="margin-top: 12px;">
                         <a class="btn" href="<?= htmlspecialchars(base_url('courses/' . (int) ($course['id'] ?? 0) . '/learn'), ENT_QUOTES, 'UTF-8') ?>">Continue learning</a>
                         <a class="btn" href="<?= htmlspecialchars(base_url('courses/' . (int) ($course['id'] ?? 0) . '/quizzes'), ENT_QUOTES, 'UTF-8') ?>">Practice quizzes</a>
+                        <a class="btn" href="<?= htmlspecialchars(base_url('courses/' . (int) ($course['id'] ?? 0) . '/exams'), ENT_QUOTES, 'UTF-8') ?>">Final exams</a>
                     </div>
                 </article>
             <?php endforeach; ?>
