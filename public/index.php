@@ -6,6 +6,14 @@ $app = require __DIR__ . '/../bootstrap/app.php';
 $routes = require __DIR__ . '/../routes/web.php';
 
 $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
+$scriptName = $_SERVER['SCRIPT_NAME'] ?? $_SERVER['PHP_SELF'] ?? '';
+$basePath = preg_replace('#/index\.php$#', '', $scriptName);
+if ($basePath !== '' && $basePath !== '/' && str_starts_with($uri, $basePath)) {
+    $uri = substr($uri, strlen($basePath));
+    if ($uri === '') {
+        $uri = '/';
+    }
+}
 $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
 
 $route = null;
