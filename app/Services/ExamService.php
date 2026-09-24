@@ -396,6 +396,10 @@ final class ExamService
 
     public function getAttemptResult(int $studentId, int $attemptId): ?array
     {
+        if (!Auth::check() || (int) Auth::userId() !== $studentId) {
+            return null;
+        }
+
         $attempt = $this->attemptRepository->findById($attemptId);
         if ($attempt === null || (int) ($attempt['user_id'] ?? 0) !== $studentId) {
             return null;
