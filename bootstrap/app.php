@@ -35,6 +35,13 @@ $securityConfig = require __DIR__ . '/../config/security.php';
 
 Session::start($securityConfig);
 
+if (!function_exists('redirect_to')) {
+    function redirect_to(string $path): array
+    {
+        return ['redirect' => base_url($path)];
+    }
+}
+
 try {
     $pdo = Database::connect($dbConfig);
 } catch (Throwable $e) {

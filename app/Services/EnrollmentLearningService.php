@@ -64,10 +64,12 @@ final class EnrollmentLearningService
 
     public function createModule(int $courseId, array $data, ?int $actorId = null): array
     {
+        if (!Auth::userCan('courses.manage')) {
+            return ['success' => false, 'code' => 'forbidden', 'message' => 'Only administrators can manage modules.'];
+        }
+
         $actor = $actorId ?? Auth::userId();
-        if ($actorId !== null) {
-            $actor = $actorId;
-        } elseif ($actor === null || !Auth::userCan('courses.manage')) {
+        if ($actor === null) {
             return ['success' => false, 'code' => 'forbidden', 'message' => 'Only administrators can manage modules.'];
         }
 
@@ -128,10 +130,12 @@ final class EnrollmentLearningService
 
     public function createLesson(int $moduleId, array $data, ?int $actorId = null): array
     {
+        if (!Auth::userCan('courses.manage')) {
+            return ['success' => false, 'code' => 'forbidden', 'message' => 'Only administrators can manage lessons.'];
+        }
+
         $actor = $actorId ?? Auth::userId();
-        if ($actorId !== null) {
-            $actor = $actorId;
-        } elseif ($actor === null || !Auth::userCan('courses.manage')) {
+        if ($actor === null) {
             return ['success' => false, 'code' => 'forbidden', 'message' => 'Only administrators can manage lessons.'];
         }
 

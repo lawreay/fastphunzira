@@ -31,7 +31,7 @@ return [
         if (!Csrf::validate($_POST['_token'] ?? null)) {
             $_SESSION['flash_error'] = 'Invalid security token.';
 
-            return ['redirect' => '/admin/courses'];
+            return redirect_to('/admin/courses');
         }
 
         return $courseController->store($_POST);
@@ -40,7 +40,7 @@ return [
         if (!Csrf::validate($_POST['_token'] ?? null)) {
             $_SESSION['flash_error'] = 'Invalid security token.';
 
-            return ['redirect' => '/admin/courses'];
+            return redirect_to('/admin/courses');
         }
 
         $id = (int) ($_POST['id'] ?? 0);
@@ -51,7 +51,7 @@ return [
         if (!Csrf::validate($_POST['_token'] ?? null)) {
             $_SESSION['flash_error'] = 'Invalid security token.';
 
-            return ['redirect' => '/admin/courses'];
+            return redirect_to('/admin/courses');
         }
 
         return $courseController->publish();
@@ -70,7 +70,7 @@ return [
         if (!Csrf::validate($token)) {
             $_SESSION['flash_error'] = 'Invalid security token.';
 
-            return ['redirect' => '/login'];
+            return redirect_to('/login');
         }
 
         $result = $authService->login(['email' => $email, 'password' => $password]);
@@ -78,12 +78,12 @@ return [
         if (!$result['success']) {
             $_SESSION['flash_error'] = $result['message'];
 
-            return ['redirect' => '/login'];
+            return redirect_to('/login');
         }
 
         $_SESSION['flash_success'] = 'Welcome back!';
 
-        return ['redirect' => '/dashboard'];
+        return redirect_to('/dashboard');
     }],
     ['GET', '/register', function () {
         return [
@@ -97,7 +97,7 @@ return [
         if (!Csrf::validate($token)) {
             $_SESSION['flash_error'] = 'Invalid security token.';
 
-            return ['redirect' => '/register'];
+            return redirect_to('/register');
         }
 
         $result = $authService->register([
@@ -110,12 +110,12 @@ return [
         if (!$result['success']) {
             $_SESSION['flash_error'] = $result['errors'][0]['message'] ?? $result['message'];
 
-            return ['redirect' => '/register'];
+            return redirect_to('/register');
         }
 
         $_SESSION['flash_success'] = 'Registration successful. Please log in.';
 
-        return ['redirect' => '/login'];
+        return redirect_to('/login');
     }],
     ['POST', '/logout', function () use ($authService) {
         $token = $_POST['_token'] ?? null;
@@ -123,13 +123,13 @@ return [
         if (!Csrf::validate($token)) {
             $_SESSION['flash_error'] = 'Invalid security token.';
 
-            return ['redirect' => '/dashboard'];
+            return redirect_to('/dashboard');
         }
 
         $authService->logout();
         $_SESSION['flash_success'] = 'You have been logged out.';
 
-        return ['redirect' => '/login'];
+        return redirect_to('/login');
     }],
     ['POST', '/courses/{id}/enroll', function (string $courseId) use ($learningService) {
         $studentId = Auth::userId();
@@ -137,13 +137,13 @@ return [
         if ($studentId === null) {
             $_SESSION['flash_error'] = 'Please log in to enroll in a course.';
 
-            return ['redirect' => '/login'];
+            return redirect_to('/login');
         }
 
         if (!Csrf::validate($_POST['_token'] ?? null)) {
             $_SESSION['flash_error'] = 'Invalid security token.';
 
-            return ['redirect' => '/courses/' . (int) $courseId];
+            return redirect_to('/courses/' . (int) $courseId);
         }
 
         $result = $learningService->enrollStudentInCourse($studentId, (int) $courseId);
@@ -151,18 +151,18 @@ return [
         if (!$result['success']) {
             $_SESSION['flash_error'] = $result['message'];
 
-            return ['redirect' => '/courses/' . (int) $courseId];
+            return redirect_to('/courses/' . (int) $courseId);
         }
 
         $_SESSION['flash_success'] = 'You have been enrolled successfully.';
 
-        return ['redirect' => '/my-courses'];
+        return redirect_to('/my-courses');
     }],
     ['GET', '/my-courses', function () use ($courseRepository, $learningService) {
         if (!Auth::check()) {
             $_SESSION['flash_error'] = 'Please log in to continue.';
 
-            return ['redirect' => '/login'];
+            return redirect_to('/login');
         }
 
         $studentId = (int) Auth::userId();
@@ -193,7 +193,7 @@ return [
         if (!Auth::check()) {
             $_SESSION['flash_error'] = 'Please log in to access course content.';
 
-            return ['redirect' => '/login'];
+            return redirect_to('/login');
         }
 
         $studentId = (int) Auth::userId();
@@ -206,7 +206,7 @@ return [
         if ($enrollmentRepository->findByStudentAndCourse($studentId, (int) $courseId) === null) {
             $_SESSION['flash_error'] = 'You must enroll in this course before accessing lessons.';
 
-            return ['redirect' => '/courses/' . (int) $courseId];
+            return redirect_to('/courses/' . (int) $courseId);
         }
 
         $modules = $moduleRepository->findByCourse((int) $courseId);
@@ -230,7 +230,7 @@ return [
         if (!Auth::check()) {
             $_SESSION['flash_error'] = 'Please log in to continue.';
 
-            return ['redirect' => '/login'];
+            return redirect_to('/login');
         }
 
         $studentId = (int) Auth::userId();
@@ -246,7 +246,7 @@ return [
         if ($course === null || $enrollmentRepository->findByStudentAndCourse($studentId, $courseId) === null) {
             $_SESSION['flash_error'] = 'You are not enrolled for this lesson.';
 
-            return ['redirect' => '/courses'];
+            return redirect_to('/courses');
         }
 
         return [
@@ -263,14 +263,14 @@ return [
         if ($studentId === null) {
             $_SESSION['flash_error'] = 'Please log in to continue.';
 
-            return ['redirect' => '/login'];
+            return redirect_to('/login');
         }
 
         $token = $_POST['_token'] ?? null;
         if (!Csrf::validate($token)) {
             $_SESSION['flash_error'] = 'Invalid security token.';
 
-            return ['redirect' => '/lessons/' . (int) $lessonId];
+            return redirect_to('/lessons/' . (int) $lessonId);
         }
 
         $result = $learningService->markLessonComplete($studentId, (int) $lessonId);
@@ -278,18 +278,18 @@ return [
         if (!$result['success']) {
             $_SESSION['flash_error'] = $result['message'];
 
-            return ['redirect' => '/lessons/' . (int) $lessonId];
+            return redirect_to('/lessons/' . (int) $lessonId);
         }
 
         $_SESSION['flash_success'] = 'Lesson marked complete.';
 
-        return ['redirect' => '/lessons/' . (int) $lessonId];
+        return redirect_to('/lessons/' . (int) $lessonId);
     }],
 
     ['GET', '/courses/{id}/quizzes', function (string $courseId) use ($courseRepository, $quizRepository, $enrollmentRepository) {
         if (!Auth::check()) {
             $_SESSION['flash_error'] = 'Please log in to continue.';
-            return ['redirect' => '/login'];
+            return redirect_to('/login');
         }
 
         $studentId = (int) Auth::userId();
@@ -300,7 +300,7 @@ return [
 
         if ($enrollmentRepository->findByStudentAndCourse($studentId, (int) $courseId) === null) {
             $_SESSION['flash_error'] = 'You must enroll in the course first.';
-            return ['redirect' => '/courses/' . (int) $courseId];
+            return redirect_to('/courses/' . (int) $courseId);
         }
 
         $quizzes = array_values(array_filter(
@@ -319,7 +319,7 @@ return [
         $studentId = Auth::userId();
         if ($studentId === null) {
             $_SESSION['flash_error'] = 'Please log in to continue.';
-            return ['redirect' => '/login'];
+            return redirect_to('/login');
         }
 
         $quiz = $quizService->getQuizForStudent((int) $studentId, (int) $quizId);
@@ -340,32 +340,32 @@ return [
         $studentId = Auth::userId();
         if ($studentId === null) {
             $_SESSION['flash_error'] = 'Please log in to continue.';
-            return ['redirect' => '/login'];
+            return redirect_to('/login');
         }
 
         if (!Csrf::validate($_POST['_token'] ?? null)) {
             $_SESSION['flash_error'] = 'Invalid security token.';
-            return ['redirect' => '/quizzes/' . (int) $quizId];
+            return redirect_to('/quizzes/' . (int) $quizId);
         }
 
         $result = $quizService->startAttempt((int) $studentId, (int) $quizId);
         if (!$result['success']) {
             $_SESSION['flash_error'] = $result['message'];
-            return ['redirect' => '/quizzes/' . (int) $quizId];
+            return redirect_to('/quizzes/' . (int) $quizId);
         }
 
-        return ['redirect' => '/quizzes/' . (int) $quizId . '?attempt=' . (int) $result['data']['id']];
+        return redirect_to('/quizzes/' . (int) $quizId . '?attempt=' . (int) $result['data']['id']);
     }],
     ['POST', '/quiz-attempts/{id}/submit', function (string $attemptId) use ($quizService) {
         $studentId = Auth::userId();
         if ($studentId === null) {
             $_SESSION['flash_error'] = 'Please log in to continue.';
-            return ['redirect' => '/login'];
+            return redirect_to('/login');
         }
 
         if (!Csrf::validate($_POST['_token'] ?? null)) {
             $_SESSION['flash_error'] = 'Invalid security token.';
-            return ['redirect' => '/dashboard'];
+            return redirect_to('/dashboard');
         }
 
         $result = $quizService->submitAttempt(
@@ -376,15 +376,15 @@ return [
 
         if (!$result['success']) {
             $_SESSION['flash_error'] = $result['message'];
-            return ['redirect' => '/dashboard'];
+            return redirect_to('/dashboard');
         }
 
-        return ['redirect' => '/quiz-attempts/' . (int) $attemptId . '/result'];
+        return redirect_to('/quiz-attempts/' . (int) $attemptId . '/result');
     }],
     ['GET', '/quiz-attempts/{id}/result', function (string $attemptId) use ($quizService) {
         $studentId = Auth::userId();
         if ($studentId === null) {
-            return ['redirect' => '/login'];
+            return redirect_to('/login');
         }
 
         $attempt = $quizService->getAttemptForStudent((int) $studentId, (int) $attemptId);
@@ -401,7 +401,7 @@ return [
 
     ['GET', '/admin/courses/{id}/quizzes/create', function (string $courseId) use ($courseRepository) {
         if (!Auth::userCan('courses.manage')) {
-            return ['redirect' => '/login'];
+            return redirect_to('/login');
         }
 
         $course = $courseRepository->findById((int) $courseId);
@@ -417,12 +417,12 @@ return [
     }],
     ['POST', '/admin/quizzes/store', function () use ($quizService) {
         if (!Auth::userCan('courses.manage')) {
-            return ['redirect' => '/login'];
+            return redirect_to('/login');
         }
 
         if (!Csrf::validate($_POST['_token'] ?? null)) {
             $_SESSION['flash_error'] = 'Invalid security token.';
-            return ['redirect' => '/dashboard'];
+            return redirect_to('/dashboard');
         }
 
         $courseId = (int) ($_POST['course_id'] ?? 0);
@@ -430,15 +430,15 @@ return [
 
         if (!$result['success']) {
             $_SESSION['flash_error'] = $result['message'];
-            return ['redirect' => '/admin/courses/' . $courseId . '/quizzes/create'];
+            return redirect_to('/admin/courses/' . $courseId . '/quizzes/create');
         }
 
         $_SESSION['flash_success'] = 'Quiz created. Add questions before publishing it for learners.';
-        return ['redirect' => '/admin/quizzes/' . (int) $result['data']['id'] . '/questions/create'];
+        return redirect_to('/admin/quizzes/' . (int) $result['data']['id'] . '/questions/create');
     }],
     ['GET', '/admin/quizzes/{id}/questions/create', function (string $quizId) use ($quizRepository) {
         if (!Auth::userCan('courses.manage')) {
-            return ['redirect' => '/login'];
+            return redirect_to('/login');
         }
 
         $quiz = $quizRepository->findById((int) $quizId);
@@ -454,12 +454,12 @@ return [
     }],
     ['POST', '/admin/quizzes/{id}/questions/store', function (string $quizId) use ($quizService) {
         if (!Auth::userCan('courses.manage')) {
-            return ['redirect' => '/login'];
+            return redirect_to('/login');
         }
 
         if (!Csrf::validate($_POST['_token'] ?? null)) {
             $_SESSION['flash_error'] = 'Invalid security token.';
-            return ['redirect' => '/dashboard'];
+            return redirect_to('/dashboard');
         }
 
         $correct = (string) ($_POST['correct_option'] ?? '');
@@ -488,28 +488,28 @@ return [
             $_SESSION['flash_success'] = 'Question added successfully.';
         }
 
-        return ['redirect' => '/admin/quizzes/' . (int) $quizId . '/questions/create'];
+        return redirect_to('/admin/quizzes/' . (int) $quizId . '/questions/create');
     }],
     ['POST', '/admin/quizzes/{id}/publish', function (string $quizId) use ($quizService) {
         if (!Auth::userCan('courses.manage')) {
-            return ['redirect' => '/login'];
+            return redirect_to('/login');
         }
 
         if (!Csrf::validate($_POST['_token'] ?? null)) {
             $_SESSION['flash_error'] = 'Invalid security token.';
-            return ['redirect' => '/dashboard'];
+            return redirect_to('/dashboard');
         }
 
         $result = $quizService->publishQuiz((int) $quizId);
         $_SESSION[$result['success'] ? 'flash_success' : 'flash_error'] = $result['message'];
 
-        return ['redirect' => '/admin/quizzes/' . (int) $quizId . '/questions/create'];
+        return redirect_to('/admin/quizzes/' . (int) $quizId . '/questions/create');
     }],
     ['GET', '/dashboard', function () {
         if (!Auth::check()) {
             $_SESSION['flash_error'] = 'Please log in to continue.';
 
-            return ['redirect' => '/login'];
+            return redirect_to('/login');
         }
 
         return [

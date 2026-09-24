@@ -36,10 +36,15 @@ final class CourseModuleRepository implements CourseModuleRepositoryInterface
             return null;
         }
 
+        $allowedColumns = ['course_id', 'title', 'description', 'sort_order'];
         $fields = [];
         $params = [':id' => $id];
 
         foreach ($data as $key => $value) {
+            if (!in_array($key, $allowedColumns, true)) {
+                continue;
+            }
+
             $fields[] = sprintf('%s = :%s', $key, $key);
             $params[':' . $key] = $value;
         }

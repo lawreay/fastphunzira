@@ -103,13 +103,15 @@ final class EnrollmentLearningTest extends TestCase
 
     public function testStudentCannotModifyModule(): void
     {
-        Auth::login(['id' => 20, 'email' => 'student@example.com', 'role' => 'student']);
+        Auth::login(['id' => 10, 'email' => 'admin@example.com', 'role' => 'admin']);
 
         $module = $this->service->createModule(1, [
             'title' => 'Introduction',
             'description' => 'Intro module',
             'sort_order' => 1,
-        ], 10);
+        ]);
+
+        Auth::login(['id' => 20, 'email' => 'student@example.com', 'role' => 'student']);
 
         $result = $this->service->updateModule((int) $module['data']['id'], ['title' => 'Blocked']);
 
@@ -139,18 +141,20 @@ final class EnrollmentLearningTest extends TestCase
 
     public function testStudentCannotAccessUnenrolledLesson(): void
     {
-        Auth::login(['id' => 20, 'email' => 'student@example.com', 'role' => 'student']);
+        Auth::login(['id' => 10, 'email' => 'admin@example.com', 'role' => 'admin']);
 
         $module = $this->service->createModule(1, [
             'title' => 'Introduction',
             'description' => 'Intro module',
             'sort_order' => 1,
-        ], 10);
+        ]);
         $lesson = $this->service->createLesson((int) $module['data']['id'], [
             'title' => 'Lesson 1',
             'content' => 'Welcome content',
             'sort_order' => 1,
-        ], 10);
+        ]);
+
+        Auth::login(['id' => 20, 'email' => 'student@example.com', 'role' => 'student']);
 
         $result = $this->service->getLessonForStudent(20, (int) $lesson['data']['id']);
 
@@ -159,19 +163,21 @@ final class EnrollmentLearningTest extends TestCase
 
     public function testLessonCompletionAndProgressCalculation(): void
     {
-        Auth::login(['id' => 20, 'email' => 'student@example.com', 'role' => 'student']);
-        $this->service->enrollStudentInCourse(20, 1);
+        Auth::login(['id' => 10, 'email' => 'admin@example.com', 'role' => 'admin']);
 
         $module = $this->service->createModule(1, [
             'title' => 'Introduction',
             'description' => 'Intro module',
             'sort_order' => 1,
-        ], 10);
+        ]);
         $lesson = $this->service->createLesson((int) $module['data']['id'], [
             'title' => 'Lesson 1',
             'content' => 'Welcome content',
             'sort_order' => 1,
-        ], 10);
+        ]);
+
+        Auth::login(['id' => 20, 'email' => 'student@example.com', 'role' => 'student']);
+        $this->service->enrollStudentInCourse(20, 1);
 
         $complete = $this->service->markLessonComplete(20, (int) $lesson['data']['id']);
         $progress = $this->service->getCourseProgress(20, 1);

@@ -32,10 +32,15 @@ final class CourseRepository implements CourseRepositoryInterface
 
     public function update(int $id, array $course): ?array
     {
+        $allowedColumns = ['title', 'slug', 'description', 'status', 'created_by'];
         $fields = [];
         $params = [':id' => $id];
 
         foreach ($course as $key => $value) {
+            if (!in_array($key, $allowedColumns, true)) {
+                continue;
+            }
+
             $fields[] = sprintf('%s = :%s', $key, $key);
             $params[':' . $key] = $value;
         }
@@ -51,15 +56,39 @@ final class CourseRepository implements CourseRepositoryInterface
         return $this->findById($id);
     }
 
+    private function hasUsersTable(): bool
+    {
+        $driver = strtolower((string) $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME));
+
+        if ($driver === 'sqlite') {
+            $statement = $this->pdo->query("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'users' LIMIT 1");
+
+            return $statement !== false && $statement->fetchColumn() !== false;
+        }
+
+        $statement = $this->pdo->query("SHOW TABLES LIKE 'users'");
+
+        return $statement !== false && $statement->fetchColumn() !== false;
+    }
+
     public function findById(int $id): ?array
     {
-        $statement = $this->pdo->prepare(
-            'SELECT c.*, u.full_name AS created_by_name
-             FROM courses c
-             LEFT JOIN users u ON u.id = c.created_by
-             WHERE c.id = :id
-             LIMIT 1'
-        );
+        if ($this->hasUsersTable()) {
+            $statement = $this->pdo->prepare(
+                'SELECT c.*, u.full_name AS created_by_name
+                 FROM courses c
+                 LEFT JOIN users u ON u.id = c.created_by
+                 WHERE c.id = :id
+                 LIMIT 1'
+            );
+        } else {
+            $statement = $this->pdo->prepare(
+                'SELECT c.*
+                 FROM courses c
+                 WHERE c.id = :id
+                 LIMIT 1'
+            );
+        }
 
         $statement->execute([':id' => $id]);
         $course = $statement->fetch();
@@ -69,13 +98,22 @@ final class CourseRepository implements CourseRepositoryInterface
 
     public function findBySlug(string $slug): ?array
     {
-        $statement = $this->pdo->prepare(
-            'SELECT c.*, u.full_name AS created_by_name
-             FROM courses c
-             LEFT JOIN users u ON u.id = c.created_by
-             WHERE c.slug = :slug
-             LIMIT 1'
-        );
+        if ($this->hasUsersTable()) {
+            $statement = $this->pdo->prepare(
+                'SELECT c.*, u.full_name AS created_by_name
+                 FROM courses c
+                 LEFT JOIN users u ON u.id = c.created_by
+                 WHERE c.slug = :slug
+                 LIMIT 1'
+            );
+        } else {
+            $statement = $this->pdo->prepare(
+                'SELECT c.*
+                 FROM courses c
+                 WHERE c.slug = :slug
+                 LIMIT 1'
+            );
+        }
 
         $statement->execute([':slug' => $slug]);
         $course = $statement->fetch();
@@ -95,25 +133,42 @@ final class CourseRepository implements CourseRepositoryInterface
 
     public function getAll(): array
     {
-        $statement = $this->pdo->query(
-            'SELECT c.*, u.full_name AS created_by_name
-             FROM courses c
-             LEFT JOIN users u ON u.id = c.created_by
-             ORDER BY c.created_at DESC'
-        );
+        if ($this->hasUsersTable()) {
+            $statement = $this->pdo->query(
+                'SELECT c.*, u.full_name AS created_by_name
+                 FROM courses c
+                 LEFT JOIN users u ON u.id = c.created_by
+                 ORDER BY c.created_at DESC'
+            );
+        } else {
+            $statement = $this->pdo->query(
+                'SELECT c.*
+                 FROM courses c
+                 ORDER BY c.created_at DESC'
+            );
+        }
 
-        return $statement->fetchAll() ?: [];
+        return $statement !== false ? ($statement->fetchAll() ?: []) : [];
     }
 
     public function getPublished(): array
     {
-        $statement = $this->pdo->prepare(
-            'SELECT c.*, u.full_name AS created_by_name
-             FROM courses c
-             LEFT JOIN users u ON u.id = c.created_by
-             WHERE c.status = :status
-             ORDER BY c.created_at DESC'
-        );
+        if ($this->hasUsersTable()) {
+            $statement = $this->pdo->prepare(
+                'SELECT c.*, u.full_name AS created_by_name
+                 FROM courses c
+                 LEFT JOIN users u ON u.id = c.created_by
+                 WHERE c.status = :status
+                 ORDER BY c.created_at DESC'
+            );
+        } else {
+            $statement = $this->pdo->prepare(
+                'SELECT c.*
+                 FROM courses c
+                 WHERE c.status = :status
+                 ORDER BY c.created_at DESC'
+            );
+        }
 
         $statement->execute([':status' => 'published']);
 
