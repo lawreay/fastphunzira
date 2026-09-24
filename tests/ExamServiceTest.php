@@ -245,6 +245,24 @@ final class ExamServiceTest extends TestCase
         $this->assertSame('forbidden', $created['code']);
     }
 
+    public function testAttemptResultRequiresAuthenticatedStudentOwnership(): void
+    {
+        Auth::login(['id' => 10, 'email' => 'admin@example.com', 'role' => 'admin']);
+
+        $attempt = $this->attemptRepository->create([
+            'exam_id' => 1,
+            'user_id' => 20,
+            'status' => 'submitted',
+            'score' => 1,
+            'percentage' => 100,
+            'passed' => 1,
+        ]);
+
+        $result = $this->service->getAttemptResult(20, (int) $attempt['id']);
+
+        $this->assertNull($result);
+    }
+
     public function testDuplicateSubmissionIsRejectedAfterFinalization(): void
     {
         Auth::login(['id' => 10, 'email' => 'admin@example.com', 'role' => 'admin']);
