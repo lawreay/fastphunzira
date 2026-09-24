@@ -11,6 +11,9 @@ $progressRepository = $app['progressRepository'];
 $learningService = $app['enrollmentLearningService'];
 $quizService = $app['quizService'];
 $quizAttemptRepository = $app['quizAttemptRepository'];
+$examRepository = $app['examRepository'];
+$examAttemptRepository = $app['examAttemptRepository'];
+$examService = $app['examService'];
 
 use App\Core\Auth;
 use App\Support\Csrf;
