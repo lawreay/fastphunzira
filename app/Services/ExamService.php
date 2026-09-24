@@ -27,6 +27,15 @@ final class ExamService
             return ['success' => false, 'code' => 'forbidden', 'message' => 'Only administrators can manage exams.'];
         }
 
+        $actor = Auth::userId();
+        if ($actor === null) {
+            return ['success' => false, 'code' => 'forbidden', 'message' => 'Only authenticated administrators can manage exams.'];
+        }
+
+        if ($actorId !== null && (int) $actorId !== (int) $actor) {
+            return ['success' => false, 'code' => 'forbidden', 'message' => 'The exam creator must match the authenticated administrator.'];
+        }
+
         $course = $this->courseRepository->findById($courseId);
         if ($course === null) {
             return ['success' => false, 'code' => 'not_found', 'message' => 'Course not found.'];
@@ -53,7 +62,7 @@ final class ExamService
             'passing_score' => $passingScore,
             'attempts_allowed' => $attemptsAllowed,
             'status' => 'draft',
-            'created_by' => $actorId ?? (int) Auth::userId(),
+            'created_by' => (int) $actor,
         ]);
 
         return ['success' => true, 'message' => 'Exam created.', 'data' => $exam];
@@ -68,6 +77,10 @@ final class ExamService
         $exam = $this->examRepository->findById($examId);
         if ($exam === null) {
             return ['success' => false, 'code' => 'not_found', 'message' => 'Exam not found.'];
+        }
+
+        if (strtolower((string) ($exam['status'] ?? 'draft')) !== 'draft') {
+            return ['success' => false, 'code' => 'validation_failed', 'message' => 'Only draft exams can be published.'];
         }
 
         if (count($this->examRepository->findQuestions($examId)) === 0) {
