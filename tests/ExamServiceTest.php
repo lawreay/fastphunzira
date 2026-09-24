@@ -315,4 +315,48 @@ final class ExamServiceTest extends TestCase
         $this->assertCount(0, $this->attemptRepository->findAnswers((int) $attempt['id']));
     }
 
+
+    public function testExamCreatorCannotBeSpoofedByActorId(): void
+    {
+        Auth::login(['id' => 10, 'email' => 'admin@example.com', 'role' => 'admin']);
+
+        $result = $this->service->createExam(1, [
+            'title' => 'Creator integrity',
+            'time_limit' => 30,
+            'passing_score' => 50,
+            'attempts_allowed' => 1,
+        ], 99);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('forbidden', $result['code']);
+    }
+
+    public function testPublishedExamCannotBePublishedAgain(): void
+    {
+        Auth::login(['id' => 10, 'email' => 'admin@example.com', 'role' => 'admin']);
+
+        $exam = $this->service->createExam(1, [
+            'title' => 'Lifecycle exam',
+            'time_limit' => 30,
+            'passing_score' => 50,
+            'attempts_allowed' => 1,
+        ]);
+
+        $this->service->addQuestion((int) $exam['data']['id'], [
+            'question_text' => 'Pick A',
+            'marks' => 1,
+            'options' => [
+                ['option_text' => 'A', 'is_correct' => true],
+                ['option_text' => 'B', 'is_correct' => false],
+            ],
+        ]);
+
+        $first = $this->service->publishExam((int) $exam['data']['id']);
+        $second = $this->service->publishExam((int) $exam['data']['id']);
+
+        $this->assertTrue($first['success']);
+        $this->assertFalse($second['success']);
+        $this->assertSame('validation_failed', $second['code']);
+    }
+
 }
