@@ -229,4 +229,90 @@ final class ExamServiceTest extends TestCase
         $this->assertSame(100.0, $result['data']['percentage']);
         $this->assertTrue((bool) $result['data']['passed']);
     }
+
+    public function testStudentsCannotCreateOrPublishExams(): void
+    {
+        Auth::login(['id' => 20, 'email' => 'student@example.com', 'role' => 'student']);
+
+        $created = $this->service->createExam(1, [
+            'title' => 'Unauthorized exam',
+            'time_limit' => 30,
+            'passing_score' => 60,
+            'attempts_allowed' => 1,
+        ]);
+
+        $this->assertFalse($created['success']);
+        $this->assertSame('forbidden', $created['code']);
+    }
+
+    public function testDuplicateSubmissionIsRejectedAfterFinalization(): void
+    {
+        Auth::login(['id' => 10, 'email' => 'admin@example.com', 'role' => 'admin']);
+
+        $exam = $this->service->createExam(1, [
+            'title' => 'Duplicate submission exam',
+            'time_limit' => 30,
+            'passing_score' => 50,
+            'attempts_allowed' => 1,
+        ]);
+
+        $this->service->addQuestion((int) $exam['data']['id'], [
+            'question_text' => 'Pick A',
+            'marks' => 1,
+            'options' => [
+                ['option_text' => 'A', 'is_correct' => true],
+                ['option_text' => 'B', 'is_correct' => false],
+            ],
+        ]);
+        $this->service->publishExam((int) $exam['data']['id']);
+
+        Auth::login(['id' => 20, 'email' => 'student@example.com', 'role' => 'student']);
+        $attempt = $this->service->startAttempt(20, (int) $exam['data']['id'])['data'];
+
+        $first = $this->service->submitAttempt(20, (int) $attempt['id'], [
+            ['question_id' => 1, 'selected_option_id' => 1],
+        ]);
+        $second = $this->service->submitAttempt(20, (int) $attempt['id'], [
+            ['question_id' => 1, 'selected_option_id' => 1],
+        ]);
+
+        $this->assertTrue($first['success']);
+        $this->assertFalse($second['success']);
+        $this->assertSame('already_submitted', $second['code']);
+    }
+
+    public function testInvalidQuestionDoesNotPersistEarlierAnswers(): void
+    {
+        Auth::login(['id' => 10, 'email' => 'admin@example.com', 'role' => 'admin']);
+
+        $exam = $this->service->createExam(1, [
+            'title' => 'Atomic validation exam',
+            'time_limit' => 30,
+            'passing_score' => 50,
+            'attempts_allowed' => 1,
+        ]);
+
+        $this->service->addQuestion((int) $exam['data']['id'], [
+            'question_text' => 'Pick A',
+            'marks' => 1,
+            'options' => [
+                ['option_text' => 'A', 'is_correct' => true],
+                ['option_text' => 'B', 'is_correct' => false],
+            ],
+        ]);
+        $this->service->publishExam((int) $exam['data']['id']);
+
+        Auth::login(['id' => 20, 'email' => 'student@example.com', 'role' => 'student']);
+        $attempt = $this->service->startAttempt(20, (int) $exam['data']['id'])['data'];
+
+        $result = $this->service->submitAttempt(20, (int) $attempt['id'], [
+            ['question_id' => 1, 'selected_option_id' => 1],
+            ['question_id' => 999, 'selected_option_id' => 1],
+        ]);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('invalid_question', $result['code']);
+        $this->assertCount(0, $this->attemptRepository->findAnswers((int) $attempt['id']));
+    }
+
 }
