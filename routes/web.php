@@ -505,6 +505,261 @@ return [
 
         return redirect_to('/admin/quizzes/' . (int) $quizId . '/questions/create');
     }],
+    ['GET', '/courses/{id}/exams', function (string $courseId) use ($courseRepository, $examRepository, $enrollmentRepository) {
+        if (!Auth::check()) {
+            $_SESSION['flash_error'] = 'Please log in to continue.';
+            return redirect_to('/login');
+        }
+
+        $studentId = (int) Auth::userId();
+        $course = $courseRepository->findById((int) $courseId);
+
+        if ($course === null) {
+            return ['view' => 'errors/not_found', 'title' => 'Course not found'];
+        }
+
+        if ($enrollmentRepository->findByStudentAndCourse($studentId, (int) $courseId) === null) {
+            $_SESSION['flash_error'] = 'You must enroll in the course first.';
+            return redirect_to('/courses/' . (int) $courseId);
+        }
+
+        $exams = array_values(array_filter(
+            $examRepository->findByCourse((int) $courseId),
+            fn(array $exam): bool => strtolower((string) ($exam['status'] ?? 'draft')) === 'published'
+        ));
+
+        return [
+            'view' => 'student/exams',
+            'title' => 'Course Exams',
+            'course' => $course,
+            'exams' => $exams,
+        ];
+    }],
+    ['GET', '/exams/{id}', function (string $examId) use ($examService, $examAttemptRepository) {
+        $studentId = Auth::userId();
+
+        if ($studentId === null) {
+            $_SESSION['flash_error'] = 'Please log in to continue.';
+            return redirect_to('/login');
+        }
+
+        $exam = $examService->getExamForStudent((int) $studentId, (int) $examId);
+
+        if ($exam === null) {
+            return ['view' => 'errors/not_found', 'title' => 'Exam not found'];
+        }
+
+        $attempt = $examAttemptRepository->findActiveByStudentAndExam((int) $studentId, (int) $examId);
+
+        return [
+            'view' => 'student/exam',
+            'title' => $exam['title'],
+            'exam' => $exam,
+            'attempt' => $attempt,
+        ];
+    }],
+    ['POST', '/exams/{id}/start', function (string $examId) use ($examService) {
+        $studentId = Auth::userId();
+
+        if ($studentId === null) {
+            $_SESSION['flash_error'] = 'Please log in to continue.';
+            return redirect_to('/login');
+        }
+
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+            return redirect_to('/exams/' . (int) $examId);
+        }
+
+        $result = $examService->startAttempt((int) $studentId, (int) $examId);
+
+        if (!$result['success']) {
+            $_SESSION['flash_error'] = $result['message'];
+            return redirect_to('/exams/' . (int) $examId);
+        }
+
+        return redirect_to('/exams/' . (int) $examId . '?attempt=' . (int) $result['data']['id']);
+    }],
+    ['POST', '/exam-attempts/{id}/answers', function (string $attemptId) use ($examService) {
+        $studentId = Auth::userId();
+
+        if ($studentId === null) {
+            return redirect_to('/login');
+        }
+
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+            return redirect_to('/dashboard');
+        }
+
+        $questionId = (int) ($_POST['question_id'] ?? 0);
+        $selectedOptionId = (int) ($_POST['selected_option_id'] ?? 0);
+
+        $result = $examService->saveAnswer((int) $studentId, (int) $attemptId, [
+            'question_id' => $questionId,
+            'selected_option_id' => $selectedOptionId,
+            'answer_text' => $_POST['answer_text'] ?? null,
+        ]);
+
+        if (!$result['success']) {
+            $_SESSION['flash_error'] = $result['message'];
+        }
+
+        return redirect_to('/exams/' . (int) ($_POST['exam_id'] ?? 0));
+    }],
+    ['POST', '/exam-attempts/{id}/submit', function (string $attemptId) use ($examService, $examAttemptRepository) {
+        $studentId = Auth::userId();
+
+        if ($studentId === null) {
+            return redirect_to('/login');
+        }
+
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+            return redirect_to('/dashboard');
+        }
+
+        $answers = [];
+        $rawAnswers = is_array($_POST['answers'] ?? null) ? $_POST['answers'] : [];
+
+        foreach ($rawAnswers as $questionId => $answer) {
+            $answers[] = [
+                'question_id' => (int) $questionId,
+                'selected_option_id' => (int) (is_array($answer) ? ($answer['selected_option_id'] ?? 0) : $answer),
+                'answer_text' => is_array($answer) ? ($answer['answer_text'] ?? null) : null,
+            ];
+        }
+
+        $result = $examService->submitAttempt((int) $studentId, (int) $attemptId, $answers);
+
+        if (!$result['success']) {
+            $_SESSION['flash_error'] = $result['message'];
+            return redirect_to('/dashboard');
+        }
+
+        return redirect_to('/exam-attempts/' . (int) $attemptId . '/result');
+    }],
+    ['GET', '/exam-attempts/{id}/result', function (string $attemptId) use ($examService) {
+        $studentId = Auth::userId();
+
+        if ($studentId === null) {
+            return redirect_to('/login');
+        }
+
+        $attempt = $examService->getAttemptResult((int) $studentId, (int) $attemptId);
+
+        if ($attempt === null) {
+            return ['view' => 'errors/not_found', 'title' => 'Exam result not found'];
+        }
+
+        return [
+            'view' => 'student/exam-result',
+            'title' => 'Exam Result',
+            'attempt' => $attempt,
+        ];
+    }],
+    ['GET', '/admin/courses/{id}/exams/create', function (string $courseId) use ($courseRepository) {
+        if (!Auth::userCan('courses.manage')) {
+            return redirect_to('/login');
+        }
+
+        $course = $courseRepository->findById((int) $courseId);
+
+        if ($course === null) {
+            return ['view' => 'errors/not_found', 'title' => 'Course not found'];
+        }
+
+        return [
+            'view' => 'admin/exam-form',
+            'title' => 'Create Exam',
+            'course' => $course,
+        ];
+    }],
+    ['POST', '/admin/exams/store', function () use ($examService) {
+        if (!Auth::userCan('courses.manage')) {
+            return redirect_to('/login');
+        }
+
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+            return redirect_to('/dashboard');
+        }
+
+        $courseId = (int) ($_POST['course_id'] ?? 0);
+        $result = $examService->createExam($courseId, $_POST, (int) Auth::userId());
+
+        if (!$result['success']) {
+            $_SESSION['flash_error'] = $result['message'];
+            return redirect_to('/admin/courses/' . $courseId . '/exams/create');
+        }
+
+        $_SESSION['flash_success'] = 'Exam created. Add questions before publishing.';
+        return redirect_to('/admin/exams/' . (int) $result['data']['id'] . '/questions/create');
+    }],
+    ['GET', '/admin/exams/{id}/questions/create', function (string $examId) use ($examRepository) {
+        if (!Auth::userCan('courses.manage')) {
+            return redirect_to('/login');
+        }
+
+        $exam = $examRepository->findById((int) $examId);
+
+        if ($exam === null) {
+            return ['view' => 'errors/not_found', 'title' => 'Exam not found'];
+        }
+
+        return [
+            'view' => 'admin/exam-question-form',
+            'title' => 'Add Exam Question',
+            'exam' => $exam,
+        ];
+    }],
+    ['POST', '/admin/exams/{id}/questions/store', function (string $examId) use ($examService) {
+        if (!Auth::userCan('courses.manage')) {
+            return redirect_to('/login');
+        }
+
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+            return redirect_to('/dashboard');
+        }
+
+        $rawOptions = is_array($_POST['options'] ?? null) ? $_POST['options'] : [];
+        $correct = (string) ($_POST['correct_option'] ?? '');
+        $options = [];
+
+        foreach ($rawOptions as $letter => $option) {
+            $options[] = [
+                'option_text' => trim((string) ($option['option_text'] ?? '')),
+                'is_correct' => $letter === $correct,
+            ];
+        }
+
+        $result = $examService->addQuestion((int) $examId, [
+            'question_text' => $_POST['question_text'] ?? '',
+            'marks' => $_POST['marks'] ?? 1,
+            'options' => $options,
+        ]);
+
+        $_SESSION[$result['success'] ? 'flash_success' : 'flash_error'] = $result['message'];
+
+        return redirect_to('/admin/exams/' . (int) $examId . '/questions/create');
+    }],
+    ['POST', '/admin/exams/{id}/publish', function (string $examId) use ($examService) {
+        if (!Auth::userCan('courses.manage')) {
+            return redirect_to('/login');
+        }
+
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+            return redirect_to('/dashboard');
+        }
+
+        $result = $examService->publishExam((int) $examId);
+        $_SESSION[$result['success'] ? 'flash_success' : 'flash_error'] = $result['message'];
+
+        return redirect_to('/admin/exams/' . (int) $examId . '/questions/create');
+    }],
+
     ['GET', '/dashboard', function () {
         if (!Auth::check()) {
             $_SESSION['flash_error'] = 'Please log in to continue.';
