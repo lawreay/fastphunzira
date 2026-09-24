@@ -4,5 +4,5 @@
     <p><strong>Score:</strong> <?= (int) $attempt['score'] ?></p>
     <p><strong>Percentage:</strong> <?= (float) $attempt['percentage'] ?>%</p>
     <p><strong>Result:</strong> <?= !empty($attempt['passed']) ? 'Passed' : 'Not passed' ?></p>
-    <p><a class="btn" href="/dashboard">Back to dashboard</a></p>
+    <p><a class="btn" href="<?= htmlspecialchars(base_url('dashboard'), ENT_QUOTES, 'UTF-8') ?>">Back to dashboard</a></p>
 </section>

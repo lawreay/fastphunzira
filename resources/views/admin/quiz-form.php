@@ -3,7 +3,7 @@ use App\Support\Csrf;
 ?>
 <section class="card">
     <h1>Create Quiz</h1>
-    <form method="post" action="/admin/quizzes/store">
+    <form method="post" action="<?= htmlspecialchars(base_url('admin/quizzes/store'), ENT_QUOTES, 'UTF-8') ?>">
         <?= Csrf::input() ?>
         <input type="hidden" name="course_id" value="<?= (int) $course['id'] ?>">
 

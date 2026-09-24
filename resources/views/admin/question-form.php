@@ -5,7 +5,7 @@ use App\Support\Csrf;
     <h1>Add Question</h1>
     <p><?= htmlspecialchars((string) $quiz['title'], ENT_QUOTES, 'UTF-8') ?></p>
 
-    <form method="post" action="/admin/quizzes/<?= (int) $quiz['id'] ?>/questions/store">
+    <form method="post" action="<?= htmlspecialchars(base_url('admin/quizzes/' . (int) $quiz['id'] . '/questions/store'), ENT_QUOTES, 'UTF-8') ?>">
         <?= Csrf::input() ?>
         <label>Question<br><textarea name="question_text" rows="4" required></textarea></label><br>
 
@@ -26,7 +26,7 @@ use App\Support\Csrf;
 </section>
 
 <?php if (($quiz['status'] ?? 'draft') !== 'published'): ?>
-<form method="post" action="/admin/quizzes/<?= (int) $quiz['id'] ?>/publish" style="margin-top:16px;">
+<form method="post" action="<?= htmlspecialchars(base_url('admin/quizzes/' . (int) $quiz['id'] . '/publish'), ENT_QUOTES, 'UTF-8') ?>" style="margin-top:16px;">
     <?= Csrf::input() ?>
     <button class="btn" type="submit">Publish Quiz</button>
 </form>

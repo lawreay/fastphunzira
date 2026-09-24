@@ -2,6 +2,19 @@
 
 declare(strict_types=1);
 
+function base_url(string $path = ''): string
+{
+    $scriptName = $_SERVER['SCRIPT_NAME'] ?? $_SERVER['PHP_SELF'] ?? '/index.php';
+    $base = preg_replace('#/index\.php$#', '', $scriptName);
+    $base = rtrim((string) $base, '/');
+
+    if ($base === '' || $base === '/' || $base === '.') {
+        return '/' . ltrim($path, '/');
+    }
+
+    return $base . '/' . ltrim($path, '/');
+}
+
 $app = require __DIR__ . '/../bootstrap/app.php';
 $routes = require __DIR__ . '/../routes/web.php';
 

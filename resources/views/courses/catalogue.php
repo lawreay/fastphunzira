@@ -12,12 +12,12 @@ use App\Core\Auth;
                 <span class="status-badge"><?= htmlspecialchars((string) ($course['status'] ?? 'draft'), ENT_QUOTES, 'UTF-8') ?></span>
                 <h3><?= htmlspecialchars((string) ($course['title'] ?? ''), ENT_QUOTES, 'UTF-8') ?></h3>
                 <p><?= htmlspecialchars((string) ($course['description'] ?? ''), ENT_QUOTES, 'UTF-8') ?></p>
-                <a class="btn secondary" href="/courses/<?= (int) ($course['id'] ?? 0) ?>">View details</a>
+                <a class="btn secondary" href="<?= htmlspecialchars(base_url('courses/' . (int) ($course['id'] ?? 0)), ENT_QUOTES, 'UTF-8') ?>">View details</a>
             </article>
         <?php endforeach; ?>
     </div>
 
     <?php if (Auth::userCan('courses.manage')): ?>
-        <p style="margin-top: 20px;"><a class="btn" href="/admin/courses">Manage courses</a></p>
+        <p style="margin-top: 20px;"><a class="btn" href="<?= htmlspecialchars(base_url('admin/courses'), ENT_QUOTES, 'UTF-8') ?>">Manage courses</a></p>
     <?php endif; ?>
 </section>

@@ -7,12 +7,12 @@ use App\Support\Csrf;
 
     <?php if (!$attempt): ?>
         <p>This quiz allows <?= (int) $quiz['attempts_allowed'] ?> attempt(s) and requires <?= (float) $quiz['pass_percentage'] ?>% to pass.</p>
-        <form method="post" action="/quizzes/<?= (int) $quiz['id'] ?>/start">
+        <form method="post" action="<?= htmlspecialchars(base_url('quizzes/' . (int) $quiz['id'] . '/start'), ENT_QUOTES, 'UTF-8') ?>">
             <?= Csrf::input() ?>
             <button class="btn" type="submit">Start Quiz</button>
         </form>
     <?php else: ?>
-        <form method="post" action="/quiz-attempts/<?= (int) $attempt['id'] ?>/submit">
+        <form method="post" action="<?= htmlspecialchars(base_url('quiz-attempts/' . (int) $attempt['id'] . '/submit'), ENT_QUOTES, 'UTF-8') ?>">
             <?= Csrf::input() ?>
             <?php foreach ($quiz['questions'] as $index => $question): ?>
                 <fieldset style="margin:20px 0;padding:16px;">

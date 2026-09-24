@@ -14,7 +14,7 @@ unset($_SESSION['flash_error'], $_SESSION['flash_success']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($title ?? 'FastPhunzira', ENT_QUOTES, 'UTF-8') ?></title>
-    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="<?= htmlspecialchars(base_url('assets/css/app.css'), ENT_QUOTES, 'UTF-8') ?>">
 </head>
 <body>
     <header>
@@ -22,16 +22,16 @@ unset($_SESSION['flash_error'], $_SESSION['flash_success']);
             <nav>
                 <div class="brand">FastPhunzira</div>
                 <div>
-                    <a href="/">Home</a>
+                    <a href="<?= htmlspecialchars(base_url(), ENT_QUOTES, 'UTF-8') ?>">Home</a>
                     <?php if (Auth::check()): ?>
-                        <a href="/dashboard">Dashboard</a>
-                        <form method="POST" action="/logout" class="inline-form">
+                        <a href="<?= htmlspecialchars(base_url('dashboard'), ENT_QUOTES, 'UTF-8') ?>">Dashboard</a>
+                        <form method="POST" action="<?= htmlspecialchars(base_url('logout'), ENT_QUOTES, 'UTF-8') ?>" class="inline-form">
                             <input type="hidden" name="_token" value="<?= htmlspecialchars(Csrf::token(), ENT_QUOTES, 'UTF-8') ?>">
                             <button type="submit" class="btn light">Logout</button>
                         </form>
                     <?php else: ?>
-                        <a href="/login">Login</a>
-                        <a href="/register">Register</a>
+                        <a href="<?= htmlspecialchars(base_url('login'), ENT_QUOTES, 'UTF-8') ?>">Login</a>
+                        <a href="<?= htmlspecialchars(base_url('register'), ENT_QUOTES, 'UTF-8') ?>">Register</a>
                     <?php endif; ?>
                 </div>
             </nav>
@@ -50,6 +50,6 @@ unset($_SESSION['flash_error'], $_SESSION['flash_success']);
         <?= $body ?? '' ?>
     </main>
 
-    <script src="/assets/js/app.js"></script>
+    <script src="<?= htmlspecialchars(base_url('assets/js/app.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
 </body>
 </html>

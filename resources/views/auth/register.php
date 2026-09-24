@@ -4,7 +4,7 @@ use App\Support\Csrf;
 ?>
 <section class="card">
     <h1>Create account</h1>
-    <form method="POST" action="/register">
+    <form method="POST" action="<?= htmlspecialchars(base_url('register'), ENT_QUOTES, 'UTF-8') ?>">
         <input type="hidden" name="_token" value="<?= htmlspecialchars(Csrf::token(), ENT_QUOTES, 'UTF-8') ?>">
         <div class="form-group">
             <label for="full_name">Full name</label>

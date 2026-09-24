@@ -11,7 +11,7 @@
                     <h3><?= htmlspecialchars((string) $quiz['title'], ENT_QUOTES, 'UTF-8') ?></h3>
                     <p><?= htmlspecialchars((string) ($quiz['description'] ?? ''), ENT_QUOTES, 'UTF-8') ?></p>
                     <p><strong>Pass mark:</strong> <?= (float) $quiz['pass_percentage'] ?>%</p>
-                    <a class="btn" href="/quizzes/<?= (int) $quiz['id'] ?>">Open quiz</a>
+                    <a class="btn" href="<?= htmlspecialchars(base_url('quizzes/' . (int) $quiz['id']), ENT_QUOTES, 'UTF-8') ?>">Open quiz</a>
                 </article>
             <?php endforeach; ?>
         </div>

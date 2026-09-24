@@ -21,7 +21,7 @@ use App\Support\Csrf;
                     <ul>
                         <?php foreach ($entry['lessons'] as $lesson): ?>
                             <li>
-                                <a href="/lessons/<?= (int) ($lesson['id'] ?? 0) ?>"><?= htmlspecialchars((string) ($lesson['title'] ?? ''), ENT_QUOTES, 'UTF-8') ?></a>
+                                <a href="<?= htmlspecialchars(base_url('lessons/' . (int) ($lesson['id'] ?? 0)), ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars((string) ($lesson['title'] ?? ''), ENT_QUOTES, 'UTF-8') ?></a>
                             </li>
                         <?php endforeach; ?>
                     </ul>
@@ -30,5 +30,5 @@ use App\Support\Csrf;
         <?php endforeach; ?>
     <?php endif; ?>
 
-    <p style="margin-top: 24px;"><a class="btn secondary" href="/courses/<?= (int) ($course['id'] ?? 0) ?>">Back to course</a></p>
+    <p style="margin-top: 24px;"><a class="btn secondary" href="<?= htmlspecialchars(base_url('courses/' . (int) ($course['id'] ?? 0)), ENT_QUOTES, 'UTF-8') ?>">Back to course</a></p>
 </section>
