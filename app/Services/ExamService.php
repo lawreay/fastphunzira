@@ -102,7 +102,7 @@ final class ExamService
         $marks = (float) ($data['marks'] ?? 1);
         $options = $data['options'] ?? [];
 
-        if ($questionText === '' || !is_array($options) || count($options) < 2) {
+        if ($questionText === '' || !is_array($options) || count($options) < 2 || $marks <= 0) {
             return ['success' => false, 'code' => 'validation_failed', 'message' => 'A question and at least two options are required.'];
         }
 
@@ -314,6 +314,12 @@ final class ExamService
             $totalMarks += (float) ($examQuestion['marks'] ?? 1);
         }
 
+        foreach ($normalized as $questionId => $answer) {
+            if (!isset($validQuestionIds[(int) $questionId])) {
+                return ['success' => false, 'code' => 'invalid_question', 'message' => 'Question does not belong to this exam.'];
+            }
+        }
+
         foreach ($validQuestionIds as $questionId => $examQuestion) {
             $answer = $normalized[$questionId] ?? null;
             if ($answer === null) {
@@ -354,12 +360,6 @@ final class ExamService
                 'answer_text' => $answer['answer_text'] ?? null,
                 'is_correct' => $isCorrect,
             ]);
-        }
-
-        foreach ($normalized as $questionId => $answer) {
-            if (!isset($validQuestionIds[(int) $questionId])) {
-                return ['success' => false, 'code' => 'invalid_question', 'message' => 'Question does not belong to this exam.'];
-            }
         }
 
         $percentage = $totalMarks > 0 ? round(($score / $totalMarks) * 100, 1) : 0.0;
