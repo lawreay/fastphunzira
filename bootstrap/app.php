@@ -38,6 +38,13 @@ Session::start($securityConfig);
 try {
     $pdo = Database::connect($dbConfig);
 } catch (Throwable $e) {
+    error_log('Database connection failed: ' . $e->getMessage());
+
+    if (($config['app_env'] ?? 'local') === 'production') {
+        http_response_code(500);
+        exit('Service temporarily unavailable.');
+    }
+
     $pdo = null;
 }
 

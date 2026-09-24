@@ -84,13 +84,19 @@ final class AuthService
             return ['success' => false, 'message' => 'Invalid credentials.'];
         }
 
+        if (($user['status'] ?? 'active') !== 'active') {
+            return ['success' => false, 'message' => 'This account is not active.'];
+        }
+
         $user['role'] = $user['role'] ?? 'student';
-        Auth::login($user);
+        $sessionUser = $user;
+        unset($sessionUser['password_hash']);
+        Auth::login($sessionUser);
 
         return [
             'success' => true,
             'message' => 'Login successful.',
-            'data' => $user,
+            'data' => $sessionUser,
         ];
     }
 

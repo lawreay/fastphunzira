@@ -48,11 +48,13 @@ final class SessionAuthTest extends TestCase
             'id' => 42,
             'email' => 'student@example.com',
             'role' => 'student',
+            'password_hash' => 'secretHash',
         ]);
 
         $this->assertTrue(Auth::check());
         $this->assertSame(42, Auth::userId());
         $this->assertSame('student@example.com', Auth::user()['email']);
+        $this->assertArrayNotHasKey('password_hash', Auth::user());
 
         Auth::logout();
 

@@ -28,14 +28,34 @@ return [
     ['GET', '/admin/courses/create', [$courseController, 'createForm']],
     ['GET', '/admin/courses/{id}/edit', [$courseController, 'editForm']],
     ['POST', '/admin/courses/store', function () use ($courseController) {
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+
+            return ['redirect' => '/admin/courses'];
+        }
+
         return $courseController->store($_POST);
     }],
     ['POST', '/admin/courses/update', function () use ($courseController) {
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+
+            return ['redirect' => '/admin/courses'];
+        }
+
         $id = (int) ($_POST['id'] ?? 0);
 
         return $courseController->update($id, $_POST);
     }],
-    ['POST', '/admin/courses/publish', [$courseController, 'publish']],
+    ['POST', '/admin/courses/publish', function () use ($courseController) {
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+
+            return ['redirect' => '/admin/courses'];
+        }
+
+        return $courseController->publish();
+    }],
     ['GET', '/login', function () {
         return [
             'view' => 'auth/login',
@@ -118,6 +138,12 @@ return [
             $_SESSION['flash_error'] = 'Please log in to enroll in a course.';
 
             return ['redirect' => '/login'];
+        }
+
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+
+            return ['redirect' => '/courses/' . (int) $courseId];
         }
 
         $result = $learningService->enrollStudentInCourse($studentId, (int) $courseId);

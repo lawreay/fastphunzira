@@ -73,8 +73,11 @@ final class Auth
             session_regenerate_id(true);
         }
 
+        $sessionUser = $user;
+        unset($sessionUser['password_hash'], $sessionUser['password']);
+
         Session::set('user_id', (int) ($user['id'] ?? 0));
-        Session::set('user', $user);
+        Session::set('user', $sessionUser);
     }
 
     public static function logout(): void

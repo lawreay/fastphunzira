@@ -123,6 +123,48 @@ final class AuthFoundationTest extends TestCase
         $this->assertFalse($badPassword['success']);
     }
 
+    public function testInactiveAccountIsRejected(): void
+    {
+        $repository = new class implements \App\Repositories\UserRepositoryInterface {
+            public function create(array $user): array
+            {
+                return $user;
+            }
+
+            public function findByEmail(string $email): ?array
+            {
+                return [
+                    'id' => 99,
+                    'full_name' => 'Disabled User',
+                    'email' => $email,
+                    'password_hash' => password_hash('StrongPass123!', PASSWORD_DEFAULT),
+                    'status' => 'disabled',
+                    'role' => 'student',
+                ];
+            }
+
+            public function findById(int $id): ?array
+            {
+                return null;
+            }
+
+            public function userExists(string $email): bool
+            {
+                return false;
+            }
+        };
+
+        $service = new AuthService($repository);
+
+        $result = $service->login([
+            'email' => 'disabled@example.com',
+            'password' => 'StrongPass123!',
+        ]);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('This account is not active.', $result['message']);
+    }
+
     public function testLogoutClearsSessionAndProtectedCheckRejectsGuests(): void
     {
         $this->authService->register([
