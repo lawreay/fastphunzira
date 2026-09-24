@@ -17,17 +17,32 @@ final class ExamAttemptRepository implements ExamAttemptRepositoryInterface
              VALUES (:exam_id, :user_id, :started_at, :expires_at, :submitted_at, :score, :percentage, :passed, :status)'
         );
 
-        $statement->execute([
-            ':exam_id' => (int) ($attempt['exam_id'] ?? 0),
-            ':user_id' => (int) ($attempt['user_id'] ?? 0),
-            ':started_at' => $attempt['started_at'] ?? date('Y-m-d H:i:s'),
-            ':expires_at' => $attempt['expires_at'] ?? null,
-            ':submitted_at' => $attempt['submitted_at'] ?? null,
-            ':score' => (float) ($attempt['score'] ?? 0),
-            ':percentage' => (float) ($attempt['percentage'] ?? 0),
-            ':passed' => !empty($attempt['passed']) ? 1 : 0,
-            ':status' => $attempt['status'] ?? 'in_progress',
-        ]);
+        try {
+            $statement->execute([
+                ':exam_id' => (int) ($attempt['exam_id'] ?? 0),
+                ':user_id' => (int) ($attempt['user_id'] ?? 0),
+                ':started_at' => $attempt['started_at'] ?? date('Y-m-d H:i:s'),
+                ':expires_at' => $attempt['expires_at'] ?? null,
+                ':submitted_at' => $attempt['submitted_at'] ?? null,
+                ':score' => (float) ($attempt['score'] ?? 0),
+                ':percentage' => (float) ($attempt['percentage'] ?? 0),
+                ':passed' => !empty($attempt['passed']) ? 1 : 0,
+                ':status' => $attempt['status'] ?? 'in_progress',
+            ]);
+        } catch (\PDOException $e) {
+            if ($e->getCode() === '23000' && ($attempt['status'] ?? 'in_progress') === 'in_progress') {
+                $existing = $this->findActiveByStudentAndExam(
+                    (int) ($attempt['user_id'] ?? 0),
+                    (int) ($attempt['exam_id'] ?? 0)
+                );
+
+                if ($existing !== null) {
+                    return $existing;
+                }
+            }
+
+            throw $e;
+        }
 
         $attempt['id'] = (int) $this->pdo->lastInsertId();
 
