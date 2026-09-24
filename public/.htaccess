@@ -1,0 +1,10 @@
+RewriteEngine On
+RewriteBase /fastphunzira/public/
+
+# Serve existing files directly.
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Route all other requests through the front controller.
+RewriteRule ^ index.php [QSA,L]

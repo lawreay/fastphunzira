@@ -1,5 +1,5 @@
 <?php
-use AppSupportCsrf;
+use App\Support\Csrf;
 ?>
 <section class="card">
     <h1>Create Exam</h1>

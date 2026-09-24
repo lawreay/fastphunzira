@@ -1,5 +1,5 @@
 <?php
-use AppSupportCsrf;
+use App\Support\Csrf;
 ?>
 <section class="card">
     <h1><?= htmlspecialchars((string) $exam['title'], ENT_QUOTES, 'UTF-8') ?></h1>
