@@ -44,10 +44,12 @@ CREATE TABLE IF NOT EXISTS exam_attempts (
     percentage DECIMAL(5,2) NOT NULL DEFAULT 0.00,
     passed TINYINT(1) NOT NULL DEFAULT 0,
     status ENUM('in_progress', 'submitted', 'expired') NOT NULL DEFAULT 'in_progress',
+    active_attempt TINYINT GENERATED ALWAYS AS (IF(status = 'in_progress', 1, NULL)) STORED,
     PRIMARY KEY (id),
     KEY idx_exam_attempts_user_exam (user_id, exam_id),
     KEY idx_exam_attempts_exam_id (exam_id),
     KEY idx_exam_attempts_expires_at (expires_at),
+    UNIQUE KEY uq_exam_attempts_one_active (user_id, exam_id, active_attempt),
     CONSTRAINT fk_exam_attempts_exam FOREIGN KEY (exam_id) REFERENCES exams (id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_exam_attempts_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
