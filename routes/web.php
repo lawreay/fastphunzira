@@ -583,7 +583,7 @@ return [
 
         return redirect_to('/exams/' . (int) $examId . '?attempt=' . (int) $result['data']['id']);
     }],
-    ['POST', '/exam-attempts/{id}/answers', function (string $attemptId) use ($examService) {
+    ['POST', '/exam-attempts/{id}/answers', function (string $attemptId) use ($examService, $examAttemptRepository) {
         $studentId = Auth::userId();
 
         if ($studentId === null) {
