@@ -221,6 +221,15 @@ final class EnrollmentLearningService
 
     public function getCourseProgress(int $studentId, int $courseId): array
     {
+        if (!Auth::check() || (int) Auth::userId() !== $studentId) {
+            return [
+                'course_id' => $courseId,
+                'percent' => 0.0,
+                'completed_lessons' => 0,
+                'total_lessons' => 0,
+            ];
+        }
+
         $course = $this->courseRepository->findById($courseId);
         if ($course === null) {
             return ['course_id' => $courseId, 'percent' => 0.0, 'completed_lessons' => 0, 'total_lessons' => 0];
