@@ -8,5 +8,5 @@ interface LoginHistoryRepositoryInterface
 
     public function countFailuresSinceLastSuccessByEmail(string $email, int $windowSeconds): int;
 
-    public function countFailuresSinceLastSuccessByIp(string $ipAddress, int $windowSeconds): int;
+    public function countFailuresByIp(string $ipAddress, int $windowSeconds): int;
 }
