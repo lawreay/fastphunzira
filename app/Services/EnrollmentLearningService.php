@@ -59,6 +59,10 @@ final class EnrollmentLearningService
 
     public function getStudentEnrollments(int $studentId): array
     {
+        if (!Auth::check() || (int) Auth::userId() !== $studentId) {
+            return [];
+        }
+
         return $this->enrollmentRepository->findByStudent($studentId);
     }
 
