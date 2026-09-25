@@ -127,4 +127,43 @@ final class CertificateServiceTest extends TestCase
         $this->assertFalse($result['success']);
         $this->assertSame('ineligible', $result['code']);
     }
+
+    public function testAdminCanReviewAndRevokeCertificates(): void
+    {
+        Auth::login(['id' => 10, 'email' => 'admin@example.com', 'role' => 'admin']);
+        $exam = $this->examRepository->create([
+            'course_id' => 1,
+            'title' => 'Admin review exam',
+            'description' => 'Review flow',
+            'time_limit' => 45,
+            'passing_score' => 70,
+            'attempts_allowed' => 1,
+            'status' => 'published',
+            'created_by' => 10,
+        ]);
+
+        $attempt = $this->attemptRepository->create([
+            'exam_id' => (int) $exam['id'],
+            'user_id' => 20,
+            'status' => 'submitted',
+            'score' => 90,
+            'percentage' => 90,
+            'passed' => 1,
+            'submitted_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        Auth::login(['id' => 20, 'email' => 'student@example.com', 'full_name' => 'Jane Doe', 'role' => 'student']);
+        $issued = $this->service->issueCertificate(20, 1, (int) $exam['id'], (int) $attempt['id']);
+
+        Auth::login(['id' => 10, 'email' => 'admin@example.com', 'role' => 'admin']);
+        $all = $this->service->getCertificatesForAdmin();
+        $this->assertCount(1, $all);
+
+        $revoked = $this->service->updateCertificateStatus(10, (int) $issued['data']['id'], 'revoked');
+        $this->assertTrue($revoked['success']);
+        $this->assertSame('revoked', $revoked['data']['status']);
+
+        $verified = $this->service->verifyCertificate($issued['data']['certificate_number'], $issued['data']['verification_code']);
+        $this->assertNull($verified);
+    }
 }

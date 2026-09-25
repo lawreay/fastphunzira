@@ -22,6 +22,11 @@ final class InMemoryCertificateRepository implements CertificateRepositoryInterf
         return $this->certificates[$id] ?? null;
     }
 
+    public function findAll(): array
+    {
+        return array_values($this->certificates);
+    }
+
     public function findByNumber(string $certificateNumber): ?array
     {
         foreach ($this->certificates as $certificate) {
@@ -51,6 +56,17 @@ final class InMemoryCertificateRepository implements CertificateRepositoryInterf
         ));
 
         return $matches !== [] ? $matches[0] : null;
+    }
+
+    public function updateStatus(int $id, string $status): ?array
+    {
+        if (!isset($this->certificates[$id])) {
+            return null;
+        }
+
+        $this->certificates[$id]['status'] = strtolower(trim($status));
+
+        return $this->certificates[$id];
     }
 
     public function countAll(): int

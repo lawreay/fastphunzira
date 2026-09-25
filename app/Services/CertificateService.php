@@ -83,6 +83,10 @@ final class CertificateService
             return null;
         }
 
+        if (strtolower((string) ($certificate['status'] ?? 'active')) !== 'active') {
+            return null;
+        }
+
         if (!hash_equals((string) ($certificate['verification_code'] ?? ''), trim((string) $verificationCode))) {
             return null;
         }
@@ -104,6 +108,38 @@ final class CertificateService
         }
 
         return $this->certificateRepository->findByUser($studentId);
+    }
+
+    public function getCertificatesForAdmin(): array
+    {
+        if (!Auth::userCan('courses.manage')) {
+            return [];
+        }
+
+        return $this->certificateRepository->findAll();
+    }
+
+    public function updateCertificateStatus(int $adminId, int $certificateId, string $status): array
+    {
+        if (!Auth::userCan('courses.manage') || (int) Auth::userId() !== $adminId) {
+            return ['success' => false, 'code' => 'forbidden', 'message' => 'Only administrators can manage certificate status.'];
+        }
+
+        $certificate = $this->certificateRepository->findById($certificateId);
+        if ($certificate === null) {
+            return ['success' => false, 'code' => 'not_found', 'message' => 'Certificate not found.'];
+        }
+
+        $normalizedStatus = strtolower(trim($status));
+        $allowedStatuses = ['active', 'revoked', 'expired', 'invalid'];
+        if (!in_array($normalizedStatus, $allowedStatuses, true)) {
+            return ['success' => false, 'code' => 'validation_failed', 'message' => 'Certificate status is invalid.'];
+        }
+
+        $certificate['status'] = $normalizedStatus;
+        $this->certificateRepository->updateStatus($certificateId, $normalizedStatus);
+
+        return ['success' => true, 'message' => 'Certificate status updated.', 'data' => $certificate];
     }
 
     private function generateCertificateNumber(): string

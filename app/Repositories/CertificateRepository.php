@@ -68,6 +68,13 @@ final class CertificateRepository implements CertificateRepositoryInterface
         return $certificate === false ? null : $certificate;
     }
 
+    public function findAll(): array
+    {
+        $statement = $this->pdo->query('SELECT * FROM certificates ORDER BY issued_at DESC');
+
+        return $statement->fetchAll() ?: [];
+    }
+
     public function findByNumber(string $certificateNumber): ?array
     {
         $statement = $this->pdo->prepare('SELECT * FROM certificates WHERE certificate_number = :certificate_number LIMIT 1');
@@ -95,6 +102,17 @@ final class CertificateRepository implements CertificateRepositoryInterface
         $certificate = $statement->fetch();
 
         return $certificate === false ? null : $certificate;
+    }
+
+    public function updateStatus(int $id, string $status): ?array
+    {
+        $statement = $this->pdo->prepare('UPDATE certificates SET status = :status WHERE id = :id');
+        $statement->execute([
+            ':status' => strtolower(trim($status)),
+            ':id' => $id,
+        ]);
+
+        return $this->findById($id);
     }
 
     public function countAll(): int

@@ -814,6 +814,37 @@ return [
             'certificate' => $certificate,
         ];
     }],
+    ['GET', '/admin/certificates', function () use ($certificateService) {
+        if (!Auth::userCan('courses.manage')) {
+            return redirect_to('/login');
+        }
+
+        return [
+            'view' => 'admin/certificates',
+            'title' => 'Certificate Review',
+            'certificates' => $certificateService->getCertificatesForAdmin(),
+        ];
+    }],
+    ['POST', '/admin/certificates/{id}/status', function (string $certificateId) use ($certificateService) {
+        if (!Auth::userCan('courses.manage')) {
+            return redirect_to('/login');
+        }
+
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+            return redirect_to('/admin/certificates');
+        }
+
+        $result = $certificateService->updateCertificateStatus(
+            (int) Auth::userId(),
+            (int) $certificateId,
+            (string) ($_POST['status'] ?? 'active')
+        );
+
+        $_SESSION[$result['success'] ? 'flash_success' : 'flash_error'] = $result['message'];
+
+        return redirect_to('/admin/certificates');
+    }],
     ['GET', '/dashboard', function () {
         if (!Auth::check()) {
             $_SESSION['flash_error'] = 'Please log in to continue.';
