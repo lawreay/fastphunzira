@@ -35,6 +35,14 @@ final class AuthLoginSecurityTest extends TestCase
                 'status' => 'active',
                 'role' => 'student',
             ],
+            'disabled@example.com' => [
+                'id' => 8,
+                'full_name' => 'Disabled Student',
+                'email' => 'disabled@example.com',
+                'password_hash' => password_hash('StrongPass123!', PASSWORD_DEFAULT),
+                'status' => 'disabled',
+                'role' => 'student',
+            ],
         ];
 
         $repository = new class($users) implements UserRepositoryInterface {
@@ -122,13 +130,13 @@ final class AuthLoginSecurityTest extends TestCase
 
     public function testInactiveAccountUsesSameGenericFailureResponse(): void
     {
-        $this->assertSame(
-            'Invalid credentials.',
-            $this->authService->login([
-                'email' => 'student@example.com',
-                'password' => 'StrongPass123!',
-            ])['message']
-        );
+        $result = $this->authService->login([
+            'email' => 'disabled@example.com',
+            'password' => 'StrongPass123!',
+        ]);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('Invalid credentials.', $result['message']);
     }
 
     public function testThresholdIsEnforcedBeforeAnotherPasswordCheck(): void
@@ -147,7 +155,7 @@ final class AuthLoginSecurityTest extends TestCase
         ]);
 
         $this->assertFalse($result['success']);
-        $this->assertSame('Too many login attempts. Please try again later.', $result['message']);
+        $this->assertSame('Invalid credentials.', $result['message']);
         $this->assertSame(3, $this->loginHistory->countFailuresSinceLastSuccessByEmail('student@example.com', 900));
 
         $logs = $this->auditLogs->findRecent(10);
