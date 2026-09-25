@@ -170,6 +170,10 @@ final class EnrollmentLearningService
 
     public function getLessonForStudent(int $studentId, int $lessonId): ?array
     {
+        if (!Auth::check() || (int) Auth::userId() !== $studentId) {
+            return null;
+        }
+
         $lesson = $this->lessonRepository->findById($lessonId);
         if ($lesson === null) {
             return null;
