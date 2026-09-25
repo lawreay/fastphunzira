@@ -213,4 +213,35 @@ final class CertificateServiceTest extends TestCase
         $verified = $this->service->verifyCertificate($issued['data']['certificate_number'], $issued['data']['verification_code']);
         $this->assertNull($verified);
     }
+
+    public function testStudentCannotChangeCertificateStatus(): void
+    {
+        Auth::login(['id' => 20, 'email' => 'student@example.com', 'role' => 'student']);
+
+        $result = $this->service->updateCertificateStatus(20, 1, 'revoked');
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('forbidden', $result['code']);
+    }
+
+    public function testAdminCannotChangeCertificateStatusForAnotherActor(): void
+    {
+        Auth::login(['id' => 10, 'email' => 'admin@example.com', 'role' => 'admin']);
+
+        $result = $this->service->updateCertificateStatus(99, 1, 'revoked');
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('forbidden', $result['code']);
+    }
+
+    public function testStudentCannotIssueCertificateForAnotherStudent(): void
+    {
+        Auth::login(['id' => 20, 'email' => 'student@example.com', 'role' => 'student']);
+
+        $result = $this->service->issueCertificate(30, 1, 1, 1);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('forbidden', $result['code']);
+    }
+
 }
