@@ -17,7 +17,7 @@ final class LoginSecurityService
         $window = $this->windowSeconds();
 
         $accountFailures = $this->repository->countFailuresSinceLastSuccessByEmail($email, $window);
-        $ipFailures = $this->repository->countFailuresSinceLastSuccessByIp($ipAddress, $window);
+        $ipFailures = $this->repository->countFailuresByIp($ipAddress, $window);
 
         return $accountFailures >= $this->maxFailuresPerAccount()
             || ($ipAddress !== '' && $ipFailures >= $this->maxFailuresPerIp());
@@ -51,7 +51,7 @@ final class LoginSecurityService
 
         return [
             'account' => $this->repository->countFailuresSinceLastSuccessByEmail($email, $window),
-            'ip' => $ipAddress === '' ? 0 : $this->repository->countFailuresSinceLastSuccessByIp($ipAddress, $window),
+            'ip' => $ipAddress === '' ? 0 : $this->repository->countFailuresByIp($ipAddress, $window),
         ];
     }
 
