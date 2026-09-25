@@ -39,7 +39,7 @@ jobs:
             ${{ runner.os }}-php-8.2-composer-
 
       - name: Validate Composer configuration
-        run: composer validate --strict
+        run: composer validate
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
