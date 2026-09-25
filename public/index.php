@@ -15,6 +15,44 @@ function base_url(string $path = ''): string
     return $base . '/' . ltrim($path, '/');
 }
 
+function coerceRouteParams(callable $handler, array $params): array
+{
+    try {
+        $reflection = is_array($handler)
+            ? new \ReflectionMethod($handler[0], $handler[1])
+            : new \ReflectionFunction($handler);
+    } catch (Throwable $throwable) {
+        return $params;
+    }
+
+    foreach ($reflection->getParameters() as $index => $parameter) {
+        if (!array_key_exists($index, $params)) {
+            continue;
+        }
+
+        $type = $parameter->getType();
+        if ($type === null || !($type instanceof \ReflectionNamedType)) {
+            continue;
+        }
+
+        $name = $type->getName();
+        $value = $params[$index];
+
+        if ($name === 'int' && is_numeric((string) $value)) {
+            $params[$index] = (int) $value;
+        } elseif ($name === 'float' && is_numeric((string) $value)) {
+            $params[$index] = (float) $value;
+        } elseif ($name === 'string') {
+            $params[$index] = (string) $value;
+        } elseif ($name === 'bool') {
+            $boolValue = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            $params[$index] = $boolValue ?? (bool) $value;
+        }
+    }
+
+    return $params;
+}
+
 $app = require __DIR__ . '/../bootstrap/app.php';
 $routes = require __DIR__ . '/../routes/web.php';
 
@@ -59,12 +97,15 @@ if ($route === null) {
     exit;
 }
 
+$routeParams = coerceRouteParams($route, $routeParams);
 $result = $route(...$routeParams);
 
 if (isset($result['redirect'])) {
     header('Location: ' . $result['redirect']);
     exit;
 }
+
+extract($result, EXTR_SKIP);
 
 $view = $result['view'] ?? 'landing';
 $title = $result['title'] ?? 'FastPhunzira';
