@@ -8,12 +8,14 @@ use App\Core\Database;
 use App\Core\Env;
 use App\Core\Session;
 use App\Controllers\CourseController;
+use App\Repositories\AuditLogRepository;
 use App\Repositories\CertificateRepository;
 use App\Repositories\CourseModuleRepository;
 use App\Repositories\CourseRepository;
 use App\Repositories\EnrollmentRepository;
 use App\Repositories\ExamAttemptRepository;
 use App\Repositories\ExamRepository;
+use App\Repositories\InMemoryAuditLogRepository;
 use App\Repositories\InMemoryCertificateRepository;
 use App\Repositories\InMemoryExamAttemptRepository;
 use App\Repositories\InMemoryExamRepository;
@@ -28,6 +30,7 @@ use App\Repositories\QuestionRepository;
 use App\Repositories\QuizAttemptRepository;
 use App\Repositories\QuizRepository;
 use App\Repositories\UserRepository;
+use App\Services\AuditLogService;
 use App\Services\AuthService;
 use App\Services\CertificateService;
 use App\Services\CourseService;
@@ -75,6 +78,7 @@ $questionRepository = $pdo !== null ? new QuestionRepository($pdo) : new \App\Re
 $quizAttemptRepository = $pdo !== null ? new QuizAttemptRepository($pdo) : new \App\Repositories\InMemoryQuizAttemptRepository();
 $examRepository = $pdo !== null ? new ExamRepository($pdo) : new InMemoryExamRepository();
 $examAttemptRepository = $pdo !== null ? new ExamAttemptRepository($pdo) : new InMemoryExamAttemptRepository();
+$auditLogRepository = $pdo !== null ? new AuditLogRepository($pdo) : new InMemoryAuditLogRepository();
 $certificateRepository = $pdo !== null ? new CertificateRepository($pdo) : new InMemoryCertificateRepository();
 $courseService = new CourseService($courseRepository);
 $courseController = new CourseController($courseService);
@@ -99,6 +103,7 @@ $certificateService = new CertificateService(
     $examAttemptRepository,
     $certificateRepository
 );
+$auditLogService = new AuditLogService($auditLogRepository);
 $enrollmentLearningService = new EnrollmentLearningService(
     $courseRepository,
     $enrollmentRepository,
@@ -127,6 +132,8 @@ return [
     'examRepository' => $examRepository,
     'examAttemptRepository' => $examAttemptRepository,
     'examService' => $examService,
+    'auditLogRepository' => $auditLogRepository,
+    'auditLogService' => $auditLogService,
     'certificateRepository' => $certificateRepository,
     'certificateService' => $certificateService,
 ];

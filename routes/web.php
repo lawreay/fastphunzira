@@ -14,6 +14,7 @@ $quizAttemptRepository = $app['quizAttemptRepository'];
 $examRepository = $app['examRepository'];
 $examAttemptRepository = $app['examAttemptRepository'];
 $examService = $app['examService'];
+$auditLogService = $app['auditLogService'];
 $certificateService = $app['certificateService'];
 
 use App\Core\Auth;
@@ -66,7 +67,7 @@ return [
             'title' => 'Login',
         ];
     }],
-    ['POST', '/login', function () use ($authService) {
+    ['POST', '/login', function () use ($authService, $auditLogService) {
         $email = strtolower(trim((string) ($_POST['email'] ?? '')));
         $password = (string) ($_POST['password'] ?? '');
         $token = $_POST['_token'] ?? null;
@@ -80,10 +81,30 @@ return [
         $result = $authService->login(['email' => $email, 'password' => $password]);
 
         if (!$result['success']) {
+            $auditLogService->record([
+                'user_id' => null,
+                'action' => 'login_failed',
+                'entity_type' => 'user',
+                'entity_id' => null,
+                'details' => ['email' => $email],
+                'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+                'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+            ]);
+
             $_SESSION['flash_error'] = $result['message'];
 
             return redirect_to('/login');
         }
+
+        $auditLogService->record([
+            'user_id' => (int) ($result['data']['id'] ?? 0),
+            'action' => 'login_success',
+            'entity_type' => 'user',
+            'entity_id' => (int) ($result['data']['id'] ?? 0),
+            'details' => ['email' => $email],
+            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+        ]);
 
         $_SESSION['flash_success'] = 'Welcome back!';
 
@@ -844,6 +865,17 @@ return [
         $_SESSION[$result['success'] ? 'flash_success' : 'flash_error'] = $result['message'];
 
         return redirect_to('/admin/certificates');
+    }],
+    ['GET', '/admin/audit-logs', function () use ($auditLogService) {
+        if (!Auth::userCan('courses.manage')) {
+            return redirect_to('/login');
+        }
+
+        return [
+            'view' => 'admin/audit-logs',
+            'title' => 'Audit Logs',
+            'logs' => $auditLogService->getRecentForAdmin(),
+        ];
     }],
     ['GET', '/dashboard', function () {
         if (!Auth::check()) {
