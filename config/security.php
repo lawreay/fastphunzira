@@ -14,6 +14,5 @@ return [
         'window_seconds' => (int) (getenv('LOGIN_SECURITY_WINDOW') ?: 900),
         'max_failures_per_account' => (int) (getenv('LOGIN_MAX_FAILURES_PER_ACCOUNT') ?: 5),
         'max_failures_per_ip' => (int) (getenv('LOGIN_MAX_FAILURES_PER_IP') ?: 20),
-        'throttle_seconds' => (int) (getenv('LOGIN_THROTTLE_SECONDS') ?: 900),
     ],
 ];
