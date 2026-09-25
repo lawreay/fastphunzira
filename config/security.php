@@ -15,4 +15,9 @@ return [
         'max_failures_per_account' => (int) (getenv('LOGIN_MAX_FAILURES_PER_ACCOUNT') ?: 5),
         'max_failures_per_ip' => (int) (getenv('LOGIN_MAX_FAILURES_PER_IP') ?: 20),
     ],
+
+    'certificate_verification' => [
+        'window_seconds' => (int) (getenv('CERT_VERIFY_RATE_LIMIT_WINDOW') ?: 900),
+        'max_attempts_per_ip' => (int) (getenv('CERT_VERIFY_MAX_ATTEMPTS_PER_IP') ?: 30),
+    ],
 ];
