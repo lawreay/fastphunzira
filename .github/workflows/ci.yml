@@ -29,13 +29,12 @@ jobs:
           tools: composer:v2
           extensions: mbstring, pdo, pdo_mysql
           ini-values: memory_limit=-1
-          coverage: none
 
       - name: Cache Composer downloads
         uses: actions/cache@v4
         with:
           path: ~/.composer/cache
-          key: ${{ runner.os }}-php-8.2-composer-${{ hashFiles('composer.lock') }}
+          key: ${{ runner.os }}-php-8.2-composer-${{ hashFiles('composer.json') }}
           restore-keys: |
             ${{ runner.os }}-php-8.2-composer-
 
