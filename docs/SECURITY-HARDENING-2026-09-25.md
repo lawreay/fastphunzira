@@ -60,3 +60,35 @@ These are intentionally separated to keep this hardening change reviewable and a
 ## Release status
 
 PR #4 is the security-hardening release candidate.
+
+## Follow-up security pass: login abuse protection
+
+The next security pass is implemented on branch `feature/security-login-abuse`:
+
+- Login attempts are recorded in the existing `login_history` table.
+- Failed and successful attempts retain timestamp, account identifier, IP address, and bounded user-agent data.
+- Account-level and IP-level failure thresholds are configurable through environment variables.
+- Throttling is temporary and window-based rather than a permanent account lockout.
+- Unknown accounts use a dummy password hash for password verification, reducing obvious timing differences.
+- Active, inactive, and unknown accounts use the same public authentication failure response.
+- Authentication audit events are recorded as `login_failed`, `login_success`, and `login_throttled`.
+- Audit events store a one-way identifier hash rather than the submitted email address.
+- Authentication logs never store passwords or password hashes.
+- Successful authentication starts a new failure window for both the account and source IP.
+
+Default development settings:
+
+- 5 failed attempts per account within 15 minutes
+- 20 failed attempts per IP within 15 minutes
+
+A separate migration adds indexes required for the login-history throttle queries.
+
+## Remaining security work
+
+After this pass, the next isolated security tasks remain:
+
+- Public certificate verification rate limiting
+- GitHub Actions CI and automated quality gates
+- Audit-log pagination and filtering
+- Broader authorization sweep
+- Production deployment security review, including secrets, backups, HTTPS, headers, and database permissions
