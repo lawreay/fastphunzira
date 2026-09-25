@@ -14,6 +14,7 @@ $quizAttemptRepository = $app['quizAttemptRepository'];
 $examRepository = $app['examRepository'];
 $examAttemptRepository = $app['examAttemptRepository'];
 $examService = $app['examService'];
+$certificateService = $app['certificateService'];
 
 use App\Core\Auth;
 use App\Support\Csrf;
@@ -769,6 +770,50 @@ return [
         return redirect_to('/admin/exams/' . (int) $examId . '/questions/create');
     }],
 
+    ['GET', '/student/certificates', function () use ($certificateService) {
+        if (!Auth::check()) {
+            $_SESSION['flash_error'] = 'Please log in to continue.';
+            return redirect_to('/login');
+        }
+
+        $certificates = $certificateService->getStudentCertificates((int) Auth::userId());
+
+        return [
+            'view' => 'student/certificates',
+            'title' => 'My Certificates',
+            'certificates' => $certificates,
+        ];
+    }],
+    ['GET', '/verify/{certificate_number}', function (string $certificateNumber) use ($certificateService) {
+        $verificationCode = trim((string) ($_GET['code'] ?? ''));
+
+        if ($verificationCode === '') {
+            return [
+                'view' => 'certificates/verify',
+                'title' => 'Certificate Verification',
+                'certificate_number' => $certificateNumber,
+                'error' => 'A verification code is required.',
+            ];
+        }
+
+        $certificate = $certificateService->verifyCertificate($certificateNumber, $verificationCode);
+
+        if ($certificate === null) {
+            return [
+                'view' => 'certificates/verify',
+                'title' => 'Certificate Verification',
+                'certificate_number' => $certificateNumber,
+                'error' => 'The certificate number or verification code is invalid.',
+            ];
+        }
+
+        return [
+            'view' => 'certificates/verify',
+            'title' => 'Certificate Verification',
+            'certificate_number' => $certificateNumber,
+            'certificate' => $certificate,
+        ];
+    }],
     ['GET', '/dashboard', function () {
         if (!Auth::check()) {
             $_SESSION['flash_error'] = 'Please log in to continue.';
