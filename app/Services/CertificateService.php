@@ -41,6 +41,10 @@ final class CertificateService
             return ['success' => false, 'code' => 'not_found', 'message' => 'Exam not found or not published.'];
         }
 
+        if ((int) ($exam['course_id'] ?? 0) !== $courseId) {
+            return ['success' => false, 'code' => 'forbidden', 'message' => 'The exam does not belong to the requested course.'];
+        }
+
         $attempt = $this->attemptRepository->findById($attemptId);
         if ($attempt === null || (int) ($attempt['user_id'] ?? 0) !== $studentId || (int) ($attempt['exam_id'] ?? 0) !== $examId) {
             return ['success' => false, 'code' => 'not_found', 'message' => 'Attempt not found for this student.'];
