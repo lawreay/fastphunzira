@@ -82,30 +82,10 @@ return [
         $result = $authService->login(['email' => $email, 'password' => $password]);
 
         if (!$result['success']) {
-            $auditLogService->record([
-                'user_id' => null,
-                'action' => 'login_failed',
-                'entity_type' => 'user',
-                'entity_id' => null,
-                'details' => ['email' => $email],
-                'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
-                'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
-            ]);
-
             $_SESSION['flash_error'] = $result['message'];
 
             return redirect_to('/login');
         }
-
-        $auditLogService->record([
-            'user_id' => (int) ($result['data']['id'] ?? 0),
-            'action' => 'login_success',
-            'entity_type' => 'user',
-            'entity_id' => (int) ($result['data']['id'] ?? 0),
-            'details' => ['email' => $email],
-            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
-            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
-        ]);
 
         $_SESSION['flash_success'] = 'Welcome back!';
 
