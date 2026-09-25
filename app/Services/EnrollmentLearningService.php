@@ -73,7 +73,7 @@ final class EnrollmentLearningService
         }
 
         $actor = $actorId ?? Auth::userId();
-        if ($actor === null) {
+        if ($actor === null || (int) $actor !== (int) Auth::userId()) {
             return ['success' => false, 'code' => 'forbidden', 'message' => 'Only administrators can manage modules.'];
         }
 
@@ -139,7 +139,7 @@ final class EnrollmentLearningService
         }
 
         $actor = $actorId ?? Auth::userId();
-        if ($actor === null) {
+        if ($actor === null || (int) $actor !== (int) Auth::userId()) {
             return ['success' => false, 'code' => 'forbidden', 'message' => 'Only administrators can manage lessons.'];
         }
 
