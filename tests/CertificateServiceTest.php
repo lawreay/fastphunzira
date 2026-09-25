@@ -244,4 +244,51 @@ final class CertificateServiceTest extends TestCase
         $this->assertSame('forbidden', $result['code']);
     }
 
+    public function testCertificateCannotUseAnExamFromAnotherCourse(): void
+    {
+        Auth::login(['id' => 10, 'email' => 'admin@example.com', 'role' => 'admin']);
+
+        $this->courseRepository->create([
+            'title' => 'JavaScript Foundations',
+            'slug' => 'javascript-foundations',
+            'description' => 'Second published course',
+            'status' => 'published',
+            'created_by' => 10,
+        ]);
+
+        $exam = $this->examRepository->create([
+            'course_id' => 2,
+            'title' => 'JavaScript final',
+            'description' => 'Second course exam',
+            'time_limit' => 45,
+            'passing_score' => 70,
+            'attempts_allowed' => 1,
+            'status' => 'published',
+            'created_by' => 10,
+        ]);
+
+        $attempt = $this->attemptRepository->create([
+            'exam_id' => (int) $exam['id'],
+            'user_id' => 20,
+            'status' => 'submitted',
+            'score' => 95,
+            'percentage' => 95,
+            'passed' => 1,
+            'submitted_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        Auth::login(['id' => 20, 'email' => 'student@example.com', 'full_name' => 'Jane Doe', 'role' => 'student']);
+
+        $result = $this->service->issueCertificate(
+            20,
+            1,
+            (int) $exam['id'],
+            (int) $attempt['id']
+        );
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('forbidden', $result['code']);
+        $this->assertSame([], $this->certificateRepository->findAll());
+    }
+
 }
