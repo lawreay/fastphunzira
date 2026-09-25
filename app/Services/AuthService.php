@@ -85,10 +85,7 @@ final class AuthService
         if ($this->loginSecurity !== null && $this->loginSecurity->isThrottled($email, $this->clientIp())) {
             $this->auditSecurityEvent('login_throttled', $email);
 
-            return [
-                'success' => false,
-                'message' => 'Too many login attempts. Please try again later.',
-            ];
+            return ['success' => false, 'message' => 'Invalid credentials.'];
         }
 
         $user = $this->userRepository->findByEmail($email);
