@@ -274,6 +274,10 @@ final class QuizService
 
     public function getAttemptForStudent(int $studentId, int $attemptId): ?array
     {
+        if (!Auth::check() || (int) Auth::userId() !== $studentId) {
+            return null;
+        }
+
         $attempt = $this->attemptRepository->findById($attemptId);
         if ($attempt === null || (int) $attempt['user_id'] !== $studentId) {
             return null;

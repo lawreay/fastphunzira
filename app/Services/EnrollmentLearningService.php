@@ -59,6 +59,10 @@ final class EnrollmentLearningService
 
     public function getStudentEnrollments(int $studentId): array
     {
+        if (!Auth::check() || (int) Auth::userId() !== $studentId) {
+            return [];
+        }
+
         return $this->enrollmentRepository->findByStudent($studentId);
     }
 
@@ -166,6 +170,10 @@ final class EnrollmentLearningService
 
     public function getLessonForStudent(int $studentId, int $lessonId): ?array
     {
+        if (!Auth::check() || (int) Auth::userId() !== $studentId) {
+            return null;
+        }
+
         $lesson = $this->lessonRepository->findById($lessonId);
         if ($lesson === null) {
             return null;
@@ -213,6 +221,15 @@ final class EnrollmentLearningService
 
     public function getCourseProgress(int $studentId, int $courseId): array
     {
+        if (!Auth::check() || (int) Auth::userId() !== $studentId) {
+            return [
+                'course_id' => $courseId,
+                'percent' => 0.0,
+                'completed_lessons' => 0,
+                'total_lessons' => 0,
+            ];
+        }
+
         $course = $this->courseRepository->findById($courseId);
         if ($course === null) {
             return ['course_id' => $courseId, 'percent' => 0.0, 'completed_lessons' => 0, 'total_lessons' => 0];
