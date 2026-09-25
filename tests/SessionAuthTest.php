@@ -21,6 +21,7 @@ final class SessionAuthTest extends TestCase
         Session::start([
             'session_name' => 'fastphunzira_test',
             'session_lifetime' => 1200,
+            'session_idle_timeout' => 1200,
             'require_https' => false,
             'cookie_httponly' => true,
             'cookie_samesite' => 'Lax',
@@ -61,4 +62,45 @@ final class SessionAuthTest extends TestCase
         $this->assertFalse(Auth::check());
         $this->assertNull(Auth::user());
     }
+
+    public function testExpiredIdleSessionIsInvalidated(): void
+    {
+        Session::start([
+            'session_name' => 'fastphunzira_test',
+            'session_lifetime' => 1200,
+            'session_idle_timeout' => 60,
+            'require_https' => false,
+            'cookie_httponly' => true,
+            'cookie_samesite' => 'Lax',
+        ]);
+
+        Session::set('user_id', 42);
+        $_SESSION['_last_activity_at'] = time() - 120;
+
+        Session::enforceIdleTimeout(60);
+
+        $this->assertArrayNotHasKey('user_id', $_SESSION);
+        $this->assertNotEmpty($_SESSION['_last_activity_at']);
+    }
+
+    public function testActiveIdleSessionRemainsValid(): void
+    {
+        Session::start([
+            'session_name' => 'fastphunzira_test',
+            'session_lifetime' => 1200,
+            'session_idle_timeout' => 60,
+            'require_https' => false,
+            'cookie_httponly' => true,
+            'cookie_samesite' => 'Lax',
+        ]);
+
+        Session::set('user_id', 42);
+        $_SESSION['_last_activity_at'] = time() - 10;
+
+        Session::enforceIdleTimeout(60);
+
+        $this->assertSame(42, $_SESSION['user_id']);
+        $this->assertGreaterThanOrEqual(time() - 1, $_SESSION['_last_activity_at']);
+    }
+
 }

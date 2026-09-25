@@ -16,7 +16,8 @@ final class CertificateService
         private EnrollmentRepositoryInterface $enrollmentRepository,
         private ExamRepositoryInterface $examRepository,
         private ExamAttemptRepositoryInterface $attemptRepository,
-        private CertificateRepositoryInterface $certificateRepository
+        private CertificateRepositoryInterface $certificateRepository,
+        private AuditLogService $auditLogService
     ) {
     }
 
@@ -49,7 +50,11 @@ final class CertificateService
             return ['success' => false, 'code' => 'already_issued', 'message' => 'A certificate for this course has already been issued.'];
         }
 
-        if (!empty($attempt['passed']) || (int) ($attempt['passed'] ?? 0) === 1) {
+        if (strtolower((string) ($attempt['status'] ?? '')) !== 'submitted') {
+            return ['success' => false, 'code' => 'ineligible', 'message' => 'Only finalized exam results can be used to issue a certificate.'];
+        }
+
+        if ((int) ($attempt['passed'] ?? 0) === 1) {
             $score = (float) ($attempt['percentage'] ?? 0);
         } else {
             return ['success' => false, 'code' => 'ineligible', 'message' => 'This exam result does not meet the certificate eligibility rules.'];
@@ -71,6 +76,20 @@ final class CertificateService
             'issued_at' => date('Y-m-d H:i:s'),
             'status' => 'active',
             'file_path' => '',
+        ]);
+
+        $this->auditLogService->record([
+            'user_id' => $studentId,
+            'action' => 'certificate_issued',
+            'entity_type' => 'certificate',
+            'entity_id' => (int) $certificate['id'],
+            'new_values' => [
+                'certificate_number' => $certificate['certificate_number'],
+                'student_id' => $studentId,
+                'course_id' => $courseId,
+                'exam_id' => $examId,
+                'status' => 'active',
+            ],
         ]);
 
         return ['success' => true, 'message' => 'Certificate issued successfully.', 'data' => $certificate];
@@ -136,17 +155,37 @@ final class CertificateService
             return ['success' => false, 'code' => 'validation_failed', 'message' => 'Certificate status is invalid.'];
         }
 
-        $certificate['status'] = $normalizedStatus;
-        $this->certificateRepository->updateStatus($certificateId, $normalizedStatus);
+        $oldStatus = strtolower((string) ($certificate['status'] ?? 'active'));
+        if ($oldStatus === $normalizedStatus) {
+            return ['success' => true, 'message' => 'Certificate status is already set.', 'data' => $certificate];
+        }
 
-        return ['success' => true, 'message' => 'Certificate status updated.', 'data' => $certificate];
+        $updated = $this->certificateRepository->updateStatus($certificateId, $normalizedStatus);
+        if ($updated === null) {
+            return ['success' => false, 'code' => 'update_failed', 'message' => 'Certificate status could not be updated.'];
+        }
+
+        $this->auditLogService->record([
+            'user_id' => $adminId,
+            'action' => 'certificate_status_changed',
+            'entity_type' => 'certificate',
+            'entity_id' => $certificateId,
+            'old_values' => ['status' => $oldStatus],
+            'new_values' => ['status' => $normalizedStatus],
+        ]);
+
+        return ['success' => true, 'message' => 'Certificate status updated.', 'data' => $updated];
     }
 
     private function generateCertificateNumber(): string
     {
         $year = date('Y');
-        $count = $this->certificateRepository->countAll() + 1;
 
-        return 'FP-' . $year . '-' . str_pad((string) $count, 6, '0', STR_PAD_LEFT);
+        do {
+            $number = random_int(1, 999999);
+            $certificateNumber = 'FP-' . $year . '-' . str_pad((string) $number, 6, '0', STR_PAD_LEFT);
+        } while ($this->certificateRepository->findByNumber($certificateNumber) !== null);
+
+        return $certificateNumber;
     }
 }

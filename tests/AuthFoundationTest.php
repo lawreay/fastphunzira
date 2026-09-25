@@ -67,7 +67,7 @@ final class AuthFoundationTest extends TestCase
 
         $this->assertTrue($result['success']);
         $this->assertSame('student', $result['data']['role']);
-        $this->assertNotSame('StrongPass123!', $result['data']['password_hash']);
+        $this->assertArrayNotHasKey('password_hash', $result['data']);
     }
 
     public function testDuplicateEmailIsRejected(): void

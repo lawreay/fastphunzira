@@ -38,6 +38,27 @@ final class Session
         }
 
         session_start();
+
+        self::enforceIdleTimeout((int) ($config['session_idle_timeout'] ?? $lifetime));
+    }
+
+    public static function enforceIdleTimeout(int $timeout): void
+    {
+        if ($timeout <= 0) {
+            return;
+        }
+
+        $now = time();
+        $lastActivity = (int) ($_SESSION['_last_activity_at'] ?? 0);
+
+        if ($lastActivity > 0 && ($now - $lastActivity) > $timeout) {
+            $_SESSION = [];
+            if (session_status() === PHP_SESSION_ACTIVE && PHP_SAPI !== 'cli') {
+                session_regenerate_id(true);
+            }
+        }
+
+        $_SESSION['_last_activity_at'] = $now;
     }
 
     public static function set(string $key, mixed $value): void

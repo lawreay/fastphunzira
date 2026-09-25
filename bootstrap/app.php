@@ -96,14 +96,15 @@ $examService = new ExamService(
     $questionRepository,
     $examAttemptRepository
 );
+$auditLogService = new AuditLogService($auditLogRepository);
 $certificateService = new CertificateService(
     $courseRepository,
     $enrollmentRepository,
     $examRepository,
     $examAttemptRepository,
-    $certificateRepository
+    $certificateRepository,
+    $auditLogService
 );
-$auditLogService = new AuditLogService($auditLogRepository);
 $enrollmentLearningService = new EnrollmentLearningService(
     $courseRepository,
     $enrollmentRepository,
