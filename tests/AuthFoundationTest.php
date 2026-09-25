@@ -170,7 +170,7 @@ final class AuthFoundationTest extends TestCase
         ]);
 
         $this->assertFalse($result['success']);
-        $this->assertSame('This account is not active.', $result['message']);
+        $this->assertSame('Invalid credentials.', $result['message']);
     }
 
     public function testModuleCreationRejectsNonAdminActorId(): void
