@@ -181,4 +181,16 @@ final class QuizServiceTest extends TestCase
         $this->assertFalse($second['success']);
         $this->assertSame('already_submitted', $second['code']);
     }
+    public function testQuizAttemptResultRequiresMatchingAuthenticatedUser(): void
+    {
+        Auth::login(['id' => 20, 'email' => 'student@example.com', 'role' => 'student']);
+
+        $attempt = $this->service->startAttempt(20, 1);
+        $this->assertTrue($attempt['success']);
+
+        Auth::logout();
+
+        $this->assertNull($this->service->getAttemptForStudent(20, (int) $attempt['data']['id']));
+    }
+
 }
