@@ -22,8 +22,8 @@ final class QuizService
 
     public function createQuiz(int $courseId, array $data, ?int $actorId = null): array
     {
-        if (!Auth::userCan('courses.manage')) {
-            return ['success' => false, 'code' => 'forbidden', 'message' => 'Only administrators can manage quizzes.'];
+        if (!Auth::userCan('courses.manage') || !Auth::check() || ($actorId !== null && (int) $actorId !== (int) Auth::userId())) {
+            return ['success' => false, 'code' => 'forbidden', 'message' => 'Only authenticated administrators can manage quizzes.'];
         }
 
         $course = $this->courseRepository->findById($courseId);
@@ -83,8 +83,8 @@ final class QuizService
 
     public function addQuestion(int $quizId, array $data, ?int $actorId = null): array
     {
-        if (!Auth::userCan('courses.manage')) {
-            return ['success' => false, 'code' => 'forbidden', 'message' => 'Only administrators can manage questions.'];
+        if (!Auth::userCan('courses.manage') || !Auth::check() || ($actorId !== null && (int) $actorId !== (int) Auth::userId())) {
+            return ['success' => false, 'code' => 'forbidden', 'message' => 'Only authenticated administrators can manage questions.'];
         }
 
         $quiz = $this->quizRepository->findById($quizId);
