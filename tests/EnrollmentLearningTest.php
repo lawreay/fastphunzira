@@ -198,4 +198,45 @@ final class EnrollmentLearningTest extends TestCase
         $this->assertSame(0, $progress['completed_lessons']);
         $this->assertSame(0, $progress['total_lessons']);
     }
+    public function testStudentEnrollmentsRequireMatchingAuthenticatedUser(): void
+    {
+        Auth::login(['id' => 20, 'email' => 'student@example.com', 'role' => 'student']);
+        $this->service->enrollStudentInCourse(20, 1);
+
+        Auth::logout();
+
+        $this->assertSame([], $this->service->getStudentEnrollments(20));
+    }
+
+    public function testLessonReadRequiresMatchingAuthenticatedUser(): void
+    {
+        Auth::login(['id' => 10, 'email' => 'admin@example.com', 'role' => 'admin']);
+
+        $module = $this->service->createModule(1, [
+            'title' => 'Protected module',
+            'description' => 'Protected content',
+            'sort_order' => 1,
+        ]);
+        $lesson = $this->service->createLesson((int) $module['data']['id'], [
+            'title' => 'Protected lesson',
+            'content' => 'Private lesson content',
+            'sort_order' => 1,
+        ]);
+
+        Auth::logout();
+
+        $this->assertNull($this->service->getLessonForStudent(20, (int) $lesson['data']['id']));
+    }
+
+    public function testCourseProgressRequiresMatchingAuthenticatedUser(): void
+    {
+        Auth::logout();
+
+        $progress = $this->service->getCourseProgress(20, 1);
+
+        $this->assertSame(0.0, $progress['percent']);
+        $this->assertSame(0, $progress['completed_lessons']);
+        $this->assertSame(0, $progress['total_lessons']);
+    }
+
 }
