@@ -11,15 +11,15 @@ final class CourseService
     {
     }
 
-    public function createCourse(array $data, int $actorId, ?bool $forceAdminCheck = null): array
+    public function createCourse(array $data, int $actorId): array
     {
-        $isAdmin = $forceAdminCheck ?? Auth::userCan('courses.manage');
+        $isAdmin = Auth::userCan('courses.manage');
 
-        if (!$isAdmin) {
+        if (!$isAdmin || !Auth::check() || (int) Auth::userId() !== $actorId) {
             return [
                 'success' => false,
                 'code' => 'forbidden',
-                'message' => 'Only administrators can create courses.',
+                'message' => 'Only authenticated administrators can create courses.',
             ];
         }
 
@@ -59,15 +59,15 @@ final class CourseService
         ];
     }
 
-    public function updateCourse(int $courseId, array $data, int $actorId, ?bool $forceAdminCheck = null): array
+    public function updateCourse(int $courseId, array $data, int $actorId): array
     {
-        $isAdmin = $forceAdminCheck ?? Auth::userCan('courses.manage');
+        $isAdmin = Auth::userCan('courses.manage');
 
-        if (!$isAdmin) {
+        if (!$isAdmin || !Auth::check() || (int) Auth::userId() !== $actorId) {
             return [
                 'success' => false,
                 'code' => 'forbidden',
-                'message' => 'Only administrators can update courses.',
+                'message' => 'Only authenticated administrators can update courses.',
             ];
         }
 
@@ -97,10 +97,6 @@ final class CourseService
         if (isset($data['status'])) {
             $status = strtolower((string) $data['status']);
             $updates['status'] = in_array($status, ['draft', 'published'], true) ? $status : 'draft';
-        }
-
-        if (isset($data['created_by'])) {
-            $updates['created_by'] = (int) $data['created_by'];
         }
 
         foreach (['title', 'slug', 'description'] as $field) {

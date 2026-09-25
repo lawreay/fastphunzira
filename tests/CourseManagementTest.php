@@ -114,12 +114,14 @@ final class CourseManagementTest extends TestCase
 
     public function testUnpublishedCourseDetailIsHiddenFromPublicView(): void
     {
+        Auth::login(['id' => 10, 'email' => 'admin@example.com', 'role' => 'admin']);
+
         $created = $this->courseService->createCourse([
             'title' => 'Draft course',
             'slug' => 'draft-course',
             'description' => 'Hidden from public',
             'status' => 'draft',
-        ], 10, true);
+        ], 10);
 
         $this->assertNull($this->courseService->getCourseDetail((int) $created['data']['id']));
         $this->assertNotNull($this->courseService->getCourseDetail((int) $created['data']['id'], true));
@@ -127,6 +129,8 @@ final class CourseManagementTest extends TestCase
 
     public function testDuplicateSlugIsRejected(): void
     {
+        Auth::login(['id' => 10, 'email' => 'admin@example.com', 'role' => 'admin']);
+
         $this->courseService->createCourse([
             'title' => 'Course One',
             'slug' => 'shared-slug',
@@ -147,14 +151,16 @@ final class CourseManagementTest extends TestCase
 
     public function testStudentCannotModifyCourse(): void
     {
-        Auth::login(['id' => 20, 'email' => 'student@example.com', 'role' => 'student']);
+        Auth::login(['id' => 10, 'email' => 'admin@example.com', 'role' => 'admin']);
 
         $created = $this->courseService->createCourse([
             'title' => 'Course to protect',
             'slug' => 'course-to-protect',
             'description' => 'Draft course',
             'status' => 'draft',
-        ], 10, true);
+        ], 10);
+
+        Auth::login(['id' => 20, 'email' => 'student@example.com', 'role' => 'student']);
 
         $result = $this->courseService->updateCourse((int) $created['data']['id'], ['status' => 'published'], 20);
 
@@ -164,6 +170,8 @@ final class CourseManagementTest extends TestCase
 
     public function testPublishedCourseCatalogueExcludesDrafts(): void
     {
+        Auth::login(['id' => 10, 'email' => 'admin@example.com', 'role' => 'admin']);
+
         $this->courseService->createCourse([
             'title' => 'Visible course',
             'slug' => 'visible-course',
