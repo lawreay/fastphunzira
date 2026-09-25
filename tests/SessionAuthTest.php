@@ -21,6 +21,7 @@ final class SessionAuthTest extends TestCase
         Session::start([
             'session_name' => 'fastphunzira_test',
             'session_lifetime' => 1200,
+            'session_idle_timeout' => 1200,
             'require_https' => false,
             'cookie_httponly' => true,
             'cookie_samesite' => 'Lax',
