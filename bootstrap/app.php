@@ -23,9 +23,11 @@ use App\Repositories\InMemoryCourseModuleRepository;
 use App\Repositories\InMemoryEnrollmentRepository;
 use App\Repositories\InMemoryLessonProgressRepository;
 use App\Repositories\InMemoryLessonRepository;
+use App\Repositories\InMemoryLoginHistoryRepository;
 use App\Repositories\InMemoryUserRepository;
 use App\Repositories\LessonProgressRepository;
 use App\Repositories\LessonRepository;
+use App\Repositories\LoginHistoryRepository;
 use App\Repositories\QuestionRepository;
 use App\Repositories\QuizAttemptRepository;
 use App\Repositories\QuizRepository;
@@ -36,6 +38,7 @@ use App\Services\CertificateService;
 use App\Services\CourseService;
 use App\Services\EnrollmentLearningService;
 use App\Services\ExamService;
+use App\Services\LoginSecurityService;
 use App\Services\QuizService;
 
 Env::load(__DIR__ . '/../.env');
@@ -67,7 +70,16 @@ try {
 }
 
 $userRepository = $pdo !== null ? new UserRepository($pdo) : new InMemoryUserRepository();
-$authService = new AuthService($userRepository);
+$auditLogRepository = $pdo !== null ? new AuditLogRepository($pdo) : new InMemoryAuditLogRepository();
+$loginHistoryRepository = $pdo !== null ? new LoginHistoryRepository($pdo) : new InMemoryLoginHistoryRepository();
+
+$auditLogService = new AuditLogService($auditLogRepository);
+$loginSecurityService = new LoginSecurityService(
+    $loginHistoryRepository,
+    $securityConfig['login_security'] ?? []
+);
+$authService = new AuthService($userRepository, $loginSecurityService, $auditLogService);
+
 $courseRepository = $pdo !== null ? new CourseRepository($pdo) : new \App\Repositories\InMemoryCourseRepository();
 $moduleRepository = $pdo !== null ? new CourseModuleRepository($pdo) : new InMemoryCourseModuleRepository();
 $lessonRepository = $pdo !== null ? new LessonRepository($pdo) : new InMemoryLessonRepository();
@@ -78,7 +90,6 @@ $questionRepository = $pdo !== null ? new QuestionRepository($pdo) : new \App\Re
 $quizAttemptRepository = $pdo !== null ? new QuizAttemptRepository($pdo) : new \App\Repositories\InMemoryQuizAttemptRepository();
 $examRepository = $pdo !== null ? new ExamRepository($pdo) : new InMemoryExamRepository();
 $examAttemptRepository = $pdo !== null ? new ExamAttemptRepository($pdo) : new InMemoryExamAttemptRepository();
-$auditLogRepository = $pdo !== null ? new AuditLogRepository($pdo) : new InMemoryAuditLogRepository();
 $certificateRepository = $pdo !== null ? new CertificateRepository($pdo) : new InMemoryCertificateRepository();
 $courseService = new CourseService($courseRepository);
 $courseController = new CourseController($courseService);
@@ -96,7 +107,6 @@ $examService = new ExamService(
     $questionRepository,
     $examAttemptRepository
 );
-$auditLogService = new AuditLogService($auditLogRepository);
 $certificateService = new CertificateService(
     $courseRepository,
     $enrollmentRepository,
@@ -123,7 +133,6 @@ return [
     'courseRepository' => $courseRepository,
     'moduleRepository' => $moduleRepository,
     'lessonRepository' => $lessonRepository,
-    'enrollmentRepository' => $enrollmentRepository,
     'progressRepository' => $progressRepository,
     'enrollmentLearningService' => $enrollmentLearningService,
     'quizRepository' => $quizRepository,
@@ -135,6 +144,8 @@ return [
     'examService' => $examService,
     'auditLogRepository' => $auditLogRepository,
     'auditLogService' => $auditLogService,
+    'loginHistoryRepository' => $loginHistoryRepository,
+    'loginSecurityService' => $loginSecurityService,
     'certificateRepository' => $certificateRepository,
     'certificateService' => $certificateService,
 ];

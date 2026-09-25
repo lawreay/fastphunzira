@@ -7,8 +7,13 @@ use App\Repositories\UserRepositoryInterface;
 
 final class AuthService
 {
-    public function __construct(private UserRepositoryInterface $userRepository)
-    {
+    private const DUMMY_PASSWORD_HASH = '$2y$12$0EJ29ChY72blbaXigdv4LOog4CXT9E4zriIn8g5ab0eikzsLIdcz2';
+
+    public function __construct(
+        private UserRepositoryInterface $userRepository,
+        private ?LoginSecurityService $loginSecurity = null,
+        private ?AuditLogService $auditLog = null
+    ) {
     }
 
     public function register(array $data): array
@@ -77,20 +82,40 @@ final class AuthService
             return ['success' => false, 'message' => 'Email and password are required.'];
         }
 
-        $user = $this->userRepository->findByEmail($email);
+        if ($this->loginSecurity !== null && $this->loginSecurity->isThrottled($email, $this->clientIp())) {
+            $this->auditSecurityEvent('login_throttled', $email);
 
-        if ($user === null || !isset($user['password_hash']) || !password_verify($password, $user['password_hash'])) {
+            return ['success' => false, 'message' => 'Invalid credentials.'];
+        }
+
+        $user = $this->userRepository->findByEmail($email);
+        $passwordHash = is_array($user) && isset($user['password_hash'])
+            ? (string) $user['password_hash']
+            : self::DUMMY_PASSWORD_HASH;
+
+        $passwordValid = password_verify($password, $passwordHash);
+
+        if ($user === null || !$passwordValid || !isset($user['password_hash'])) {
+            $this->recordFailedLogin($email, is_array($user) ? (int) ($user['id'] ?? 0) : null);
+            $this->auditSecurityEvent('login_failed', $email, is_array($user) ? (int) ($user['id'] ?? 0) : null);
+
             return ['success' => false, 'message' => 'Invalid credentials.'];
         }
 
         if (($user['status'] ?? 'active') !== 'active') {
-            return ['success' => false, 'message' => 'This account is not active.'];
+            $this->recordFailedLogin($email, (int) ($user['id'] ?? 0));
+            $this->auditSecurityEvent('login_failed', $email, (int) ($user['id'] ?? 0));
+
+            return ['success' => false, 'message' => 'Invalid credentials.'];
         }
 
         $user['role'] = $user['role'] ?? 'student';
         $sessionUser = $user;
         unset($sessionUser['password_hash']);
         Auth::login($sessionUser);
+
+        $this->recordSuccessfulLogin($email, (int) ($user['id'] ?? 0));
+        $this->auditSecurityEvent('login_success', $email, (int) ($user['id'] ?? 0));
 
         return [
             'success' => true,
@@ -112,5 +137,59 @@ final class AuthService
     public function currentUser(): ?array
     {
         return Auth::user();
+    }
+
+    private function recordFailedLogin(string $email, ?int $userId): void
+    {
+        if ($this->loginSecurity === null) {
+            return;
+        }
+
+        try {
+            $this->loginSecurity->recordFailure($email, $userId ?: null);
+        } catch (\Throwable $e) {
+            error_log('Login failure history could not be recorded: ' . $e->getMessage());
+        }
+    }
+
+    private function recordSuccessfulLogin(string $email, int $userId): void
+    {
+        if ($this->loginSecurity === null) {
+            return;
+        }
+
+        try {
+            $this->loginSecurity->recordSuccess($email, $userId);
+        } catch (\Throwable $e) {
+            error_log('Login success history could not be recorded: ' . $e->getMessage());
+        }
+    }
+
+    private function auditSecurityEvent(string $action, string $email, ?int $userId = null): void
+    {
+        if ($this->auditLog === null) {
+            return;
+        }
+
+        try {
+            $this->auditLog->record([
+                'user_id' => $userId ?: null,
+                'action' => $action,
+                'entity_type' => 'authentication',
+                'entity_id' => $userId ?: null,
+                'new_values' => [
+                    'identifier_hash' => hash('sha256', $email),
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            error_log('Authentication security event could not be audited: ' . $e->getMessage());
+        }
+    }
+
+    private function clientIp(): string
+    {
+        $ip = trim((string) ($_SERVER['REMOTE_ADDR'] ?? ''));
+
+        return filter_var($ip, FILTER_VALIDATE_IP) ? $ip : '';
     }
 }

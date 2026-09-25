@@ -20,5 +20,11 @@ final class AuthSchemaReviewTest extends TestCase
         $this->assertStringContainsString('FOREIGN KEY (user_id) REFERENCES users', $migration);
         $this->assertStringContainsString('FOREIGN KEY (role_id) REFERENCES roles', $migration);
         $this->assertStringContainsString("('student'", $seed);
+        $this->assertStringContainsString('CREATE TABLE IF NOT EXISTS login_history', $migration);
+
+        $loginIndexes = file_get_contents(__DIR__ . '/../database/migrations/007_add_login_history_indexes.sql');
+        $this->assertNotFalse($loginIndexes);
+        $this->assertStringContainsString('idx_login_history_email_created', $loginIndexes);
+        $this->assertStringContainsString('idx_login_history_ip_created', $loginIndexes);
     }
 }
