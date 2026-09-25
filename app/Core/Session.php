@@ -44,7 +44,7 @@ final class Session
 
     public static function enforceIdleTimeout(int $timeout): void
     {
-        if ($timeout <= 0 || PHP_SAPI === 'cli' || session_status() !== PHP_SESSION_ACTIVE) {
+        if ($timeout <= 0) {
             return;
         }
 
@@ -53,7 +53,9 @@ final class Session
 
         if ($lastActivity > 0 && ($now - $lastActivity) > $timeout) {
             $_SESSION = [];
-            session_regenerate_id(true);
+            if (session_status() === PHP_SESSION_ACTIVE && PHP_SAPI !== 'cli') {
+                session_regenerate_id(true);
+            }
         }
 
         $_SESSION['_last_activity_at'] = $now;
