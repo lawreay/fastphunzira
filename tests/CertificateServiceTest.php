@@ -3,11 +3,13 @@
 namespace App\Tests;
 
 use App\Core\Auth;
+use App\Repositories\InMemoryAuditLogRepository;
 use App\Repositories\InMemoryCertificateRepository;
 use App\Repositories\InMemoryCourseRepository;
 use App\Repositories\InMemoryEnrollmentRepository;
 use App\Repositories\InMemoryExamAttemptRepository;
 use App\Repositories\InMemoryExamRepository;
+use App\Services\AuditLogService;
 use App\Services\CertificateService;
 use PHPUnit\Framework\TestCase;
 
@@ -18,6 +20,7 @@ final class CertificateServiceTest extends TestCase
     private InMemoryExamRepository $examRepository;
     private InMemoryExamAttemptRepository $attemptRepository;
     private InMemoryCertificateRepository $certificateRepository;
+    private InMemoryAuditLogRepository $auditLogRepository;
     private CertificateService $service;
 
     protected function setUp(): void
@@ -44,13 +47,15 @@ final class CertificateServiceTest extends TestCase
         $this->examRepository = new InMemoryExamRepository();
         $this->attemptRepository = new InMemoryExamAttemptRepository();
         $this->certificateRepository = new InMemoryCertificateRepository();
+        $this->auditLogRepository = new InMemoryAuditLogRepository();
 
         $this->service = new CertificateService(
             $this->courseRepository,
             $this->enrollmentRepository,
             $this->examRepository,
             $this->attemptRepository,
-            $this->certificateRepository
+            $this->certificateRepository,
+            new AuditLogService($this->auditLogRepository)
         );
     }
 
@@ -85,6 +90,11 @@ final class CertificateServiceTest extends TestCase
         $this->assertMatchesRegularExpression('/^FP-\d{4}-\d{6}$/', $issued['data']['certificate_number']);
         $this->assertNotSame('', $issued['data']['verification_code']);
 
+        $logs = $this->auditLogRepository->findRecent(10);
+        $this->assertCount(1, $logs);
+        $this->assertSame('certificate_issued', $logs[0]['action']);
+        $this->assertSame((int) $issued['data']['id'], (int) $logs[0]['entity_id']);
+
         $verified = $this->service->verifyCertificate($issued['data']['certificate_number'], $issued['data']['verification_code']);
 
         $this->assertNotNull($verified);
@@ -95,6 +105,37 @@ final class CertificateServiceTest extends TestCase
         $duplicate = $this->service->issueCertificate(20, 1, (int) $exam['id'], (int) $attempt['id']);
         $this->assertFalse($duplicate['success']);
         $this->assertSame('already_issued', $duplicate['code']);
+    }
+
+    public function testInProgressAttemptCannotGenerateCertificate(): void
+    {
+        Auth::login(['id' => 10, 'email' => 'admin@example.com', 'role' => 'admin']);
+        $exam = $this->examRepository->create([
+            'course_id' => 1,
+            'title' => 'Unfinalized attempt',
+            'description' => 'No certificate until submitted',
+            'time_limit' => 30,
+            'passing_score' => 70,
+            'attempts_allowed' => 1,
+            'status' => 'published',
+            'created_by' => 10,
+        ]);
+
+        $attempt = $this->attemptRepository->create([
+            'exam_id' => (int) $exam['id'],
+            'user_id' => 20,
+            'status' => 'in_progress',
+            'score' => 90,
+            'percentage' => 90,
+            'passed' => 1,
+        ]);
+
+        Auth::login(['id' => 20, 'email' => 'student@example.com', 'role' => 'student']);
+        $result = $this->service->issueCertificate(20, 1, (int) $exam['id'], (int) $attempt['id']);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('ineligible', $result['code']);
+        $this->assertSame([], $this->certificateRepository->findAll());
     }
 
     public function testIneligibleAttemptsCannotGenerateCertificates(): void
@@ -162,6 +203,12 @@ final class CertificateServiceTest extends TestCase
         $revoked = $this->service->updateCertificateStatus(10, (int) $issued['data']['id'], 'revoked');
         $this->assertTrue($revoked['success']);
         $this->assertSame('revoked', $revoked['data']['status']);
+
+        $logs = $this->auditLogRepository->findRecent(10);
+        $this->assertCount(2, $logs);
+        $this->assertSame('certificate_status_changed', $logs[0]['action']);
+        $this->assertSame(['status' => 'active'], $logs[0]['old_values']);
+        $this->assertSame(['status' => 'revoked'], $logs[0]['new_values']);
 
         $verified = $this->service->verifyCertificate($issued['data']['certificate_number'], $issued['data']['verification_code']);
         $this->assertNull($verified);
