@@ -91,3 +91,46 @@ If a deployment fails:
 ## 11. Operational Notes
 
 The production environment should remain simple, secure, and configurable. FastPhunzira should be deployed in a way that allows easy rollback, clear monitoring, and safe ongoing maintenance.
+
+
+## 12. FastPhunzira Release Gate
+
+Production deployment follows this controlled path:
+
+```
+Pull Request
+   ↓
+GitHub Actions CI
+   ↓
+main
+   ↓
+Staging
+   ↓
+Smoke + security testing
+   ↓
+Production
+```
+
+Use the following operational documents:
+
+- `docs/PRODUCTION-READINESS-CHECKLIST.md`
+- `docs/STAGING-DEPLOYMENT.md`
+- `docs/ROLLBACK-AND-RECOVERY.md`
+
+Production must not be deployed directly from an unreviewed feature branch.
+
+## 13. Migration Safety
+
+Database migrations must be tested on staging before production.
+
+The current certificate verification rate-limiting implementation requires its migration to be applied before persistent rate limiting can operate correctly.
+
+Never treat an application code rollback as a database rollback. Review the migration state and use the documented recovery procedure when database restoration is required.
+
+## 14. Deployment Automation
+
+Deployment automation is intentionally separate from CI.
+
+CI validates the code. Deployment moves a validated release to an environment.
+
+Automatic production deployment should only be introduced after the staging deployment mechanism, credentials, rollback procedure, and hosting capabilities have been verified.
