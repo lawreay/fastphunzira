@@ -64,7 +64,6 @@ final class AuthService
                 'email' => $createdUser['email'],
                 'status' => $createdUser['status'] ?? 'active',
                 'role' => $createdUser['role'] ?? 'student',
-                'password_hash' => $createdUser['password_hash'],
             ],
         ];
     }
