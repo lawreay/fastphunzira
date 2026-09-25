@@ -10,6 +10,8 @@ use App\Core\Session;
 use App\Controllers\CourseController;
 use App\Repositories\AuditLogRepository;
 use App\Repositories\CertificateRepository;
+use App\Repositories\CertificateVerificationAttemptRepository;
+use App\Repositories\InMemoryCertificateVerificationAttemptRepository;
 use App\Repositories\CourseModuleRepository;
 use App\Repositories\CourseRepository;
 use App\Repositories\EnrollmentRepository;
@@ -35,6 +37,7 @@ use App\Repositories\UserRepository;
 use App\Services\AuditLogService;
 use App\Services\AuthService;
 use App\Services\CertificateService;
+use App\Services\CertificateVerificationRateLimitService;
 use App\Services\CourseService;
 use App\Services\EnrollmentLearningService;
 use App\Services\ExamService;
@@ -91,6 +94,11 @@ $quizAttemptRepository = $pdo !== null ? new QuizAttemptRepository($pdo) : new \
 $examRepository = $pdo !== null ? new ExamRepository($pdo) : new InMemoryExamRepository();
 $examAttemptRepository = $pdo !== null ? new ExamAttemptRepository($pdo) : new InMemoryExamAttemptRepository();
 $certificateRepository = $pdo !== null ? new CertificateRepository($pdo) : new InMemoryCertificateRepository();
+$certificateVerificationRepository = $pdo !== null ? new CertificateVerificationAttemptRepository($pdo) : new InMemoryCertificateVerificationAttemptRepository();
+$certificateVerificationRateLimitService = new CertificateVerificationRateLimitService(
+    $certificateVerificationRepository,
+    $securityConfig['certificate_verification'] ?? []
+);
 $courseService = new CourseService($courseRepository);
 $courseController = new CourseController($courseService);
 $quizService = new QuizService(
@@ -148,4 +156,5 @@ return [
     'loginSecurityService' => $loginSecurityService,
     'certificateRepository' => $certificateRepository,
     'certificateService' => $certificateService,
+    'certificateVerificationRateLimitService' => $certificateVerificationRateLimitService,
 ];

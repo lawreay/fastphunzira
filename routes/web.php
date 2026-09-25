@@ -16,6 +16,7 @@ $examAttemptRepository = $app['examAttemptRepository'];
 $examService = $app['examService'];
 $auditLogService = $app['auditLogService'];
 $certificateService = $app['certificateService'];
+$certificateVerificationRateLimitService = $app['certificateVerificationRateLimitService'];
 
 use App\Core\Auth;
 use App\Support\Csrf;
@@ -805,10 +806,22 @@ return [
             'certificates' => $certificates,
         ];
     }],
-    ['GET', '/verify/{certificate_number}', function (string $certificateNumber) use ($certificateService) {
+    ['GET', '/verify/{certificate_number}', function (string $certificateNumber) use ($certificateService, $certificateVerificationRateLimitService) {
+        $ipAddress = trim((string) ($_SERVER['REMOTE_ADDR'] ?? ''));
         $verificationCode = trim((string) ($_GET['code'] ?? ''));
 
+        if ($certificateVerificationRateLimitService->isThrottled($ipAddress)) {
+            return [
+                'view' => 'certificates/verify',
+                'title' => 'Certificate Verification',
+                'certificate_number' => $certificateNumber,
+                'error' => 'Too many verification attempts. Please try again later.',
+            ];
+        }
+
         if ($verificationCode === '') {
+            $certificateVerificationRateLimitService->recordAttempt($ipAddress, $certificateNumber, false);
+
             return [
                 'view' => 'certificates/verify',
                 'title' => 'Certificate Verification',
@@ -818,6 +831,7 @@ return [
         }
 
         $certificate = $certificateService->verifyCertificate($certificateNumber, $verificationCode);
+        $certificateVerificationRateLimitService->recordAttempt($ipAddress, $certificateNumber, $certificate !== null);
 
         if ($certificate === null) {
             return [
