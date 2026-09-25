@@ -11,6 +11,10 @@ use App\Controllers\CourseController;
 use App\Repositories\CourseModuleRepository;
 use App\Repositories\CourseRepository;
 use App\Repositories\EnrollmentRepository;
+use App\Repositories\ExamAttemptRepository;
+use App\Repositories\ExamRepository;
+use App\Repositories\InMemoryExamAttemptRepository;
+use App\Repositories\InMemoryExamRepository;
 use App\Repositories\InMemoryCourseModuleRepository;
 use App\Repositories\InMemoryEnrollmentRepository;
 use App\Repositories\InMemoryLessonProgressRepository;
@@ -25,6 +29,7 @@ use App\Repositories\UserRepository;
 use App\Services\AuthService;
 use App\Services\CourseService;
 use App\Services\EnrollmentLearningService;
+use App\Services\ExamService;
 use App\Services\QuizService;
 
 Env::load(__DIR__ . '/../.env');
@@ -65,6 +70,8 @@ $progressRepository = $pdo !== null ? new LessonProgressRepository($pdo) : new I
 $quizRepository = $pdo !== null ? new QuizRepository($pdo) : new \App\Repositories\InMemoryQuizRepository();
 $questionRepository = $pdo !== null ? new QuestionRepository($pdo) : new \App\Repositories\InMemoryQuestionRepository();
 $quizAttemptRepository = $pdo !== null ? new QuizAttemptRepository($pdo) : new \App\Repositories\InMemoryQuizAttemptRepository();
+$examRepository = $pdo !== null ? new ExamRepository($pdo) : new InMemoryExamRepository();
+$examAttemptRepository = $pdo !== null ? new ExamAttemptRepository($pdo) : new InMemoryExamAttemptRepository();
 $courseService = new CourseService($courseRepository);
 $courseController = new CourseController($courseService);
 $quizService = new QuizService(
@@ -73,6 +80,13 @@ $quizService = new QuizService(
     $quizRepository,
     $questionRepository,
     $quizAttemptRepository
+);
+$examService = new ExamService(
+    $courseRepository,
+    $enrollmentRepository,
+    $examRepository,
+    $questionRepository,
+    $examAttemptRepository
 );
 $enrollmentLearningService = new EnrollmentLearningService(
     $courseRepository,
@@ -99,4 +113,7 @@ return [
     'questionRepository' => $questionRepository,
     'quizAttemptRepository' => $quizAttemptRepository,
     'quizService' => $quizService,
+    'examRepository' => $examRepository,
+    'examAttemptRepository' => $examAttemptRepository,
+    'examService' => $examService,
 ];

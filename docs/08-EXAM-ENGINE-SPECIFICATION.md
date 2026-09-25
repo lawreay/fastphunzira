@@ -154,3 +154,7 @@ The system should log:
 ## 13. Implementation Notes
 
 The exam engine should be treated as a security-critical component. It must validate all calculations on the server, never trust client state, and maintain immutable attempt records for review and dispute resolution.
+
+
+### Expiration Handling
+Expired attempts are **auto-submitted server-side**. The browser timer is informational only; the server checks `expires_at`, scores the attempt using authoritative question data, and finalizes the result.

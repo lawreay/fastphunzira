@@ -307,3 +307,8 @@ questions ──< question_options
 ## 10. Notes for Implementation
 
 The database should be defined through migration files and should be supported by seed data for roles, permissions, and basic default admin content. The schema should be reviewed alongside the API and security requirements before implementation begins.
+
+
+### Exam attempt concurrency
+
+The `exam_attempts` table enforces at most one `in_progress` attempt for a given student and exam through a generated active-attempt key and a unique index. Submitted attempts remain repeatable for configured retakes because their generated active key is `NULL`.
