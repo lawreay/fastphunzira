@@ -61,7 +61,7 @@ final class LoginHistoryRepository implements LoginHistoryRepositoryInterface
         return (int) $statement->fetchColumn();
     }
 
-    public function countFailuresSinceLastSuccessByIp(string $ipAddress, int $windowSeconds): int
+    public function countFailuresByIp(string $ipAddress, int $windowSeconds): int
     {
         $windowSeconds = max(1, $windowSeconds);
 
@@ -71,25 +71,13 @@ final class LoginHistoryRepository implements LoginHistoryRepositoryInterface
 
         $statement = $this->pdo->prepare(
             "SELECT COUNT(*)
-             FROM login_history h
-             WHERE h.ip_address = :ip
-               AND h.status = 'failed'
-               AND h.created_at >= DATE_SUB(NOW(), INTERVAL {$windowSeconds} SECOND)
-               AND h.created_at > COALESCE(
-                   (
-                       SELECT MAX(s.created_at)
-                       FROM login_history s
-                       WHERE s.ip_address = :success_ip
-                         AND s.status = 'success'
-                   ),
-                   '1970-01-01 00:00:00'
-               )"
+             FROM login_history
+             WHERE ip_address = :ip
+               AND status = 'failed'
+               AND created_at >= DATE_SUB(NOW(), INTERVAL {$windowSeconds} SECOND)"
         );
 
-        $statement->execute([
-            ':ip' => $ipAddress,
-            ':success_ip' => $ipAddress,
-        ]);
+        $statement->execute([':ip' => $ipAddress]);
 
         return (int) $statement->fetchColumn();
     }
