@@ -19,35 +19,14 @@ final class InMemoryLoginHistoryRepository implements LoginHistoryRepositoryInte
 
     public function countFailuresSinceLastSuccessByEmail(string $email, int $windowSeconds): int
     {
-        return $this->countFailures(
-            static fn (array $entry): bool => strtolower((string) ($entry['email'] ?? '')) === strtolower(trim($email)),
-            $windowSeconds,
-            strtolower(trim($email))
-        );
-    }
-
-    public function countFailuresSinceLastSuccessByIp(string $ipAddress, int $windowSeconds): int
-    {
-        if ($ipAddress === '') {
-            return 0;
-        }
-
-        return $this->countFailures(
-            static fn (array $entry): bool => (string) ($entry['ip_address'] ?? '') === $ipAddress,
-            $windowSeconds,
-            $ipAddress
-        );
-    }
-
-    private function countFailures(callable $matches, int $windowSeconds, string $successKey): int
-    {
+        $email = strtolower(trim($email));
         $cutoff = time() - max(1, $windowSeconds);
         $lastSuccessAt = 0;
 
         foreach ($this->entries as $entry) {
             $createdAt = strtotime((string) ($entry['created_at'] ?? '')) ?: 0;
 
-            if ($createdAt < $cutoff || !$matches($entry)) {
+            if ($createdAt < $cutoff || strtolower((string) ($entry['email'] ?? '')) !== $email) {
                 continue;
             }
 
@@ -61,11 +40,38 @@ final class InMemoryLoginHistoryRepository implements LoginHistoryRepositoryInte
         foreach ($this->entries as $entry) {
             $createdAt = strtotime((string) ($entry['created_at'] ?? '')) ?: 0;
 
-            if ($createdAt < $cutoff || $createdAt <= $lastSuccessAt || !$matches($entry)) {
+            if (
+                $createdAt < $cutoff
+                || $createdAt <= $lastSuccessAt
+                || strtolower((string) ($entry['email'] ?? '')) !== $email
+                || ($entry['status'] ?? '') !== 'failed'
+            ) {
                 continue;
             }
 
-            if (($entry['status'] ?? '') === 'failed') {
+            $count++;
+        }
+
+        return $count;
+    }
+
+    public function countFailuresByIp(string $ipAddress, int $windowSeconds): int
+    {
+        if ($ipAddress === '') {
+            return 0;
+        }
+
+        $cutoff = time() - max(1, $windowSeconds);
+        $count = 0;
+
+        foreach ($this->entries as $entry) {
+            $createdAt = strtotime((string) ($entry['created_at'] ?? '')) ?: 0;
+
+            if (
+                $createdAt >= $cutoff
+                && (string) ($entry['ip_address'] ?? '') === $ipAddress
+                && ($entry['status'] ?? '') === 'failed'
+            ) {
                 $count++;
             }
         }
