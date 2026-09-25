@@ -53,31 +53,28 @@ final class LoginSecurityServiceTest extends TestCase
         $this->assertTrue($service->isThrottled('another@example.com', '192.0.2.20'));
     }
 
-    public function testSuccessfulLoginResetsAccountFailureWindow(): void
+    public function testSuccessfulLoginResetsAccountFailuresButNotSharedIpFailures(): void
     {
         $repository = new InMemoryLoginHistoryRepository();
         $service = new LoginSecurityService($repository, [
             'window_seconds' => 900,
             'max_failures_per_account' => 3,
-            'max_failures_per_ip' => 20,
+            'max_failures_per_ip' => 3,
         ]);
 
         $_SERVER['REMOTE_ADDR'] = '192.0.2.30';
 
         $service->recordFailure('student@example.com');
         $service->recordFailure('student@example.com');
-        $this->assertSame(
-            ['account' => 2, 'ip' => 2],
-            $service->failureCounts('student@example.com', '192.0.2.30')
-        );
+        $service->recordFailure('other@example.com');
 
         $service->recordSuccess('student@example.com', 7);
 
         $this->assertSame(
-            ['account' => 0, 'ip' => 0],
+            ['account' => 0, 'ip' => 3],
             $service->failureCounts('student@example.com', '192.0.2.30')
         );
-        $this->assertFalse($service->isThrottled('student@example.com', '192.0.2.30'));
+        $this->assertTrue($service->isThrottled('student@example.com', '192.0.2.30'));
     }
 
     public function testChangingEmailDoesNotBypassIpThreshold(): void
