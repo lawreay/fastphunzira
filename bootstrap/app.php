@@ -50,6 +50,9 @@ $config = require __DIR__ . '/../config/app.php';
 $dbConfig = require __DIR__ . '/../config/database.php';
 $securityConfig = require __DIR__ . '/../config/security.php';
 
+$appEnv = strtolower((string) ($config['app_env'] ?? getenv('APP_ENV') ?: 'local'));
+Env::validateForRuntime($appEnv);
+
 Session::start($securityConfig);
 
 if (!function_exists('redirect_to')) {
@@ -63,6 +66,10 @@ try {
     $pdo = Database::connect($dbConfig);
 } catch (Throwable $e) {
     error_log('Database connection failed: ' . $e->getMessage());
+
+    if (!in_array($appEnv, ['local', 'testing'], true)) {
+        throw $e;
+    }
 
     if (($config['app_env'] ?? 'local') === 'production') {
         http_response_code(500);
