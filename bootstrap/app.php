@@ -117,14 +117,16 @@ $quizService = new QuizService(
     $enrollmentRepository,
     $quizRepository,
     $questionRepository,
-    $quizAttemptRepository
+    $quizAttemptRepository,
+    $studentMembershipRepository
 );
 $examService = new ExamService(
     $courseRepository,
     $enrollmentRepository,
     $examRepository,
     $questionRepository,
-    $examAttemptRepository
+    $examAttemptRepository,
+    $studentMembershipRepository
 );
 $certificateService = new CertificateService(
     $courseRepository,
