@@ -8,6 +8,7 @@ use App\Repositories\EnrollmentRepositoryInterface;
 use App\Repositories\QuestionRepositoryInterface;
 use App\Repositories\QuizAttemptRepositoryInterface;
 use App\Repositories\QuizRepositoryInterface;
+use App\Repositories\StudentMembershipRepository;
 
 final class QuizService
 {
@@ -16,7 +17,8 @@ final class QuizService
         private EnrollmentRepositoryInterface $enrollmentRepository,
         private QuizRepositoryInterface $quizRepository,
         private QuestionRepositoryInterface $questionRepository,
-        private QuizAttemptRepositoryInterface $attemptRepository
+        private QuizAttemptRepositoryInterface $attemptRepository,
+        private ?StudentMembershipRepository $membershipRepository = null
     ) {
     }
 
@@ -160,6 +162,11 @@ final class QuizService
         }
 
         if ($this->enrollmentRepository->findByStudentAndCourse($studentId, (int) $quiz['course_id']) === null) {
+            return null;
+        }
+
+        if (strtolower((string) ($course['access_tier'] ?? 'regular')) === 'premium'
+            && ($this->membershipRepository === null || !$this->membershipRepository->isPremiumActive($studentId))) {
             return null;
         }
 
