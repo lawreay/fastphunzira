@@ -417,6 +417,53 @@ return [
         ];
     }],
 
+    ['GET', '/admin/modules/{moduleId}/lessons/create', function (string $moduleId) use ($moduleRepository) {
+        if (!Auth::userCan('courses.manage')) {
+            return redirect_to('/login');
+        }
+
+        $module = $moduleRepository->findById((int) $moduleId);
+        if ($module === null) {
+            return ['view' => 'errors/not_found', 'title' => 'Module not found'];
+        }
+
+        return [
+            'view' => 'admin/lesson-form',
+            'title' => 'Add Lesson',
+            'moduleId' => (int) $moduleId,
+            'courseId' => (int) ($module['course_id'] ?? 0),
+        ];
+    }],
+    ['POST', '/admin/modules/{moduleId}/lessons/store', function (string $moduleId) use ($learningService, $moduleRepository) {
+        if (!Auth::userCan('courses.manage')) {
+            return redirect_to('/login');
+        }
+
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+
+            return redirect_to('/admin/modules/' . (int) $moduleId . '/lessons/create');
+        }
+
+        $result = $learningService->createLesson((int) $moduleId, [
+            'title' => trim((string) ($_POST['title'] ?? '')),
+            'summary' => trim((string) ($_POST['summary'] ?? '')),
+            'content' => trim((string) ($_POST['content'] ?? '')),
+            'video_url' => trim((string) ($_POST['video_url'] ?? '')),
+            'sort_order' => (int) ($_POST['sort_order'] ?? 0),
+        ], (int) Auth::userId());
+
+        if (!$result['success']) {
+            $_SESSION['flash_error'] = $result['message'];
+
+            return redirect_to('/admin/modules/' . (int) $moduleId . '/lessons/create');
+        }
+
+        $module = $moduleRepository->findById((int) $moduleId);
+        $_SESSION['flash_success'] = 'Lesson created successfully.';
+
+        return redirect_to('/admin/courses/' . (int) ($module['course_id'] ?? 0) . '/edit');
+    }],
     ['GET', '/admin/courses/{id}/quizzes/create', function (string $courseId) use ($courseRepository) {
         if (!Auth::userCan('courses.manage')) {
             return redirect_to('/login');
