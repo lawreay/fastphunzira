@@ -22,10 +22,11 @@ use App\Core\Auth;
 use App\Support\Csrf;
 
 return [
-    ['GET', '/', function () {
+    ['GET', '/', function () use ($courseRepository) {
         return [
             'view' => 'landing',
             'title' => 'FastPhunzira',
+            'featured_courses' => array_slice($courseRepository->findPublished(), 0, 3),
         ];
     }],
     ['GET', '/courses', [$courseController, 'catalogue']],
@@ -66,6 +67,12 @@ return [
         return [
             'view' => 'auth/login',
             'title' => 'Login',
+        ];
+    }],
+    ['GET', '/forgot-password', function () {
+        return [
+            'view' => 'auth/forgot-password',
+            'title' => 'Forgot Password',
         ];
     }],
     ['POST', '/login', function () use ($authService, $auditLogService) {
