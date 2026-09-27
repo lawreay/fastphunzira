@@ -8,6 +8,7 @@ use App\Repositories\EnrollmentRepositoryInterface;
 use App\Repositories\ExamAttemptRepositoryInterface;
 use App\Repositories\ExamRepositoryInterface;
 use App\Repositories\QuestionRepositoryInterface;
+use App\Repositories\StudentMembershipRepository;
 use DateTimeImmutable;
 
 final class ExamService
@@ -17,7 +18,8 @@ final class ExamService
         private EnrollmentRepositoryInterface $enrollmentRepository,
         private ExamRepositoryInterface $examRepository,
         private QuestionRepositoryInterface $questionRepository,
-        private ExamAttemptRepositoryInterface $attemptRepository
+        private ExamAttemptRepositoryInterface $attemptRepository,
+        private ?StudentMembershipRepository $membershipRepository = null
     ) {
     }
 
@@ -170,6 +172,11 @@ final class ExamService
         }
 
         if ($this->enrollmentRepository->findByStudentAndCourse($studentId, (int) ($exam['course_id'] ?? 0)) === null) {
+            return null;
+        }
+
+        if (strtolower((string) ($course['access_tier'] ?? 'regular')) === 'premium'
+            && ($this->membershipRepository === null || !$this->membershipRepository->isPremiumActive($studentId))) {
             return null;
         }
 
