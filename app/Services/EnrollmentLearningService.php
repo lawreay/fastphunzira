@@ -158,6 +158,8 @@ final class EnrollmentLearningService
 
         $title = trim((string) ($data['title'] ?? ''));
         $content = trim((string) ($data['content'] ?? ''));
+        $summary = trim((string) ($data['summary'] ?? ''));
+        $videoUrl = trim((string) ($data['video_url'] ?? ''));
         $sortOrder = (int) ($data['sort_order'] ?? 0);
 
         if ($title === '' || $content === '') {
@@ -169,6 +171,8 @@ final class EnrollmentLearningService
             'course_id' => (int) ($module['course_id'] ?? 0),
             'title' => $title,
             'content' => $content,
+            'summary' => $summary,
+            'video_url' => $videoUrl !== '' ? $videoUrl : null,
             'sort_order' => $sortOrder,
             'created_by' => $actor,
         ];
