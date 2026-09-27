@@ -27,6 +27,14 @@
                 <option value="published" <?= (($course['status'] ?? 'draft') === 'published') ? 'selected' : '' ?>>Published</option>
             </select>
         </div>
+        <div class="form-group">
+            <label for="access_tier">Student access</label>
+            <select id="access_tier" name="access_tier">
+                <option value="regular" <?= (($course['access_tier'] ?? 'regular') === 'regular') ? 'selected' : '' ?>>Regular</option>
+                <option value="premium" <?= (($course['access_tier'] ?? 'regular') === 'premium') ? 'selected' : '' ?>>Premium</option>
+            </select>
+            <small>Premium courses require an active Premium student membership.</small>
+        </div>
 
         <button class="btn" type="submit">Save course</button>
         <a class="btn secondary" href="<?= htmlspecialchars(base_url('admin/courses'), ENT_QUOTES, 'UTF-8') ?>">Cancel</a>
