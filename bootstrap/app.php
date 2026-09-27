@@ -139,7 +139,8 @@ $enrollmentLearningService = new EnrollmentLearningService(
     $enrollmentRepository,
     $moduleRepository,
     $lessonRepository,
-    $progressRepository
+    $progressRepository,
+    $studentMembershipRepository
 );
 
 return [
