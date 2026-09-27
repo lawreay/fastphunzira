@@ -23,9 +23,11 @@ unset($_SESSION['flash_error'], $_SESSION['flash_success']);
                 <div class="brand">FastPhunzira</div>
                 <div>
                     <a href="<?= htmlspecialchars(base_url(), ENT_QUOTES, 'UTF-8') ?>">Home</a>
+                    <a href="<?= htmlspecialchars(base_url('courses'), ENT_QUOTES, 'UTF-8') ?>">Courses</a>
                     <?php if (Auth::check()): ?>
                         <a href="<?= htmlspecialchars(base_url('courses'), ENT_QUOTES, 'UTF-8') ?>">Courses</a>
                         <a href="<?= htmlspecialchars(base_url('dashboard'), ENT_QUOTES, 'UTF-8') ?>">Dashboard</a>
+                        <?php if (Auth::userCan('courses.manage')): ?><a href="<?= htmlspecialchars(base_url('admin/settings'), ENT_QUOTES, 'UTF-8') ?>">Settings</a><?php endif; ?>
                         <form method="POST" action="<?= htmlspecialchars(base_url('logout'), ENT_QUOTES, 'UTF-8') ?>" class="inline-form">
                             <input type="hidden" name="_token" value="<?= htmlspecialchars(Csrf::token(), ENT_QUOTES, 'UTF-8') ?>">
                             <button type="submit" class="btn light">Logout</button>
