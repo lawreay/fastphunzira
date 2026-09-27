@@ -8,6 +8,7 @@ use App\Repositories\CourseModuleRepositoryInterface;
 use App\Repositories\EnrollmentRepositoryInterface;
 use App\Repositories\LessonProgressRepositoryInterface;
 use App\Repositories\LessonRepositoryInterface;
+use App\Repositories\StudentMembershipRepository;
 
 final class EnrollmentLearningService
 {
@@ -16,7 +17,8 @@ final class EnrollmentLearningService
         private EnrollmentRepositoryInterface $enrollmentRepository,
         private CourseModuleRepositoryInterface $moduleRepository,
         private LessonRepositoryInterface $lessonRepository,
-        private LessonProgressRepositoryInterface $progressRepository
+        private LessonProgressRepositoryInterface $progressRepository,
+        private ?StudentMembershipRepository $membershipRepository = null
     ) {
     }
 
@@ -38,6 +40,12 @@ final class EnrollmentLearningService
 
         if (strtolower((string) ($course['status'] ?? 'draft')) !== 'published') {
             return ['success' => false, 'code' => 'course_unavailable', 'message' => 'This course is not available for enrollment.'];
+        }
+
+        if (strtolower((string) ($course['access_tier'] ?? 'regular')) === 'premium') {
+            if ($this->membershipRepository === null || !$this->membershipRepository->isPremiumActive($studentId)) {
+                return ['success' => false, 'code' => 'premium_required', 'message' => 'This course requires an active Premium membership.'];
+            }
         }
 
         if ($this->enrollmentRepository->findByStudentAndCourse($studentId, $courseId) !== null) {
