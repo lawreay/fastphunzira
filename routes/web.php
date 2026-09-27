@@ -1026,6 +1026,17 @@ return [
             return redirect_to('/dashboard');
         }
 
+        if (($transaction['status'] ?? '') === 'successful') {
+            $_SESSION['flash_success'] = 'Premium membership is already active.';
+
+            return redirect_to('/dashboard');
+        }
+
+        if (($transaction['status'] ?? '') === 'successful') {
+            http_response_code(200);
+            exit('Already processed.');
+        }
+
         $verification = $payChanguService->verify($txRef);
         $providerData = $verification['data']['data'] ?? [];
 
