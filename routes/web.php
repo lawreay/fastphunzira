@@ -945,7 +945,7 @@ return [
             'premiumPrice' => (float) ($platformSettingsRepository->get('premium_price', '0') ?? '0'),
             'premiumCurrency' => (string) ($platformSettingsRepository->get('premium_currency', $paymentsConfig['currency'] ?? 'MWK') ?? 'MWK'),
             'premiumDurationDays' => (int) ($platformSettingsRepository->get('premium_duration_days', '30') ?? '30'),
-            'payChanguEnabled' => (bool) ($paymentsConfig['enabled'] ?? false),
+            'payChanguEnabled' => $payChanguService?->enabled() ?? false,
             'payChanguMode' => (string) ($paymentsConfig['mode'] ?? 'test'),
             'payChanguSecretConfigured' => trim((string) ($paymentsConfig['secret_key'] ?? '')) !== '',
             'payChanguWebhookConfigured' => trim((string) ($paymentsConfig['webhook_secret'] ?? '')) !== '',
