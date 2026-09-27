@@ -938,6 +938,12 @@ return [
             return redirect_to('/login');
         }
 
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+
+            return redirect_to('/dashboard');
+        }
+
         if ($payChanguService === null) {
             $_SESSION['flash_error'] = 'Payment service is unavailable.';
 
