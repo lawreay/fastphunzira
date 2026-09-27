@@ -22,6 +22,7 @@ use App\Core\Auth;
         <tr>
             <th>Title</th>
             <th>Status</th>
+            <th>Access</th>
             <th>Actions</th>
         </tr>
         </thead>
@@ -30,6 +31,7 @@ use App\Core\Auth;
             <tr>
                 <td><?= htmlspecialchars((string) ($course['title'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
                 <td><?= htmlspecialchars((string) ($course['status'] ?? 'draft'), ENT_QUOTES, 'UTF-8') ?></td>
+                <td><span class="status-badge <?= (($course['access_tier'] ?? 'regular') === 'premium') ? 'premium-badge' : '' ?>"><?= htmlspecialchars(ucfirst((string) ($course['access_tier'] ?? 'regular')), ENT_QUOTES, 'UTF-8') ?></span></td>
                 <td class="actions">
                     <a class="btn secondary" href="<?= htmlspecialchars(base_url('courses/' . (int) ($course['id'] ?? 0)), ENT_QUOTES, 'UTF-8') ?>">View</a>
                     <a class="btn secondary" href="<?= htmlspecialchars(base_url('admin/courses/edit?id=' . (int) ($course['id'] ?? 0)), ENT_QUOTES, 'UTF-8') ?>">Edit</a>
