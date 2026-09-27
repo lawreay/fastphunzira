@@ -24,6 +24,7 @@ unset($_SESSION['flash_error'], $_SESSION['flash_success']);
                 <div>
                     <a href="<?= htmlspecialchars(base_url(), ENT_QUOTES, 'UTF-8') ?>">Home</a>
                     <?php if (Auth::check()): ?>
+                        <a href="<?= htmlspecialchars(base_url('courses'), ENT_QUOTES, 'UTF-8') ?>">Courses</a>
                         <a href="<?= htmlspecialchars(base_url('dashboard'), ENT_QUOTES, 'UTF-8') ?>">Dashboard</a>
                         <form method="POST" action="<?= htmlspecialchars(base_url('logout'), ENT_QUOTES, 'UTF-8') ?>" class="inline-form">
                             <input type="hidden" name="_token" value="<?= htmlspecialchars(Csrf::token(), ENT_QUOTES, 'UTF-8') ?>">
@@ -49,6 +50,8 @@ unset($_SESSION['flash_error'], $_SESSION['flash_success']);
 
         <?= $body ?? '' ?>
     </main>
+
+    <footer><div class="container">FastPhunzira · Learn, practice, examine, certify.</div></footer>
 
     <script src="<?= htmlspecialchars(base_url('assets/js/app.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
 </body>
