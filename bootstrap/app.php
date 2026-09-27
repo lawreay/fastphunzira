@@ -30,6 +30,9 @@ use App\Repositories\InMemoryUserRepository;
 use App\Repositories\LessonProgressRepository;
 use App\Repositories\LessonRepository;
 use App\Repositories\LoginHistoryRepository;
+use App\Repositories\PaymentTransactionRepository;
+use App\Repositories\PlatformSettingsRepository;
+use App\Repositories\StudentMembershipRepository;
 use App\Repositories\QuestionRepository;
 use App\Repositories\QuizAttemptRepository;
 use App\Repositories\QuizRepository;
@@ -43,12 +46,14 @@ use App\Services\EnrollmentLearningService;
 use App\Services\ExamService;
 use App\Services\LoginSecurityService;
 use App\Services\QuizService;
+use App\Services\PayChanguService;
 
 Env::load(__DIR__ . '/../.env');
 
 $config = require __DIR__ . '/../config/app.php';
 $dbConfig = require __DIR__ . '/../config/database.php';
 $securityConfig = require __DIR__ . '/../config/security.php';
+$paymentsConfig = require __DIR__ . '/../config/payments.php';
 
 Session::start($securityConfig);
 
@@ -75,6 +80,9 @@ try {
 $userRepository = $pdo !== null ? new UserRepository($pdo) : new InMemoryUserRepository();
 $auditLogRepository = $pdo !== null ? new AuditLogRepository($pdo) : new InMemoryAuditLogRepository();
 $loginHistoryRepository = $pdo !== null ? new LoginHistoryRepository($pdo) : new InMemoryLoginHistoryRepository();
+$platformSettingsRepository = $pdo !== null ? new PlatformSettingsRepository($pdo) : null;
+$paymentTransactionRepository = $pdo !== null ? new PaymentTransactionRepository($pdo) : null;
+$studentMembershipRepository = $pdo !== null ? new StudentMembershipRepository($pdo) : null;
 
 $auditLogService = new AuditLogService($auditLogRepository);
 $loginSecurityService = new LoginSecurityService(
@@ -82,6 +90,9 @@ $loginSecurityService = new LoginSecurityService(
     $securityConfig['login_security'] ?? []
 );
 $authService = new AuthService($userRepository, $loginSecurityService, $auditLogService);
+$payChanguService = ($platformSettingsRepository !== null && $paymentTransactionRepository !== null)
+    ? new PayChanguService($paymentsConfig, $paymentTransactionRepository, $platformSettingsRepository)
+    : null;
 
 $courseRepository = $pdo !== null ? new CourseRepository($pdo) : new \App\Repositories\InMemoryCourseRepository();
 $moduleRepository = $pdo !== null ? new CourseModuleRepository($pdo) : new InMemoryCourseModuleRepository();
@@ -135,6 +146,11 @@ return [
     'config' => $config,
     'db' => $pdo,
     'security' => $securityConfig,
+    'payments' => $paymentsConfig,
+    'platformSettingsRepository' => $platformSettingsRepository,
+    'paymentTransactionRepository' => $paymentTransactionRepository,
+    'studentMembershipRepository' => $studentMembershipRepository,
+    'payChanguService' => $payChanguService,
     'auth' => $authService,
     'courseService' => $courseService,
     'courseController' => $courseController,
