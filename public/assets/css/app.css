@@ -605,3 +605,208 @@ textarea { min-height: 120px; }
     .catalogue-grid { grid-template-columns: 1fr; }
     .catalogue-admin { align-items: stretch; flex-direction: column; }
 }
+
+
+/* Course details */
+.course-detail-page {
+    padding: 38px 0 70px;
+}
+.course-detail-breadcrumb {
+    margin-bottom: 22px;
+}
+.course-detail-breadcrumb a {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--muted);
+    font-size: .9rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+.course-detail-breadcrumb a:hover {
+    color: var(--ink);
+}
+.course-detail-breadcrumb svg,
+.course-access-card .btn svg,
+.course-detail-footer .btn svg {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.course-detail-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 370px;
+    gap: 52px;
+    align-items: center;
+    padding: 30px 0 62px;
+}
+.course-detail-copy h1 {
+    max-width: 820px;
+    margin: 0 0 18px;
+    color: var(--ink);
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    line-height: .98;
+    letter-spacing: -.055em;
+}
+.course-detail-badges {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 22px;
+}
+.course-detail-badges .status-badge {
+    margin: 0;
+}
+.course-detail-description {
+    max-width: 760px;
+    margin: 0;
+    color: var(--muted);
+    font-size: 1.12rem;
+    line-height: 1.75;
+}
+.course-access-card {
+    padding: 28px;
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    background: #fff;
+    box-shadow: var(--shadow-md);
+}
+.course-access-icon {
+    width: 46px;
+    height: 46px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 20px;
+    border-radius: 14px;
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+.course-access-icon svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.course-access-label {
+    display: block;
+    margin-bottom: 7px;
+    color: var(--muted);
+    font-size: .75rem;
+    font-weight: 900;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+.course-access-card h2 {
+    margin: 0 0 10px;
+    color: var(--ink);
+    font-size: 1.35rem;
+    line-height: 1.2;
+}
+.course-access-card p {
+    margin: 0 0 20px;
+    color: var(--muted);
+    font-size: .92rem;
+}
+.course-access-card .btn {
+    gap: 8px;
+}
+.course-admin-link {
+    display: block;
+    margin-top: 15px;
+    color: var(--muted);
+    text-align: center;
+    font-size: .85rem;
+    font-weight: 700;
+}
+.course-detail-section {
+    padding: 58px 0 12px;
+    border-top: 1px solid var(--line);
+}
+.course-detail-section-heading {
+    max-width: 720px;
+    margin-bottom: 28px;
+}
+.course-detail-section-heading h2 {
+    margin: 0 0 10px;
+    color: var(--ink);
+    font-size: clamp(1.9rem, 3vw, 2.7rem);
+    line-height: 1.08;
+    letter-spacing: -.04em;
+}
+.course-detail-section-heading p {
+    margin: 0;
+    color: var(--muted);
+}
+.course-flow-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+.course-flow-card {
+    padding: 24px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: #fff;
+}
+.course-flow-card > span {
+    color: var(--accent);
+    font-size: .75rem;
+    font-weight: 900;
+}
+.course-flow-card h3 {
+    margin: 28px 0 8px;
+    color: var(--ink);
+}
+.course-flow-card p {
+    margin: 0;
+    color: var(--muted);
+}
+.course-detail-footer {
+    display: flex;
+    justify-content: flex-start;
+    padding-top: 34px;
+}
+.course-detail-footer .btn {
+    gap: 7px;
+}
+
+@media (max-width: 900px) {
+    .course-detail-hero {
+        grid-template-columns: 1fr;
+        gap: 34px;
+    }
+    .course-access-card {
+        max-width: 620px;
+    }
+    .course-flow-grid {
+        grid-template-columns: 1fr;
+    }
+}
+@media (max-width: 650px) {
+    .course-detail-page {
+        padding-top: 24px;
+    }
+    .course-detail-hero {
+        padding-top: 18px;
+        padding-bottom: 44px;
+    }
+    .course-detail-copy h1 {
+        font-size: clamp(2.3rem, 12vw, 3.6rem);
+    }
+    .course-detail-description {
+        font-size: 1rem;
+    }
+    .course-access-card {
+        padding: 22px;
+        border-radius: 18px;
+    }
+}
