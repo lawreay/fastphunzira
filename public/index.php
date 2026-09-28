@@ -76,6 +76,8 @@ if (!is_file($viewPath)) {
     exit;
 }
 
+extract($result, EXTR_SKIP);
+
 ob_start();
 require $viewPath;
 $body = ob_get_clean();

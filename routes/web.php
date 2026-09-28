@@ -11,15 +11,35 @@ $progressRepository = $app['progressRepository'];
 $learningService = $app['enrollmentLearningService'];
 $quizService = $app['quizService'];
 $quizAttemptRepository = $app['quizAttemptRepository'];
+$courseService = $app['courseService'];
 
 use App\Core\Auth;
 use App\Support\Csrf;
 
 return [
-    ['GET', '/', function () {
+    ['GET', '/', function () use ($courseService) {
         return [
             'view' => 'landing',
-            'title' => 'FastPhunzira',
+            'title' => 'FastPhunzira — Learn, Get Certified, Get Ahead',
+            'featuredCourses' => array_slice($courseService->getPublishedCourses(), 0, 3),
+        ];
+    }],
+    ['GET', '/about', function () {
+        return [
+            'view' => 'about',
+            'title' => 'About FastPhunzira',
+        ];
+    }],
+    ['GET', '/how-it-works', function () {
+        return [
+            'view' => 'how-it-works',
+            'title' => 'How FastPhunzira Works',
+        ];
+    }],
+    ['GET', '/teachers', function () {
+        return [
+            'view' => 'teachers',
+            'title' => 'For Teachers',
         ];
     }],
     ['GET', '/courses', [$courseController, 'catalogue']],
