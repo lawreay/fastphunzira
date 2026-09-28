@@ -930,7 +930,7 @@ return [
             'logs' => $auditLogService->getRecentForAdmin(),
         ];
     }],
-    ['GET', '/admin/settings', function () use ($platformSettingsRepository, $paymentsConfig) {
+    ['GET', '/admin/settings', function () use ($platformSettingsRepository, $paymentsConfig, $payChanguService) {
         if (!Auth::userCan('courses.manage')) {
             return redirect_to('/login');
         }
@@ -1032,16 +1032,12 @@ return [
             return redirect_to('/dashboard');
         }
 
-        if (($transaction['status'] ?? '') === 'successful') {
-            http_response_code(200);
-            exit('Already processed.');
-        }
-
         $verification = $payChanguService->verify($txRef);
         $providerData = $verification['data']['data'] ?? [];
 
         $successful = $verification['success']
             && strtolower((string) ($providerData['status'] ?? '')) === 'success'
+            && (string) ($providerData['tx_ref'] ?? '') === (string) $transaction['tx_ref']
             && strtoupper((string) ($providerData['currency'] ?? '')) === strtoupper((string) $transaction['currency'])
             && (float) ($providerData['amount'] ?? 0) >= (float) $transaction['amount'];
 
@@ -1089,6 +1085,11 @@ return [
         if ($transaction === null) {
             http_response_code(200);
             exit('Ignored.');
+        }
+
+        if (($transaction['status'] ?? '') === 'successful') {
+            http_response_code(200);
+            exit('Already processed.');
         }
 
         $verification = $payChanguService->verify($txRef);
