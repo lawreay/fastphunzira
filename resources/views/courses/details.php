@@ -12,6 +12,8 @@ $isPremium = $accessTier === 'premium';
 $membershipIsPremium = ($membership['plan'] ?? 'regular') === 'premium'
     && ($membership['status'] ?? '') === 'active';
 $canManageCourses = Auth::userCan('courses.manage');
+$isEnrolled = (bool) ($isEnrolled ?? false);
+$hasCourseAccess = $isEnrolled && (!$isPremium || $membershipIsPremium);
 $returnToMyCourses = ($_GET['from'] ?? '') === 'my-courses';
 $returnUrl = $returnToMyCourses ? base_url('my-courses') : base_url('courses');
 $returnLabel = $returnToMyCourses ? 'Back to my courses' : 'Back to catalogue';
@@ -58,8 +60,14 @@ $returnLabel = $returnToMyCourses ? 'Back to my courses' : 'Back to catalogue';
             <h2><?= $isPremium ? 'Premium membership required' : 'Available to enrolled students' ?></h2>
 
             <?php if (Auth::check()): ?>
-                <?php if ($isPremium && !$membershipIsPremium): ?>
-                    <p>This course requires an active Premium membership. Upgrade from your dashboard before enrolling.</p>
+                <?php if ($hasCourseAccess): ?>
+                    <p>You are enrolled in this course. Continue learning from where you left off.</p>
+                    <a class="btn btn-block" href="<?= htmlspecialchars(base_url('courses/' . $courseId . '/learn'), ENT_QUOTES, 'UTF-8') ?>">
+                        Continue learning
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13m-5-5 5 5-5 5"/></svg>
+                    </a>
+                <?php elseif ($isPremium && !$membershipIsPremium): ?>
+                    <p>This course requires an active Premium membership before you can enroll or continue learning.</p>
                     <a class="btn btn-block" href="<?= htmlspecialchars(base_url('dashboard'), ENT_QUOTES, 'UTF-8') ?>">
                         View membership
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13m-5-5 5 5-5 5"/></svg>
