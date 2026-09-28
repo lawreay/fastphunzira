@@ -160,6 +160,7 @@ return [
     'courseRepository' => $courseRepository,
     'moduleRepository' => $moduleRepository,
     'lessonRepository' => $lessonRepository,
+    'enrollmentRepository' => $enrollmentRepository,
     'progressRepository' => $progressRepository,
     'enrollmentLearningService' => $enrollmentLearningService,
     'quizRepository' => $quizRepository,
