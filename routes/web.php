@@ -1020,10 +1020,10 @@ return [
         }
 
         $transaction = $paymentTransactionRepository->findByTxRef($txRef);
-        if ($transaction === null || (int) $transaction['user_id'] !== (int) Auth::userId()) {
+        if ($transaction === null || ($transaction['purpose'] ?? '') !== 'premium_membership') {
             $_SESSION['flash_error'] = 'Payment could not be confirmed.';
 
-            return redirect_to('/dashboard');
+            return redirect_to(Auth::check() ? '/dashboard' : '/login');
         }
 
         if (($transaction['status'] ?? '') === 'successful') {
@@ -1061,7 +1061,7 @@ return [
 
         $_SESSION['flash_success'] = 'Premium membership activated successfully.';
 
-        return redirect_to('/dashboard');
+        return redirect_to(Auth::check() ? '/dashboard' : '/login');
     }],
     ['POST', '/payments/paychangu/webhook', function () use ($payChanguService, $paymentTransactionRepository, $studentMembershipRepository, $paymentsConfig) {
         $payload = file_get_contents('php://input') ?: '';
