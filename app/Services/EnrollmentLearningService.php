@@ -201,6 +201,12 @@ final class EnrollmentLearningService
             return null;
         }
 
+        if (strtolower((string) ($course['access_tier'] ?? 'regular')) === 'premium') {
+            if ($this->membershipRepository === null || !$this->membershipRepository->isPremiumActive($studentId)) {
+                return null;
+            }
+        }
+
         return $lesson;
     }
 
