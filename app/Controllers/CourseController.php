@@ -4,12 +4,15 @@ namespace App\Controllers;
 
 use App\Core\Auth;
 use App\Services\CourseService;
+use App\Repositories\StudentMembershipRepository;
 use App\Support\Csrf;
 
 final class CourseController
 {
-    public function __construct(private CourseService $courseService)
-    {
+    public function __construct(
+        private CourseService $courseService,
+        private ?StudentMembershipRepository $membershipRepository = null
+    ) {
     }
 
     public function catalogue(): array
@@ -36,6 +39,9 @@ final class CourseController
             'view' => 'courses/details',
             'title' => $course['title'],
             'course' => $course,
+            'membership' => Auth::check() && $this->membershipRepository !== null
+                ? $this->membershipRepository->findByUserId((int) Auth::userId())
+                : null,
         ];
     }
 

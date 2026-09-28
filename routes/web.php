@@ -17,15 +17,21 @@ $examService = $app['examService'];
 $auditLogService = $app['auditLogService'];
 $certificateService = $app['certificateService'];
 $certificateVerificationRateLimitService = $app['certificateVerificationRateLimitService'];
+$payChanguService = $app['payChanguService'];
+$platformSettingsRepository = $app['platformSettingsRepository'];
+$paymentTransactionRepository = $app['paymentTransactionRepository'];
+$studentMembershipRepository = $app['studentMembershipRepository'];
+$paymentsConfig = $app['payments'];
 
 use App\Core\Auth;
 use App\Support\Csrf;
 
 return [
-    ['GET', '/', function () {
+    ['GET', '/', function () use ($courseRepository) {
         return [
             'view' => 'landing',
             'title' => 'FastPhunzira',
+            'featured_courses' => array_slice($courseRepository->findPublished(), 0, 3),
         ];
     }],
     ['GET', '/courses', [$courseController, 'catalogue']],
@@ -66,6 +72,12 @@ return [
         return [
             'view' => 'auth/login',
             'title' => 'Login',
+        ];
+    }],
+    ['GET', '/forgot-password', function () {
+        return [
+            'view' => 'auth/forgot-password',
+            'title' => 'Forgot Password',
         ];
     }],
     ['POST', '/login', function () use ($authService, $auditLogService) {
@@ -405,6 +417,53 @@ return [
         ];
     }],
 
+    ['GET', '/admin/modules/{moduleId}/lessons/create', function (string $moduleId) use ($moduleRepository) {
+        if (!Auth::userCan('courses.manage')) {
+            return redirect_to('/login');
+        }
+
+        $module = $moduleRepository->findById((int) $moduleId);
+        if ($module === null) {
+            return ['view' => 'errors/not_found', 'title' => 'Module not found'];
+        }
+
+        return [
+            'view' => 'admin/lesson-form',
+            'title' => 'Add Lesson',
+            'moduleId' => (int) $moduleId,
+            'courseId' => (int) ($module['course_id'] ?? 0),
+        ];
+    }],
+    ['POST', '/admin/modules/{moduleId}/lessons/store', function (string $moduleId) use ($learningService, $moduleRepository) {
+        if (!Auth::userCan('courses.manage')) {
+            return redirect_to('/login');
+        }
+
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+
+            return redirect_to('/admin/modules/' . (int) $moduleId . '/lessons/create');
+        }
+
+        $result = $learningService->createLesson((int) $moduleId, [
+            'title' => trim((string) ($_POST['title'] ?? '')),
+            'summary' => trim((string) ($_POST['summary'] ?? '')),
+            'content' => trim((string) ($_POST['content'] ?? '')),
+            'video_url' => trim((string) ($_POST['video_url'] ?? '')),
+            'sort_order' => (int) ($_POST['sort_order'] ?? 0),
+        ], (int) Auth::userId());
+
+        if (!$result['success']) {
+            $_SESSION['flash_error'] = $result['message'];
+
+            return redirect_to('/admin/modules/' . (int) $moduleId . '/lessons/create');
+        }
+
+        $module = $moduleRepository->findById((int) $moduleId);
+        $_SESSION['flash_success'] = 'Lesson created successfully.';
+
+        return redirect_to('/admin/courses/' . (int) ($module['course_id'] ?? 0) . '/edit');
+    }],
     ['GET', '/admin/courses/{id}/quizzes/create', function (string $courseId) use ($courseRepository) {
         if (!Auth::userCan('courses.manage')) {
             return redirect_to('/login');
@@ -871,16 +930,208 @@ return [
             'logs' => $auditLogService->getRecentForAdmin(),
         ];
     }],
-    ['GET', '/dashboard', function () {
+    ['GET', '/admin/settings', function () use ($platformSettingsRepository, $paymentsConfig, $payChanguService) {
+        if (!Auth::userCan('courses.manage')) {
+            return redirect_to('/login');
+        }
+
+        if ($platformSettingsRepository === null) {
+            return ['view' => 'errors/not_found', 'title' => 'Settings unavailable'];
+        }
+
+        return [
+            'view' => 'admin/settings',
+            'title' => 'Platform Settings',
+            'premiumPrice' => (float) ($platformSettingsRepository->get('premium_price', '0') ?? '0'),
+            'premiumCurrency' => (string) ($platformSettingsRepository->get('premium_currency', $paymentsConfig['currency'] ?? 'MWK') ?? 'MWK'),
+            'premiumDurationDays' => (int) ($platformSettingsRepository->get('premium_duration_days', '30') ?? '30'),
+            'payChanguEnabled' => $payChanguService?->enabled() ?? false,
+            'payChanguMode' => (string) ($paymentsConfig['mode'] ?? 'test'),
+            'payChanguSecretConfigured' => trim((string) ($paymentsConfig['secret_key'] ?? '')) !== '',
+            'payChanguWebhookConfigured' => trim((string) ($paymentsConfig['webhook_secret'] ?? '')) !== '',
+        ];
+    }],
+    ['POST', '/admin/settings', function () use ($platformSettingsRepository) {
+        if (!Auth::userCan('courses.manage')) {
+            return redirect_to('/login');
+        }
+
+        if ($platformSettingsRepository === null || !Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid settings request.';
+
+            return redirect_to('/admin/settings');
+        }
+
+        $price = max(0, (float) ($_POST['premium_price'] ?? 0));
+        $currency = strtoupper(trim((string) ($_POST['premium_currency'] ?? 'MWK')));
+        $duration = max(1, (int) ($_POST['premium_duration_days'] ?? 30));
+
+        if (!preg_match('/^[A-Z]{3}$/', $currency)) {
+            $_SESSION['flash_error'] = 'Currency must be a valid three-letter code.';
+
+            return redirect_to('/admin/settings');
+        }
+
+        $platformSettingsRepository->set('premium_price', number_format($price, 2, '.', ''));
+        $platformSettingsRepository->set('premium_currency', $currency);
+        $platformSettingsRepository->set('premium_duration_days', (string) $duration);
+
+        $_SESSION['flash_success'] = 'Platform settings updated.';
+
+        return redirect_to('/admin/settings');
+    }],
+    ['POST', '/premium/checkout', function () use ($payChanguService) {
+        if (!Auth::check()) {
+            return redirect_to('/login');
+        }
+
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+
+            return redirect_to('/dashboard');
+        }
+
+        if ($payChanguService === null) {
+            $_SESSION['flash_error'] = 'Payment service is unavailable.';
+
+            return redirect_to('/dashboard');
+        }
+
+        $result = $payChanguService->initiatePremiumCheckout(
+            Auth::user(),
+            base_url('payments/paychangu/callback'),
+            base_url('dashboard')
+        );
+
+        if (!$result['success']) {
+            $_SESSION['flash_error'] = $result['message'];
+
+            return redirect_to('/dashboard');
+        }
+
+        return ['redirect' => $result['checkout_url']];
+    }],
+    ['GET', '/payments/paychangu/callback', function () use ($payChanguService, $paymentTransactionRepository, $studentMembershipRepository) {
+        $txRef = trim((string) ($_GET['tx_ref'] ?? ''));
+        if ($txRef === '' || $payChanguService === null || $paymentTransactionRepository === null || $studentMembershipRepository === null) {
+            $_SESSION['flash_error'] = 'Payment could not be confirmed.';
+
+            return redirect_to('/dashboard');
+        }
+
+        $transaction = $paymentTransactionRepository->findByTxRef($txRef);
+        if ($transaction === null || ($transaction['purpose'] ?? '') !== 'premium_membership') {
+            $_SESSION['flash_error'] = 'Payment could not be confirmed.';
+
+            return redirect_to(Auth::check() ? '/dashboard' : '/login');
+        }
+
+        if (($transaction['status'] ?? '') === 'successful') {
+            $_SESSION['flash_success'] = 'Premium membership is already active.';
+
+            return redirect_to('/dashboard');
+        }
+
+        $verification = $payChanguService->verify($txRef);
+        $providerData = $verification['data']['data'] ?? [];
+
+        $successful = $verification['success']
+            && strtolower((string) ($providerData['status'] ?? '')) === 'success'
+            && (string) ($providerData['tx_ref'] ?? '') === (string) $transaction['tx_ref']
+            && strtoupper((string) ($providerData['currency'] ?? '')) === strtoupper((string) $transaction['currency'])
+            && (float) ($providerData['amount'] ?? 0) >= (float) $transaction['amount'];
+
+        if (!$successful) {
+            $paymentTransactionRepository->updateStatus($txRef, 'failed');
+
+            $_SESSION['flash_error'] = 'Payment was not confirmed by PayChangu.';
+
+            return redirect_to('/dashboard');
+        }
+
+        $paymentTransactionRepository->updateStatus(
+            $txRef,
+            'successful',
+            isset($providerData['reference']) ? (string) $providerData['reference'] : null
+        );
+
+        $days = $payChanguService->premiumDurationDays();
+        $expiresAt = date('Y-m-d H:i:s', strtotime('+' . $days . ' days'));
+        $studentMembershipRepository->activatePremium((int) $transaction['user_id'], $expiresAt);
+
+        $_SESSION['flash_success'] = 'Premium membership activated successfully.';
+
+        return redirect_to(Auth::check() ? '/dashboard' : '/login');
+    }],
+    ['POST', '/payments/paychangu/webhook', function () use ($payChanguService, $paymentTransactionRepository, $studentMembershipRepository, $paymentsConfig) {
+        $payload = file_get_contents('php://input') ?: '';
+        $signature = $_SERVER['HTTP_SIGNATURE'] ?? '';
+
+        $secret = (string) ($paymentsConfig['webhook_secret'] ?? '');
+        if ($secret === '' || !hash_equals(hash_hmac('sha256', $payload, $secret), $signature)) {
+            http_response_code(401);
+            exit('Invalid signature.');
+        }
+
+        $data = json_decode($payload, true);
+        $txRef = trim((string) ($data['tx_ref'] ?? $data['data']['tx_ref'] ?? ''));
+
+        if ($txRef === '' || $payChanguService === null || $paymentTransactionRepository === null || $studentMembershipRepository === null) {
+            http_response_code(400);
+            exit('Invalid payment notification.');
+        }
+
+        $transaction = $paymentTransactionRepository->findByTxRef($txRef);
+        if ($transaction === null) {
+            http_response_code(200);
+            exit('Ignored.');
+        }
+
+        if (($transaction['status'] ?? '') === 'successful') {
+            http_response_code(200);
+            exit('Already processed.');
+        }
+
+        $verification = $payChanguService->verify($txRef);
+        $providerData = $verification['data']['data'] ?? [];
+        $successful = $verification['success']
+            && strtolower((string) ($providerData['status'] ?? '')) === 'success'
+            && strtoupper((string) ($providerData['currency'] ?? '')) === strtoupper((string) $transaction['currency'])
+            && (float) ($providerData['amount'] ?? 0) >= (float) $transaction['amount'];
+
+        if ($successful) {
+            $paymentTransactionRepository->updateStatus(
+                $txRef,
+                'successful',
+                isset($providerData['reference']) ? (string) $providerData['reference'] : null
+            );
+
+            $days = $payChanguService->premiumDurationDays();
+            $expiresAt = date('Y-m-d H:i:s', strtotime('+' . $days . ' days'));
+            $studentMembershipRepository->activatePremium((int) $transaction['user_id'], $expiresAt);
+        }
+
+        http_response_code(200);
+        exit('OK.');
+    }],
+    ['GET', '/dashboard', function () use ($studentMembershipRepository, $payChanguService, $platformSettingsRepository, $paymentsConfig) {
         if (!Auth::check()) {
             $_SESSION['flash_error'] = 'Please log in to continue.';
 
             return redirect_to('/login');
         }
 
+        $membership = $studentMembershipRepository !== null
+            ? $studentMembershipRepository->findByUserId((int) Auth::userId())
+            : ['plan' => 'regular', 'status' => 'active'];
+
         return [
             'view' => 'dashboard',
             'title' => 'Dashboard',
+            'membership' => $membership,
+            'payChanguEnabled' => $payChanguService?->enabled() ?? false,
+            'premiumPrice' => (float) ($platformSettingsRepository?->get('premium_price', '0') ?? '0'),
+            'premiumCurrency' => (string) ($platformSettingsRepository?->get('premium_currency', $paymentsConfig['currency'] ?? 'MWK') ?? 'MWK'),
         ];
     }],
 ];

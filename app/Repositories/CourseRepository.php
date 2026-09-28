@@ -13,8 +13,8 @@ final class CourseRepository implements CourseRepositoryInterface
     public function create(array $course): array
     {
         $statement = $this->pdo->prepare(
-            'INSERT INTO courses (title, slug, description, status, created_by, created_at)
-            VALUES (:title, :slug, :description, :status, :created_by, NOW())'
+            'INSERT INTO courses (title, slug, description, status, access_tier, created_by, created_at)
+            VALUES (:title, :slug, :description, :status, :access_tier, :created_by, NOW())'
         );
 
         $statement->execute([
@@ -22,6 +22,7 @@ final class CourseRepository implements CourseRepositoryInterface
             ':slug' => $course['slug'],
             ':description' => $course['description'],
             ':status' => $course['status'] ?? 'draft',
+            ':access_tier' => $course['access_tier'] ?? 'regular',
             ':created_by' => (int) ($course['created_by'] ?? 0),
         ]);
 
@@ -32,7 +33,7 @@ final class CourseRepository implements CourseRepositoryInterface
 
     public function update(int $id, array $course): ?array
     {
-        $allowedColumns = ['title', 'slug', 'description', 'status', 'created_by'];
+        $allowedColumns = ['title', 'slug', 'description', 'status', 'access_tier', 'created_by'];
         $fields = [];
         $params = [':id' => $id];
 

@@ -8,6 +8,7 @@ use App\Repositories\CourseModuleRepositoryInterface;
 use App\Repositories\EnrollmentRepositoryInterface;
 use App\Repositories\LessonProgressRepositoryInterface;
 use App\Repositories\LessonRepositoryInterface;
+use App\Repositories\StudentMembershipRepository;
 
 final class EnrollmentLearningService
 {
@@ -16,7 +17,8 @@ final class EnrollmentLearningService
         private EnrollmentRepositoryInterface $enrollmentRepository,
         private CourseModuleRepositoryInterface $moduleRepository,
         private LessonRepositoryInterface $lessonRepository,
-        private LessonProgressRepositoryInterface $progressRepository
+        private LessonProgressRepositoryInterface $progressRepository,
+        private ?StudentMembershipRepository $membershipRepository = null
     ) {
     }
 
@@ -38,6 +40,12 @@ final class EnrollmentLearningService
 
         if (strtolower((string) ($course['status'] ?? 'draft')) !== 'published') {
             return ['success' => false, 'code' => 'course_unavailable', 'message' => 'This course is not available for enrollment.'];
+        }
+
+        if (strtolower((string) ($course['access_tier'] ?? 'regular')) === 'premium') {
+            if ($this->membershipRepository === null || !$this->membershipRepository->isPremiumActive($studentId)) {
+                return ['success' => false, 'code' => 'premium_required', 'message' => 'This course requires an active Premium membership.'];
+            }
         }
 
         if ($this->enrollmentRepository->findByStudentAndCourse($studentId, $courseId) !== null) {
@@ -150,6 +158,8 @@ final class EnrollmentLearningService
 
         $title = trim((string) ($data['title'] ?? ''));
         $content = trim((string) ($data['content'] ?? ''));
+        $summary = trim((string) ($data['summary'] ?? ''));
+        $videoUrl = trim((string) ($data['video_url'] ?? ''));
         $sortOrder = (int) ($data['sort_order'] ?? 0);
 
         if ($title === '' || $content === '') {
@@ -161,6 +171,8 @@ final class EnrollmentLearningService
             'course_id' => (int) ($module['course_id'] ?? 0),
             'title' => $title,
             'content' => $content,
+            'summary' => $summary,
+            'video_url' => $videoUrl !== '' ? $videoUrl : null,
             'sort_order' => $sortOrder,
             'created_by' => $actor,
         ];
@@ -187,6 +199,12 @@ final class EnrollmentLearningService
         $enrollment = $this->enrollmentRepository->findByStudentAndCourse($studentId, (int) ($lesson['course_id'] ?? 0));
         if ($enrollment === null) {
             return null;
+        }
+
+        if (strtolower((string) ($course['access_tier'] ?? 'regular')) === 'premium') {
+            if ($this->membershipRepository === null || !$this->membershipRepository->isPremiumActive($studentId)) {
+                return null;
+            }
         }
 
         return $lesson;

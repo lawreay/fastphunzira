@@ -27,6 +27,7 @@ final class CourseService
         $slug = $this->normalizeSlug((string) ($data['slug'] ?? ''));
         $description = trim((string) ($data['description'] ?? ''));
         $status = strtolower((string) ($data['status'] ?? 'draft'));
+        $accessTier = strtolower((string) ($data['access_tier'] ?? 'regular'));
 
         if ($title === '' || $slug === '' || $description === '') {
             return [
@@ -49,6 +50,7 @@ final class CourseService
             'slug' => $slug,
             'description' => $description,
             'status' => in_array($status, ['draft', 'published'], true) ? $status : 'draft',
+            'access_tier' => in_array($accessTier, ['regular', 'premium'], true) ? $accessTier : 'regular',
             'created_by' => $actorId,
         ];
 
@@ -97,6 +99,11 @@ final class CourseService
         if (isset($data['status'])) {
             $status = strtolower((string) $data['status']);
             $updates['status'] = in_array($status, ['draft', 'published'], true) ? $status : 'draft';
+        }
+
+        if (isset($data['access_tier'])) {
+            $accessTier = strtolower((string) $data['access_tier']);
+            $updates['access_tier'] = in_array($accessTier, ['regular', 'premium'], true) ? $accessTier : 'regular';
         }
 
         foreach (['title', 'slug', 'description'] as $field) {
