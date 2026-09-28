@@ -8,9 +8,9 @@ $totalLessons = (int) ($progress['total_lessons'] ?? 0);
 ?>
 <section class="learning-overview-page">
     <div class="learning-overview-breadcrumb">
-        <a href="<?= htmlspecialchars(base_url('courses'), ENT_QUOTES, 'UTF-8') ?>">Catalogue</a>
+        <a href="<?= htmlspecialchars(base_url('my-courses'), ENT_QUOTES, 'UTF-8') ?>">My Courses</a>
         <span aria-hidden="true">/</span>
-        <a href="<?= htmlspecialchars(base_url('courses/' . $courseId), ENT_QUOTES, 'UTF-8') ?>">Course</a>
+        <a href="<?= htmlspecialchars(base_url('courses/' . $courseId . '?from=my-courses'), ENT_QUOTES, 'UTF-8') ?>">Course</a>
         <span aria-hidden="true">/</span>
         <strong>Learning</strong>
     </div>
@@ -23,7 +23,7 @@ $totalLessons = (int) ($progress['total_lessons'] ?? 0);
                 <p><?= htmlspecialchars($courseDescription, ENT_QUOTES, 'UTF-8') ?></p>
             <?php endif; ?>
         </div>
-        <a class="btn secondary" href="<?= htmlspecialchars(base_url('courses/' . $courseId), ENT_QUOTES, 'UTF-8') ?>">Course details</a>
+        <a class="btn secondary" href="<?= htmlspecialchars(base_url('courses/' . $courseId . '?from=my-courses'), ENT_QUOTES, 'UTF-8') ?>">Course details</a>
     </header>
 
     <section class="learning-progress-card" aria-label="Course progress">
@@ -42,7 +42,7 @@ $totalLessons = (int) ($progress['total_lessons'] ?? 0);
             <span class="eyebrow">Course content</span>
             <h2>No modules are available yet</h2>
             <p>This course has been created, but learning content has not been added yet.</p>
-            <a class="btn secondary" href="<?= htmlspecialchars(base_url('courses/' . $courseId), ENT_QUOTES, 'UTF-8') ?>">Back to course</a>
+            <a class="btn secondary" href="<?= htmlspecialchars(base_url('my-courses'), ENT_QUOTES, 'UTF-8') ?>">Back to my courses</a>
         </section>
     <?php else: ?>
         <div class="learning-module-list">
