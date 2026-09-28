@@ -12,13 +12,16 @@ $isPremium = $accessTier === 'premium';
 $membershipIsPremium = ($membership['plan'] ?? 'regular') === 'premium'
     && ($membership['status'] ?? '') === 'active';
 $canManageCourses = Auth::userCan('courses.manage');
+$returnToMyCourses = ($_GET['from'] ?? '') === 'my-courses';
+$returnUrl = $returnToMyCourses ? base_url('my-courses') : base_url('courses');
+$returnLabel = $returnToMyCourses ? 'Back to my courses' : 'Back to catalogue';
 ?>
 
 <section class="course-detail-page">
     <div class="course-detail-breadcrumb">
-        <a href="<?= htmlspecialchars(base_url('courses'), ENT_QUOTES, 'UTF-8') ?>">
+        <a href="<?= htmlspecialchars($returnUrl, ENT_QUOTES, 'UTF-8') ?>">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
-            Back to catalogue
+            <?= htmlspecialchars($returnLabel, ENT_QUOTES, 'UTF-8') ?>
         </a>
     </div>
 
@@ -114,9 +117,9 @@ $canManageCourses = Auth::userCan('courses.manage');
     </div>
 
     <div class="course-detail-footer">
-        <a class="btn secondary" href="<?= htmlspecialchars(base_url('courses'), ENT_QUOTES, 'UTF-8') ?>">
+        <a class="btn secondary" href="<?= htmlspecialchars($returnUrl, ENT_QUOTES, 'UTF-8') ?>">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
-            Back to catalogue
+            <?= htmlspecialchars($returnLabel, ENT_QUOTES, 'UTF-8') ?>
         </a>
     </div>
 </section>
