@@ -400,3 +400,208 @@ textarea { min-height: 120px; }
         width: 100%;
     }
 }
+
+
+/* Course catalogue */
+.catalogue-page {
+    padding: 42px 0 64px;
+}
+.catalogue-hero {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 30px;
+    padding: 18px 0 38px;
+}
+.catalogue-hero h1 {
+    max-width: 720px;
+    margin: 0 0 12px;
+    color: var(--ink);
+    font-size: clamp(2.25rem, 5vw, 4rem);
+    line-height: 1.03;
+    letter-spacing: -.05em;
+}
+.catalogue-hero p {
+    max-width: 680px;
+    margin: 0;
+    color: var(--muted);
+    font-size: 1.05rem;
+}
+.catalogue-count {
+    min-width: 150px;
+    padding: 18px 20px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: var(--shadow-sm);
+}
+.catalogue-count strong,
+.catalogue-count span {
+    display: block;
+}
+.catalogue-count strong {
+    color: var(--ink);
+    font-size: 1.8rem;
+    line-height: 1;
+}
+.catalogue-count span {
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: .8rem;
+}
+.catalogue-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 0;
+}
+.catalogue-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 330px;
+    padding: 22px;
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.catalogue-card:hover {
+    transform: translateY(-4px);
+    border-color: #cbd5e1;
+    box-shadow: var(--shadow-md);
+}
+.catalogue-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+.course-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 999px;
+    padding: 5px 9px;
+    font-size: .72rem;
+    font-weight: 800;
+}
+.course-type.standard {
+    color: #1d4ed8;
+    background: #eff6ff;
+}
+.course-type.premium {
+    color: #92400e;
+    background: #fffbeb;
+}
+.course-type svg {
+    width: 13px;
+    height: 13px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.catalogue-card .status-badge {
+    margin: 0;
+    padding: 4px 8px;
+    font-size: .7rem;
+}
+.catalogue-card-icon {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    margin: 24px 0 18px;
+    border-radius: 14px;
+    background: var(--ink);
+    color: #fff;
+}
+.catalogue-card-icon svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.catalogue-card h2 {
+    margin: 0 0 9px;
+    color: var(--ink);
+    font-size: 1.25rem;
+    line-height: 1.2;
+}
+.catalogue-card p {
+    margin: 0;
+    color: var(--muted);
+    font-size: .9rem;
+    line-height: 1.65;
+}
+.catalogue-card-footer {
+    margin-top: auto;
+    padding-top: 22px;
+}
+.catalogue-card-footer .btn {
+    width: 100%;
+    gap: 8px;
+}
+.catalogue-card-footer .btn svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.catalogue-admin {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 22px;
+    margin-top: 24px;
+    padding: 18px 20px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: #fff;
+}
+.catalogue-admin strong,
+.catalogue-admin span {
+    display: block;
+}
+.catalogue-admin strong { color: var(--ink); }
+.catalogue-admin span { margin-top: 3px; color: var(--muted); font-size: .86rem; }
+.catalogue-empty {
+    padding: 60px 24px;
+    text-align: center;
+    border: 1px dashed #cbd5e1;
+    border-radius: 18px;
+    background: #fff;
+}
+.catalogue-empty-icon {
+    display: grid;
+    place-items: center;
+    width: 54px;
+    height: 54px;
+    margin: 0 auto 18px;
+    border-radius: 15px;
+    background: #eff6ff;
+    color: var(--accent);
+}
+.catalogue-empty-icon svg {
+    width: 25px;
+    height: 25px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.catalogue-empty h2 { margin: 0 0 7px; color: var(--ink); }
+.catalogue-empty p { margin: 0 0 20px; color: var(--muted); }
+
+@media (max-width: 900px) {
+    .catalogue-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 650px) {
+    .catalogue-hero { align-items: stretch; flex-direction: column; }
+    .catalogue-count { min-width: 0; }
+    .catalogue-grid { grid-template-columns: 1fr; }
+    .catalogue-admin { align-items: stretch; flex-direction: column; }
+}
