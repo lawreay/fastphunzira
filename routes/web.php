@@ -214,7 +214,7 @@ return [
             'courses' => $courses,
         ];
     }],
-    ['GET', '/courses/{id}/learn', function (string $courseId) use ($courseRepository, $moduleRepository, $lessonRepository, $enrollmentRepository, $learningService) {
+    ['GET', '/courses/{id}/learn', function (string $courseId) use ($courseRepository, $moduleRepository, $lessonRepository, $enrollmentRepository, $learningService, $studentMembershipRepository) {
         if (!Auth::check()) {
             $_SESSION['flash_error'] = 'Please log in to access course content.';
 
@@ -231,7 +231,16 @@ return [
         if ($enrollmentRepository->findByStudentAndCourse($studentId, (int) $courseId) === null) {
             $_SESSION['flash_error'] = 'You must enroll in this course before accessing lessons.';
 
-            return redirect_to('/courses/' . (int) $courseId);
+            return redirect_to('/courses/' . (int) $courseId . '?from=my-courses');
+        }
+
+        if (
+            strtolower((string) ($course['access_tier'] ?? 'regular')) === 'premium'
+            && ($studentMembershipRepository === null || !$studentMembershipRepository->isPremiumActive($studentId))
+        ) {
+            $_SESSION['flash_error'] = 'Your Premium membership is required to continue this course.';
+
+            return redirect_to('/courses/' . (int) $courseId . '?from=my-courses');
         }
 
         $modules = $moduleRepository->findByCourse((int) $courseId);
@@ -251,7 +260,7 @@ return [
             'progress' => $learningService->getCourseProgress($studentId, (int) $courseId),
         ];
     }],
-    ['GET', '/lessons/{id}', function (string $lessonId) use ($lessonRepository, $enrollmentRepository, $courseRepository, $progressRepository) {
+    ['GET', '/lessons/{id}', function (string $lessonId) use ($lessonRepository, $enrollmentRepository, $courseRepository, $progressRepository, $studentMembershipRepository) {
         if (!Auth::check()) {
             $_SESSION['flash_error'] = 'Please log in to continue.';
 
@@ -272,6 +281,15 @@ return [
             $_SESSION['flash_error'] = 'You are not enrolled for this lesson.';
 
             return redirect_to('/courses');
+        }
+
+        if (
+            strtolower((string) ($course['access_tier'] ?? 'regular')) === 'premium'
+            && ($studentMembershipRepository === null || !$studentMembershipRepository->isPremiumActive($studentId))
+        ) {
+            $_SESSION['flash_error'] = 'Your Premium membership is required to access this lesson.';
+
+            return redirect_to('/courses/' . $courseId . '?from=my-courses');
         }
 
         return [
