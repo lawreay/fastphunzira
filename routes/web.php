@@ -1114,16 +1114,24 @@ return [
         http_response_code(200);
         exit('OK.');
     }],
-    ['GET', '/dashboard', function () {
+    ['GET', '/dashboard', function () use ($studentMembershipRepository, $payChanguService, $platformSettingsRepository, $paymentsConfig) {
         if (!Auth::check()) {
             $_SESSION['flash_error'] = 'Please log in to continue.';
 
             return redirect_to('/login');
         }
 
+        $membership = $studentMembershipRepository !== null
+            ? $studentMembershipRepository->findByUserId((int) Auth::userId())
+            : ['plan' => 'regular', 'status' => 'active'];
+
         return [
             'view' => 'dashboard',
             'title' => 'Dashboard',
+            'membership' => $membership,
+            'payChanguEnabled' => $payChanguService?->enabled() ?? false,
+            'premiumPrice' => (float) ($platformSettingsRepository?->get('premium_price', '0') ?? '0'),
+            'premiumCurrency' => (string) ($platformSettingsRepository?->get('premium_currency', $paymentsConfig['currency'] ?? 'MWK') ?? 'MWK'),
         ];
     }],
 ];
