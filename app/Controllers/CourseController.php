@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Auth;
 use App\Services\CourseService;
+use App\Repositories\EnrollmentRepositoryInterface;
 use App\Repositories\StudentMembershipRepository;
 use App\Support\Csrf;
 
@@ -11,7 +12,8 @@ final class CourseController
 {
     public function __construct(
         private CourseService $courseService,
-        private ?StudentMembershipRepository $membershipRepository = null
+        private ?StudentMembershipRepository $membershipRepository = null,
+        private ?EnrollmentRepositoryInterface $enrollmentRepository = null
     ) {
     }
 
@@ -35,6 +37,13 @@ final class CourseController
             ];
         }
 
+        $isEnrolled = Auth::check()
+            && $this->enrollmentRepository !== null
+            && $this->enrollmentRepository->findByStudentAndCourse(
+                (int) Auth::userId(),
+                $id
+            ) !== null;
+
         return [
             'view' => 'courses/details',
             'title' => $course['title'],
@@ -42,6 +51,7 @@ final class CourseController
             'membership' => Auth::check() && $this->membershipRepository !== null
                 ? $this->membershipRepository->findByUserId((int) Auth::userId())
                 : null,
+            'isEnrolled' => $isEnrolled,
         ];
     }
 
