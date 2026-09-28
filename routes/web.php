@@ -35,7 +35,14 @@ return [
         ];
     }],
     ['GET', '/courses', [$courseController, 'catalogue']],
-    ['GET', '/courses/{id}', [$courseController, 'detail']],
+    ['GET', '/courses/{id}', function (string $id) use ($courseController) {
+        if (!ctype_digit($id)) {
+            http_response_code(404);
+            return ['view' => 'errors/not_found', 'title' => 'Course not found'];
+        }
+
+        return $courseController->detail((int) $id);
+    }],
     ['GET', '/admin/courses', [$courseController, 'adminIndex']],
     ['GET', '/admin/courses/create', [$courseController, 'createForm']],
     ['GET', '/admin/courses/{id}/edit', [$courseController, 'editForm']],
