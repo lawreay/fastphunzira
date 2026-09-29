@@ -9,8 +9,10 @@ $description = trim((string) ($course['description'] ?? ''));
 $status = strtolower((string) ($course['status'] ?? 'draft'));
 $accessTier = strtolower((string) ($course['access_tier'] ?? 'regular'));
 $isPremium = $accessTier === 'premium';
+$membershipExpiresAt = !empty($membership['expires_at']) ? strtotime((string) $membership['expires_at']) : false;
 $membershipIsPremium = ($membership['plan'] ?? 'regular') === 'premium'
-    && ($membership['status'] ?? '') === 'active';
+    && ($membership['status'] ?? '') === 'active'
+    && ($membershipExpiresAt === false || $membershipExpiresAt >= time());
 $canManageCourses = Auth::userCan('courses.manage');
 $isEnrolled = (bool) ($isEnrolled ?? false);
 $hasCourseAccess = $isEnrolled && (!$isPremium || $membershipIsPremium);
