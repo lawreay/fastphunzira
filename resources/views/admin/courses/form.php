@@ -93,12 +93,31 @@ $tabUrl = static fn(string $tab): string => base_url('admin/courses/' . $courseI
             </form>
             <?php if (empty($modules)): ?><div class="admin-empty-content"><strong>No modules yet</strong><span>Create the first module to start building the course.</span></div><?php else: ?>
                 <div class="admin-managed-list"><?php foreach ($modules as $module): ?>
-                    <div class="admin-managed-item">
-                        <form method="post" action="<?= htmlspecialchars(base_url('admin/modules/' . (int) $module['id'] . '/update'), ENT_QUOTES, 'UTF-8') ?>" class="admin-managed-main">
-                            <?= Csrf::input() ?><div class="admin-managed-fields"><input name="title" value="<?= htmlspecialchars((string) ($module['title'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required><input name="description" value="<?= htmlspecialchars((string) ($module['description'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required><input name="sort_order" type="number" min="0" value="<?= (int) ($module['sort_order'] ?? 0) ?>" aria-label="Module order"></div>
-                            <div class="admin-managed-actions"><a class="btn secondary" href="<?= htmlspecialchars(base_url('admin/modules/' . (int) $module['id'] . '/lessons/create'), ENT_QUOTES, 'UTF-8') ?>">Add lesson</a><button class="btn secondary" type="submit">Save</button></div>
+                    <?php $moduleId = (int) ($module['id'] ?? 0); $lessons = $moduleLessons[$moduleId] ?? []; ?>
+                    <div class="admin-managed-item admin-module-item">
+                        <form method="post" action="<?= htmlspecialchars(base_url('admin/modules/' . $moduleId . '/update'), ENT_QUOTES, 'UTF-8') ?>" class="admin-managed-main">
+                            <?= Csrf::input() ?>
+                            <div class="admin-managed-fields"><input name="title" value="<?= htmlspecialchars((string) ($module['title'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required><input name="description" value="<?= htmlspecialchars((string) ($module['description'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required><input name="sort_order" type="number" min="0" value="<?= (int) ($module['sort_order'] ?? 0) ?>" aria-label="Module order"></div>
+                            <div class="admin-module-content">
+                                <div class="admin-module-lessons-heading">
+                                    <div><strong>Lessons</strong><span><?= count($lessons) ?> lesson<?= count($lessons) === 1 ? '' : 's' ?></span></div>
+                                    <a class="btn" href="<?= htmlspecialchars(base_url('admin/modules/' . $moduleId . '/lessons/create'), ENT_QUOTES, 'UTF-8') ?>">+ Add lesson</a>
+                                </div>
+                                <?php if (empty($lessons)): ?>
+                                    <div class="admin-module-empty">No lessons yet. Add the first lesson to this module.</div>
+                                <?php else: ?>
+                                    <div class="admin-module-lessons">
+                                        <?php foreach ($lessons as $lesson): ?>
+                                            <div class="admin-module-lesson">
+                                                <div><strong><?= htmlspecialchars((string) ($lesson['title'] ?? 'Untitled lesson'), ENT_QUOTES, 'UTF-8') ?></strong><span><?= (int) ($lesson['sort_order'] ?? 0) ?></span></div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="admin-managed-actions"><button class="btn secondary" type="submit">Save module</button></div>
                         </form>
-                        <form method="post" action="<?= htmlspecialchars(base_url('admin/modules/' . (int) $module['id'] . '/delete'), ENT_QUOTES, 'UTF-8') ?>" onsubmit="return confirm('Remove this module and all lessons inside it? This cannot be undone.');"><?= Csrf::input() ?><button class="btn danger" type="submit">Remove</button></form>
+                        <form method="post" action="<?= htmlspecialchars(base_url('admin/modules/' . $moduleId . '/delete'), ENT_QUOTES, 'UTF-8') ?>" onsubmit="return confirm('Remove this module and all lessons inside it? This cannot be undone.');"><?= Csrf::input() ?><button class="btn danger" type="submit">Remove module</button></form>
                     </div>
                 <?php endforeach; ?></div>
             <?php endif; ?>
