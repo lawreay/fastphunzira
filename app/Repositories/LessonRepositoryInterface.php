@@ -10,6 +10,8 @@ interface LessonRepositoryInterface
 
     public function findById(int $id): ?array;
 
+    public function delete(int $id): bool;
+
     public function findByModule(int $moduleId): array;
 
     public function findByCourse(int $courseId): array;
