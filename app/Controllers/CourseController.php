@@ -8,6 +8,7 @@ use App\Repositories\EnrollmentRepositoryInterface;
 use App\Repositories\CourseModuleRepositoryInterface;
 use App\Repositories\QuizRepositoryInterface;
 use App\Repositories\ExamRepositoryInterface;
+use App\Repositories\LessonRepositoryInterface;
 use App\Repositories\StudentMembershipRepository;
 use App\Support\Csrf;
 
@@ -19,7 +20,8 @@ final class CourseController
         private ?EnrollmentRepositoryInterface $enrollmentRepository = null,
         private ?CourseModuleRepositoryInterface $moduleRepository = null,
         private ?QuizRepositoryInterface $quizRepository = null,
-        private ?ExamRepositoryInterface $examRepository = null
+        private ?ExamRepositoryInterface $examRepository = null,
+        private ?LessonRepositoryInterface $lessonRepository = null
     ) {
     }
 
@@ -120,11 +122,19 @@ final class CourseController
             return redirect_to('/admin/courses');
         }
 
+        $modules = $this->moduleRepository?->findByCourse($id) ?? [];
+        $moduleLessons = [];
+        foreach ($modules as $module) {
+            $moduleId = (int) ($module['id'] ?? 0);
+            $moduleLessons[$moduleId] = $this->lessonRepository?->findByModule($moduleId) ?? [];
+        }
+
         return [
             'view' => 'admin/courses/form',
             'title' => 'Edit Course',
             'course' => $course,
-            'modules' => $this->moduleRepository?->findByCourse($id) ?? [],
+            'modules' => $modules,
+            'moduleLessons' => $moduleLessons,
             'quizzes' => $this->quizRepository?->findByCourse($id) ?? [],
             'exams' => $this->examRepository?->findByCourse($id) ?? [],
         ];
