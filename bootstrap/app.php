@@ -111,7 +111,14 @@ $certificateVerificationRateLimitService = new CertificateVerificationRateLimitS
     $securityConfig['certificate_verification'] ?? []
 );
 $courseService = new CourseService($courseRepository);
-$courseController = new CourseController($courseService, $studentMembershipRepository, $enrollmentRepository);
+$courseController = new CourseController(
+    $courseService,
+    $studentMembershipRepository,
+    $enrollmentRepository,
+    $moduleRepository,
+    $quizRepository,
+    $examRepository
+);
 $quizService = new QuizService(
     $courseRepository,
     $enrollmentRepository,
