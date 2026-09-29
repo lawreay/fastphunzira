@@ -29,6 +29,8 @@ use App\Repositories\InMemoryLoginHistoryRepository;
 use App\Repositories\InMemoryUserRepository;
 use App\Repositories\LessonProgressRepository;
 use App\Repositories\LessonRepository;
+use App\Repositories\LessonMaterialRepository;
+use App\Repositories\InMemoryLessonMaterialRepository;
 use App\Repositories\LoginHistoryRepository;
 use App\Repositories\PaymentTransactionRepository;
 use App\Repositories\PlatformSettingsRepository;
@@ -45,6 +47,7 @@ use App\Services\CourseService;
 use App\Services\EnrollmentLearningService;
 use App\Services\ExamService;
 use App\Services\LoginSecurityService;
+use App\Services\LocalMediaStorage;
 use App\Services\QuizService;
 use App\Services\PayChanguService;
 
@@ -54,6 +57,7 @@ $config = require __DIR__ . '/../config/app.php';
 $dbConfig = require __DIR__ . '/../config/database.php';
 $securityConfig = require __DIR__ . '/../config/security.php';
 $paymentsConfig = require __DIR__ . '/../config/payments.php';
+$mediaConfig = require __DIR__ . '/../config/media.php';
 
 Session::start($securityConfig);
 
@@ -97,6 +101,8 @@ $payChanguService = ($platformSettingsRepository !== null && $paymentTransaction
 $courseRepository = $pdo !== null ? new CourseRepository($pdo) : new \App\Repositories\InMemoryCourseRepository();
 $moduleRepository = $pdo !== null ? new CourseModuleRepository($pdo) : new InMemoryCourseModuleRepository();
 $lessonRepository = $pdo !== null ? new LessonRepository($pdo) : new InMemoryLessonRepository();
+$lessonMaterialRepository = $pdo !== null ? new LessonMaterialRepository($pdo) : new InMemoryLessonMaterialRepository();
+$mediaStorage = new LocalMediaStorage((string) ($mediaConfig['storage_path'] ?? (dirname(__DIR__) . '/storage/learning-media')));
 $enrollmentRepository = $pdo !== null ? new EnrollmentRepository($pdo) : new InMemoryEnrollmentRepository();
 $progressRepository = $pdo !== null ? new LessonProgressRepository($pdo) : new InMemoryLessonProgressRepository();
 $quizRepository = $pdo !== null ? new QuizRepository($pdo) : new \App\Repositories\InMemoryQuizRepository();
@@ -158,6 +164,9 @@ return [
     'db' => $pdo,
     'security' => $securityConfig,
     'payments' => $paymentsConfig,
+    'media' => $mediaConfig,
+    'lessonMaterialRepository' => $lessonMaterialRepository,
+    'mediaStorage' => $mediaStorage,
     'platformSettingsRepository' => $platformSettingsRepository,
     'paymentTransactionRepository' => $paymentTransactionRepository,
     'studentMembershipRepository' => $studentMembershipRepository,
