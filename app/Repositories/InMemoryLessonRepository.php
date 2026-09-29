@@ -26,6 +26,13 @@ final class InMemoryLessonRepository implements LessonRepositoryInterface
         return $this->lessons[$id];
     }
 
+    public function delete(int $id): bool
+    {
+        if (!isset($this->lessons[$id])) return false;
+        unset($this->lessons[$id]);
+        return true;
+    }
+
     public function findById(int $id): ?array
     {
         return $this->lessons[$id] ?? null;
