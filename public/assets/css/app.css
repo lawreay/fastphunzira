@@ -34,7 +34,7 @@ button, input, textarea, select { font: inherit; }
     padding: 24px;
 }
 
-header {
+.site-header {
     background: var(--color-heading);
     color: white;
     padding: 16px 0;
