@@ -108,7 +108,7 @@ return [
         return redirect_to('/admin/courses/' . $courseId . '/edit?tab=modules');
     }],
 
-    ['GET', '/lessons/{lessonId}', function (string $lessonId) use ($studentCanAccessLesson, $progressRepository, $materialRepository, $courseRepository) {
+    ['GET', '/lessons/{lessonId}', function (string $lessonId) use ($studentCanAccessLesson, $progressRepository, $materialRepository, $lessonBlockRepository, $courseRepository) {
         $lesson = $studentCanAccessLesson((int) $lessonId);
         if ($lesson === null) {
             $_SESSION['flash_error'] = 'You are not enrolled for this lesson.';
@@ -140,7 +140,7 @@ return [
             'blocks' => [],
         ];
     }],
-    ['GET', '/admin/lessons/{lessonId}/edit-media', function (string $lessonId) use ($lessonRepository, $moduleRepository, $materialRepository) {
+    ['GET', '/admin/lessons/{lessonId}/edit-media', function (string $lessonId) use ($lessonRepository, $moduleRepository, $materialRepository, $lessonBlockRepository) {
         if (!Auth::userCan('courses.manage')) return redirect_to('/login');
         $lesson = $lessonRepository->findById((int) $lessonId);
         if ($lesson === null) return ['view' => 'errors/not_found', 'title' => 'Lesson not found'];
@@ -153,6 +153,7 @@ return [
             'moduleId' => (int) ($lesson['module_id'] ?? 0),
             'courseId' => (int) ($module['course_id'] ?? 0),
             'materials' => $materialRepository->findByLesson((int) $lessonId),
+            'blocks' => $lessonBlockRepository->findByLesson((int) $lessonId),
         ];
     }],
     ['POST', '/admin/modules/{moduleId}/lessons/store-media', function (string $moduleId) use ($learningService, $moduleRepository, $lessonRepository, $mediaStorage, $mediaConfig, $materialRepository, $materialType, $lessonBlockRepository, $redirectToLessonEditor) {
