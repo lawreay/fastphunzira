@@ -12,6 +12,7 @@ $enrollmentRepository = $app['enrollmentRepository'];
 $studentMembershipRepository = $app['studentMembershipRepository'];
 $progressRepository = $app['progressRepository'];
 $materialRepository = $app['lessonMaterialRepository'];
+$lessonBlockRepository = $app['lessonBlockRepository'];
 $mediaStorage = $app['mediaStorage'];
 $mediaConfig = $app['media'];
 
@@ -122,6 +123,7 @@ return [
             'course' => $course,
             'completed' => $progressRepository->findByStudentAndLesson((int) Auth::userId(), (int) $lessonId) !== null,
             'materials' => $materialRepository->findByLesson((int) $lessonId),
+            'blocks' => $lessonBlockRepository->findByLesson((int) $lessonId),
         ];
     }],
     ['GET', '/admin/modules/{moduleId}/lessons/create-media', function (string $moduleId) use ($moduleRepository) {
@@ -135,6 +137,7 @@ return [
             'courseId' => (int) ($module['course_id'] ?? 0),
             'lesson' => null,
             'materials' => [],
+            'blocks' => [],
         ];
     }],
     ['GET', '/admin/lessons/{lessonId}/edit-media', function (string $lessonId) use ($lessonRepository, $moduleRepository, $materialRepository) {
@@ -215,9 +218,8 @@ return [
         return $redirectToLessonEditor((int) $module['course_id']);
     }],
 
-    ['POST', '/admin/lessons/{lessonId}/save-media', function (string $lessonId) use ($learningService, $lessonRepository, $moduleRepository, $mediaStorage, $mediaConfig, $materialRepository, $materialType, $redirectToLessonEditor) {
+    ['POST', '/admin/lessons/{lessonId}/save-media', function (string $lessonId) use ($learningService, $lessonRepository, $moduleRepository, $mediaStorage, $mediaConfig, $lessonBlockRepository, $redirectToLessonEditor) {
         if (!Auth::userCan('courses.manage')) return redirect_to('/login');
-
         $lesson = $lessonRepository->findById((int) $lessonId);
         $module = $lesson !== null ? $moduleRepository->findById((int) ($lesson['module_id'] ?? 0)) : null;
         if ($lesson === null || $module === null) return ['view' => 'errors/not_found', 'title' => 'Lesson not found'];
@@ -228,78 +230,86 @@ return [
             return $redirectToLessonEditor($courseId);
         }
 
-        $existingVideoPath = trim((string) ($lesson['file_path'] ?? ''));
-        $videoUploaded = !empty($_FILES['video_file']['name']);
-        $externalVideo = trim((string) ($_POST['video_url'] ?? ''));
-        $removeVideo = isset($_POST['remove_video']);
-
         $updates = [
             'title' => trim((string) ($_POST['title'] ?? '')),
             'summary' => trim((string) ($_POST['summary'] ?? '')),
             'content' => trim((string) ($_POST['content'] ?? '')),
-            'video_url' => $externalVideo !== '' ? $externalVideo : null,
             'sort_order' => (int) ($_POST['sort_order'] ?? 0),
         ];
+        $result = $learningService->updateLesson((int) $lessonId, $updates);
+        if (!$result['success']) {
+            $_SESSION['flash_error'] = $result['message'];
+            return $redirectToLessonEditor($courseId);
+        }
+
+        $blocks = is_array($_POST['blocks'] ?? null) ? $_POST['blocks'] : [];
+        $existing = [];
+        foreach ($lessonBlockRepository->findByLesson((int) $lessonId) as $block) {
+            $existing[(int) $block['id']] = $block;
+        }
 
         try {
-            if ($videoUploaded) {
-                $upload = $mediaStorage->store($_FILES['video_file'], 'videos', $mediaConfig['video_mimes'], (int) $mediaConfig['max_upload_bytes']);
-                $updates['video_url'] = null;
-                $updates['video_original_name'] = $upload['original_name'];
-                $updates['video_mime_type'] = $upload['mime_type'];
-                $updates['video_file_size'] = $upload['file_size'];
-                $updates['file_path'] = $upload['storage_path'];
-            } elseif ($externalVideo !== '' || $removeVideo) {
-                $updates['video_original_name'] = null;
-                $updates['video_mime_type'] = null;
-                $updates['video_file_size'] = null;
-                $updates['file_path'] = null;
-            } else {
-                unset($updates['video_url']);
-            }
+            foreach ($blocks as $index => $block) {
+                if (!is_array($block)) continue;
+                $id = (int) ($block['id'] ?? 0);
+                $type = (string) ($block['type'] ?? 'text');
+                if (!in_array($type, ['text','youtube','video','material'], true)) continue;
 
-            $metadataUpdates = [];
-            foreach (['video_original_name', 'video_mime_type', 'video_file_size', 'file_path'] as $field) {
-                if (array_key_exists($field, $updates)) {
-                    $metadataUpdates[$field] = $updates[$field];
-                    unset($updates[$field]);
+                $data = [
+                    'title' => trim((string) ($block['title'] ?? '')),
+                    'content' => trim((string) ($block['content'] ?? '')),
+                    'download_allowed' => isset($block['download_allowed']) ? 1 : 0,
+                    'sort_order' => (int) ($block['sort_order'] ?? $index),
+                ];
+
+                if ($type === 'youtube' && $data['content'] === '') {
+                    throw new RuntimeException('YouTube blocks require a video URL.');
                 }
+
+                if ($id > 0 && isset($existing[$id])) {
+                    $lessonBlockRepository->update($id, $data);
+                    unset($existing[$id]);
+                    continue;
+                }
+
+                $upload = null;
+                if (in_array($type, ['video','material'], true)) {
+                    $file = $_FILES['block_files']['tmp_name'][$index] ?? null;
+                    if ($file !== null && !empty($_FILES['block_files']['name'][$index])) {
+                        $fileData = [
+                            'name' => $_FILES['block_files']['name'][$index],
+                            'type' => $_FILES['block_files']['type'][$index] ?? '',
+                            'tmp_name' => $_FILES['block_files']['tmp_name'][$index],
+                            'error' => $_FILES['block_files']['error'][$index] ?? UPLOAD_ERR_NO_FILE,
+                            'size' => $_FILES['block_files']['size'][$index] ?? 0,
+                        ];
+                        $allowed = $type === 'video' ? $mediaConfig['video_mimes'] : $mediaConfig['material_mimes'];
+                        $upload = $mediaStorage->store($fileData, $type === 'video' ? 'videos' : 'materials', $allowed, (int) $mediaConfig['max_upload_bytes']);
+                    } else {
+                        throw new RuntimeException(($type === 'video' ? 'Video' : 'Learning material') . ' blocks require a file.');
+                    }
+                }
+
+                if ($upload !== null) {
+                    $data['storage_path'] = $upload['storage_path'];
+                    $data['original_name'] = $upload['original_name'];
+                    $data['mime_type'] = $upload['mime_type'];
+                    $data['file_size'] = $upload['file_size'];
+                }
+                $data['lesson_id'] = (int) $lessonId;
+                $data['type'] = $type;
+                $lessonBlockRepository->create($data);
             }
 
-            $result = $learningService->updateLesson((int) $lessonId, $updates);
-            if (!$result['success']) {
-                $_SESSION['flash_error'] = $result['message'];
-                return $redirectToLessonEditor($courseId);
-            }
-
-            if ($metadataUpdates !== []) {
-                $lessonRepository->update((int) $lessonId, $metadataUpdates);
-            }
-
-            if (($videoUploaded || $externalVideo !== '' || $removeVideo) && $existingVideoPath !== '') {
-                $mediaStorage->delete($existingVideoPath);
-            }
-
-            if (!empty($_FILES['material_file']['name'])) {
-                $upload = $mediaStorage->store($_FILES['material_file'], 'materials', $mediaConfig['material_mimes'], (int) $mediaConfig['max_upload_bytes']);
-                $materialRepository->create([
-                    'lesson_id' => (int) $lessonId,
-                    'title' => trim((string) ($_POST['material_title'] ?? '')) ?: $upload['original_name'],
-                    'type' => $materialType($upload['mime_type']),
-                    'original_name' => $upload['original_name'],
-                    'stored_name' => $upload['stored_name'],
-                    'mime_type' => $upload['mime_type'],
-                    'file_size' => $upload['file_size'],
-                    'storage_path' => $upload['storage_path'],
-                    'download_allowed' => isset($_POST['download_allowed']) ? 1 : 0,
-                    'sort_order' => (int) ($_POST['material_sort_order'] ?? 0),
-                ]);
+            foreach ($existing as $oldBlock) {
+                if (!empty($oldBlock['storage_path'])) $mediaStorage->delete((string) $oldBlock['storage_path']);
+                $lessonBlockRepository->delete((int) $oldBlock['id']);
             }
 
             $_SESSION['flash_success'] = 'Lesson saved successfully.';
         } catch (Throwable $e) {
-            error_log('Lesson media save failed: ' . $e->getMessage());
-            $_SESSION['flash_error'] = 'The lesson could not be fully saved: ' . $e->getMessage();
+            error_log('Lesson content block save failed: ' . $e->getMessage());
+            $_SESSION['flash_error'] = 'Lesson details were saved, but a content block failed: ' . $e->getMessage();
         }
 
         return $redirectToLessonEditor($courseId);
