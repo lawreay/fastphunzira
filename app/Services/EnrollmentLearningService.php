@@ -140,6 +140,26 @@ final class EnrollmentLearningService
         return ['success' => $updated !== null, 'message' => $updated !== null ? 'Module updated.' : 'Module update failed.', 'data' => $updated];
     }
 
+    public function deleteModule(int $moduleId): array
+    {
+        if (!Auth::userCan('courses.manage')) {
+            return ['success' => false, 'code' => 'forbidden', 'message' => 'Only administrators can remove modules.'];
+        }
+
+        $module = $this->moduleRepository->findById($moduleId);
+        if ($module === null) {
+            return ['success' => false, 'code' => 'not_found', 'message' => 'Module not found.'];
+        }
+
+        $deleted = $this->moduleRepository->delete($moduleId);
+
+        return [
+            'success' => $deleted,
+            'message' => $deleted ? 'Module removed.' : 'Module could not be removed.',
+            'data' => $module,
+        ];
+    }
+
     public function createLesson(int $moduleId, array $data, ?int $actorId = null): array
     {
         if (!Auth::userCan('courses.manage')) {
