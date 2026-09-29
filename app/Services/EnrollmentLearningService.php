@@ -200,6 +200,54 @@ final class EnrollmentLearningService
         return ['success' => true, 'message' => 'Lesson created.', 'data' => $this->lessonRepository->create($lesson)];
     }
 
+    public function updateLesson(int $lessonId, array $data): array
+    {
+        if (!Auth::userCan('courses.manage')) {
+            return ['success' => false, 'code' => 'forbidden', 'message' => 'Only administrators can update lessons.'];
+        }
+
+        $existing = $this->lessonRepository->findById($lessonId);
+        if ($existing === null) {
+            return ['success' => false, 'code' => 'not_found', 'message' => 'Lesson not found.'];
+        }
+
+        $updates = [];
+        if (isset($data['title'])) $updates['title'] = trim((string) $data['title']);
+        if (isset($data['summary'])) $updates['summary'] = trim((string) $data['summary']);
+        if (isset($data['content'])) $updates['content'] = trim((string) $data['content']);
+        if (isset($data['video_url'])) {
+            $videoUrl = trim((string) $data['video_url']);
+            $updates['video_url'] = $videoUrl !== '' ? $videoUrl : null;
+        }
+        if (isset($data['sort_order'])) $updates['sort_order'] = (int) $data['sort_order'];
+
+        $title = $updates['title'] ?? trim((string) ($existing['title'] ?? ''));
+        $content = $updates['content'] ?? trim((string) ($existing['content'] ?? ''));
+        if ($title === '' || $content === '') {
+            return ['success' => false, 'code' => 'validation_failed', 'message' => 'Lesson title and content are required.'];
+        }
+
+        $updated = $this->lessonRepository->update($lessonId, $updates);
+
+        return ['success' => $updated !== null, 'message' => $updated !== null ? 'Lesson updated.' : 'Lesson update failed.', 'data' => $updated];
+    }
+
+    public function deleteLesson(int $lessonId): array
+    {
+        if (!Auth::userCan('courses.manage')) {
+            return ['success' => false, 'code' => 'forbidden', 'message' => 'Only administrators can remove lessons.'];
+        }
+
+        $lesson = $this->lessonRepository->findById($lessonId);
+        if ($lesson === null) {
+            return ['success' => false, 'code' => 'not_found', 'message' => 'Lesson not found.'];
+        }
+
+        $deleted = $this->lessonRepository->delete($lessonId);
+
+        return ['success' => $deleted, 'message' => $deleted ? 'Lesson removed.' : 'Lesson could not be removed.', 'data' => $lesson];
+    }
+
     public function getLessonForStudent(int $studentId, int $lessonId): ?array
     {
         if (!Auth::check() || (int) Auth::userId() !== $studentId) {
