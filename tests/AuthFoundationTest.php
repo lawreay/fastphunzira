@@ -197,6 +197,7 @@ final class AuthFoundationTest extends TestCase
             public function create(array $module): array { return $module; }
             public function update(int $id, array $data): ?array { return $data; }
             public function findById(int $id): ?array { return null; }
+            public function delete(int $id): bool { return false; }
             public function findByCourse(int $courseId): array { return []; }
         };
 
