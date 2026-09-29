@@ -63,6 +63,38 @@ $redirectToLessonEditor = static function (int $courseId): array {
 };
 
 return [
+    ['GET', '/lesson-blocks/{blockId}/view', function (string $blockId) use ($lessonBlockRepository, $studentCanAccessLesson, $mediaStorage) {
+        $block=$lessonBlockRepository->findById((int)$blockId);
+        if($block===null || $studentCanAccessLesson((int)($block['lesson_id']??0))===null){http_response_code(404);exit('Content not found.');}
+        $path=$mediaStorage->absolutePath((string)($block['storage_path']??''));
+        if(!is_file($path)){http_response_code(404);exit('Content not found.');}
+        $mime=(string)($block['mime_type']??'application/octet-stream');
+        header('Content-Type: '.$mime); header('X-Content-Type-Options: nosniff');
+        if($mime==='text/html') header("Content-Security-Policy: sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src data:;");
+        else header('Content-Disposition: inline; filename="'.addcslashes(basename((string)($block['original_name']??'file')),"\\\"").'"');
+        readfile($path);exit;
+    }],
+    ['GET', '/lesson-blocks/{blockId}/download', function (string $blockId) use ($lessonBlockRepository, $studentCanAccessLesson, $mediaStorage) {
+        $block=$lessonBlockRepository->findById((int)$blockId);
+        if($block===null || $studentCanAccessLesson((int)($block['lesson_id']??0))===null){http_response_code(404);exit('Content not found.');}
+        if(empty($block['download_allowed'])){http_response_code(403);exit('Download is disabled for this resource.');}
+        $path=$mediaStorage->absolutePath((string)($block['storage_path']??''));
+        if(!is_file($path)){http_response_code(404);exit('Content not found.');}
+        header('Content-Type: application/octet-stream');header('Content-Disposition: attachment; filename="'.addcslashes(basename((string)($block['original_name']??'file')),"\\\"").'"');header('Content-Length: '.filesize($path));header('X-Content-Type-Options: nosniff');readfile($path);exit;
+    }],
+    ['GET', '/lesson-blocks/{blockId}/video', function (string $blockId) use ($lessonBlockRepository, $studentCanAccessLesson, $mediaStorage) {
+        $block=$lessonBlockRepository->findById((int)$blockId);
+        if($block===null || ($block['type']??'')!=='video' || $studentCanAccessLesson((int)($block['lesson_id']??0))===null){http_response_code(404);exit('Video not found.');}
+        $path=$mediaStorage->absolutePath((string)($block['storage_path']??''));
+        if(!is_file($path)){http_response_code(404);exit('Video not found.');}
+        $size=filesize($path);$start=0;$end=$size-1;$mime=(string)($block['mime_type']??'video/mp4');
+        header('Content-Type: '.$mime);header('Accept-Ranges: bytes');header('X-Content-Type-Options: nosniff');
+        if(isset($_SERVER['HTTP_RANGE'])&&preg_match('/bytes=(\d*)-(\d*)/',$_SERVER['HTTP_RANGE'],$m)){
+          if($m[1]===''&&$m[2]!==''){$len=min((int)$m[2],$size);$start=$size-$len;$end=$size-1;}else{if($m[1]!=='')$start=(int)$m[1];if($m[2]!=='')$end=(int)$m[2];if($m[1]!==''&&$m[2]==='')$end=min($start+2097152-1,$size-1);}
+          if($start>$end||$start>=$size){http_response_code(416);header('Content-Range: bytes */'.$size);exit;}http_response_code(206);header('Content-Range: bytes '.$start.'-'.$end.'/'.$size);
+        }
+        $length=$end-$start+1;header('Content-Length: '.$length);$h=fopen($path,'rb');fseek($h,$start);$remaining=$length;while($remaining>0&&!feof($h)){$chunk=fread($h,min(8192,$remaining));if($chunk===false||$chunk==='')break;echo $chunk;$remaining-=strlen($chunk);flush();}fclose($h);exit;
+    }],
     ['POST', '/admin/lessons/{lessonId}/delete', function (string $lessonId) use ($learningService, $lessonRepository, $moduleRepository, $materialRepository, $mediaStorage, $redirectToLessonEditor) {
         if (!Auth::userCan('courses.manage')) return redirect_to('/login');
         $lesson = $lessonRepository->findById((int) $lessonId);
