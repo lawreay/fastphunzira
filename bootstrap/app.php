@@ -30,6 +30,8 @@ use App\Repositories\InMemoryUserRepository;
 use App\Repositories\LessonProgressRepository;
 use App\Repositories\LessonRepository;
 use App\Repositories\LessonMaterialRepository;
+use App\Repositories\LessonBlockRepository;
+use App\Repositories\InMemoryLessonBlockRepository;
 use App\Repositories\InMemoryLessonMaterialRepository;
 use App\Repositories\LoginHistoryRepository;
 use App\Repositories\PaymentTransactionRepository;
@@ -102,6 +104,7 @@ $courseRepository = $pdo !== null ? new CourseRepository($pdo) : new \App\Reposi
 $moduleRepository = $pdo !== null ? new CourseModuleRepository($pdo) : new InMemoryCourseModuleRepository();
 $lessonRepository = $pdo !== null ? new LessonRepository($pdo) : new InMemoryLessonRepository();
 $lessonMaterialRepository = $pdo !== null ? new LessonMaterialRepository($pdo) : new InMemoryLessonMaterialRepository();
+$lessonBlockRepository = $pdo !== null ? new LessonBlockRepository($pdo) : new InMemoryLessonBlockRepository();
 $mediaStorage = new LocalMediaStorage((string) ($mediaConfig['storage_path'] ?? (dirname(__DIR__) . '/storage/learning-media')));
 $enrollmentRepository = $pdo !== null ? new EnrollmentRepository($pdo) : new InMemoryEnrollmentRepository();
 $progressRepository = $pdo !== null ? new LessonProgressRepository($pdo) : new InMemoryLessonProgressRepository();
@@ -166,6 +169,7 @@ return [
     'payments' => $paymentsConfig,
     'media' => $mediaConfig,
     'lessonMaterialRepository' => $lessonMaterialRepository,
+    'lessonBlockRepository' => $lessonBlockRepository,
     'mediaStorage' => $mediaStorage,
     'platformSettingsRepository' => $platformSettingsRepository,
     'paymentTransactionRepository' => $paymentTransactionRepository,
