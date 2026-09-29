@@ -109,7 +109,17 @@ $tabUrl = static fn(string $tab): string => base_url('admin/courses/' . $courseI
                                     <div class="admin-module-lessons">
                                         <?php foreach ($lessons as $lesson): ?>
                                             <div class="admin-module-lesson">
-                                                <div><strong><?= htmlspecialchars((string) ($lesson['title'] ?? 'Untitled lesson'), ENT_QUOTES, 'UTF-8') ?></strong><span><?= (int) ($lesson['sort_order'] ?? 0) ?></span></div>
+                                                <div>
+                                                    <strong><?= htmlspecialchars((string) ($lesson['title'] ?? 'Untitled lesson'), ENT_QUOTES, 'UTF-8') ?></strong>
+                                                    <span><?= (int) ($lesson['sort_order'] ?? 0) ?></span>
+                                                </div>
+                                                <div class="admin-module-lesson-actions">
+                                                    <a class="btn secondary" href="<?= htmlspecialchars(base_url('admin/lessons/' . (int) ($lesson['id'] ?? 0) . '/edit'), ENT_QUOTES, 'UTF-8') ?>">Edit</a>
+                                                    <form method="post" action="<?= htmlspecialchars(base_url('admin/lessons/' . (int) ($lesson['id'] ?? 0) . '/delete'), ENT_QUOTES, 'UTF-8') ?>" onsubmit="return confirm('Delete this lesson? This cannot be undone.');">
+                                                        <?= Csrf::input() ?>
+                                                        <button class="btn danger" type="submit">Delete</button>
+                                                    </form>
+                                                </div>
                                             </div>
                                         <?php endforeach; ?>
                                     </div>
