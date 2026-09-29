@@ -2,20 +2,38 @@
 
 use App\Core\Auth;
 $user = Auth::user();
+$membershipPlan = strtolower((string) ($membership['plan'] ?? 'regular'));
+$membershipStatus = strtolower((string) ($membership['status'] ?? 'active'));
+$isPremium = $membershipPlan === 'premium' && $membershipStatus === 'active'
+    && (empty($membership['expires_at']) || strtotime((string) $membership['expires_at']) >= time());
+$membershipLabel = $isPremium ? 'Premium' : 'Regular';
+$expiresAt = !empty($membership['expires_at']) ? strtotime((string) $membership['expires_at']) : false;
 ?>
 <section class="app-page">
-    <div class="page-heading">
-        <div><span class="eyebrow">Student area</span><h1>Welcome back, <?= htmlspecialchars((string) ($user['full_name'] ?? 'Student'), ENT_QUOTES, 'UTF-8') ?>.</h1><p>Pick up your learning where you left off.</p></div>
-        <a class="btn" href="<?= htmlspecialchars(base_url('courses'), ENT_QUOTES, 'UTF-8') ?>">Browse courses</a>
+    <div class="page-heading dashboard-welcome">
+        <div>
+            <span class="eyebrow">Student dashboard</span>
+            <h1>Welcome, <?= htmlspecialchars((string) ($user['full_name'] ?? 'Student'), ENT_QUOTES, 'UTF-8') ?> <span aria-hidden="true">👋</span></h1>
+            <p>Pick up your learning where you left off.</p>
+        </div>
+        <div class="dashboard-membership-pill <?= $isPremium ? 'is-premium' : '' ?>">
+            <span>Membership</span>
+            <strong><?= htmlspecialchars($membershipLabel, ENT_QUOTES, 'UTF-8') ?></strong>
+        </div>
     </div>
 
-    <section class="membership-banner <?= (($membership['plan'] ?? 'regular') === 'premium' && ($membership['status'] ?? '') === 'active') ? 'is-premium' : '' ?>">
+    <section class="membership-banner <?= $isPremium ? 'is-premium' : '' ?>">
         <div>
             <span class="eyebrow">Membership</span>
-            <h2><?= (($membership['plan'] ?? 'regular') === 'premium' && ($membership['status'] ?? '') === 'active') ? 'Premium student' : 'Regular student' ?></h2>
-            <p><?= (($membership['plan'] ?? 'regular') === 'premium' && ($membership['status'] ?? '') === 'active') ? 'You have access to regular and premium courses.' : 'Upgrade when you want access to premium courses.' ?></p>
+            <h2><?= $isPremium ? 'Premium membership' : 'Regular membership' ?></h2>
+            <p>
+                <?= $isPremium ? 'You have access to regular and premium courses.' : 'You currently have access to standard courses.' ?>
+                <?php if ($isPremium && $expiresAt !== false): ?>
+                    <span class="membership-expiry">Expires <?= htmlspecialchars(date('d M Y', $expiresAt), ENT_QUOTES, 'UTF-8') ?></span>
+                <?php endif; ?>
+            </p>
         </div>
-        <?php if (!(($membership['plan'] ?? 'regular') === 'premium' && ($membership['status'] ?? '') === 'active') && $payChanguEnabled && $premiumPrice > 0): ?>
+        <?php if (!$isPremium && $payChanguEnabled && $premiumPrice > 0): ?>
             <form method="POST" action="<?= htmlspecialchars(base_url('premium/checkout'), ENT_QUOTES, 'UTF-8') ?>">
                 <input type="hidden" name="_token" value="<?= htmlspecialchars(App\Support\Csrf::token(), ENT_QUOTES, 'UTF-8') ?>">
                 <button class="btn" type="submit">Upgrade · <?= htmlspecialchars($premiumCurrency . ' ' . number_format((float) $premiumPrice, 2), ENT_QUOTES, 'UTF-8') ?></button>
