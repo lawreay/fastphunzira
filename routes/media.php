@@ -11,6 +11,7 @@ $moduleRepository = $app['moduleRepository'];
 $courseRepository = $app['courseRepository'];
 $enrollmentRepository = $app['enrollmentRepository'];
 $studentMembershipRepository = $app['studentMembershipRepository'];
+$progressRepository = $app['progressRepository'];
 $materialRepository = $app['lessonMaterialRepository'];
 $mediaStorage = $app['mediaStorage'];
 $mediaConfig = $app['media'];
