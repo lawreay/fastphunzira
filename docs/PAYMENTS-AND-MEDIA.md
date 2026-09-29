@@ -70,3 +70,23 @@ For YouTube, FastPhunzira can embed videos, but YouTube links are not equivalent
     YouTube embed OR protected external player
 
 Large uploaded files should not be committed to GitHub or stored in the public web root.
+
+
+## Lesson study materials and local media
+
+Lessons now support a server-side media layer separate from the PHP source:
+
+- local lesson video uploads;
+- PDF, audio, video, HTML, document, and text study materials;
+- per-material download permission;
+- protected view/download routes;
+- an in-application PDF iframe viewer;
+- protected local-video streaming with byte-range support.
+
+Uploaded files are stored under storage/learning-media by default and are ignored by Git. The storage path can be changed with MEDIA_STORAGE_PATH.
+
+The default application upload limit is 10 MB and can be changed with MEDIA_MAX_UPLOAD_BYTES, but the effective limit is also constrained by PHP/server settings such as upload_max_filesize and post_max_size. Large production videos should still move to object storage or a dedicated video provider.
+
+Student media access is checked server-side for authentication, enrollment, published course status, and Premium membership where required. A disabled download button is not DRM: if a browser can render content, a determined user can still capture or copy it.
+
+HTML materials are served with a restrictive sandbox Content Security Policy so uploaded HTML cannot execute arbitrary application-origin scripts. Arbitrary PHP/script uploads are not allowed by the media MIME allowlist.
