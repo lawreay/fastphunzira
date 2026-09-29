@@ -2076,3 +2076,56 @@ textarea { min-height: 120px; }
     .admin-module-lessons-heading{align-items:flex-start;flex-direction:column}
     .admin-module-lessons-heading .btn{width:100%}
 }
+
+
+/* Lesson media management */
+.lesson-media-editor{width:100%}
+.admin-media-choice,.admin-media-upload,.admin-current-media{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:16px;border:1px solid var(--line);border-radius:12px;background:#f8fafc;margin-bottom:12px}
+.admin-media-choice strong,.admin-media-upload strong,.admin-current-media strong{display:block;color:var(--ink);font-size:.86rem}
+.admin-media-choice span,.admin-media-upload span,.admin-current-media span{display:block;margin-top:4px;color:var(--muted);font-size:.76rem}
+.admin-current-media label{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:.76rem;font-weight:700}
+.admin-material-upload-grid{display:grid;grid-template-columns:1fr 1.2fr 110px;gap:14px;align-items:end}
+.admin-checkbox{display:flex;align-items:flex-start;gap:9px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:.78rem;font-weight:700}
+.admin-checkbox input{margin-top:3px}
+.admin-checkbox span{display:block}
+.admin-checkbox small{display:block;margin-top:3px;color:var(--muted);font-weight:500}
+.admin-checkbox.compact{padding:8px 10px;align-items:center;white-space:nowrap}
+.admin-checkbox.compact input{margin:0}
+.admin-form-hint{margin:12px 0 0;color:var(--muted);font-size:.78rem}
+.admin-section-heading{display:flex;justify-content:space-between;gap:18px;margin-bottom:16px}
+.admin-section-heading h2{margin:5px 0 4px;color:var(--ink);font-size:1.15rem}
+.admin-section-heading p{margin:0;color:var(--muted);font-size:.8rem}
+.admin-material-list{display:grid;gap:10px;margin-top:18px}
+.admin-material-item{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.admin-material-item>form:first-child{display:flex;align-items:center;justify-content:space-between;gap:12px;flex:1;min-width:0}
+.admin-material-main{display:grid;grid-template-columns:auto minmax(140px,1fr);gap:7px 10px;align-items:center;min-width:0}
+.admin-material-main input{min-width:0}
+.admin-material-type{display:inline-flex;align-items:center;justify-content:center;padding:4px 7px;border-radius:999px;background:#eef2f7;color:var(--muted);font-size:.64rem;font-weight:800}
+.admin-material-file{grid-column:2;color:var(--muted);font-size:.72rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.admin-material-controls{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.admin-material-controls input[type=number]{width:70px}
+.lesson-materials{margin-top:28px;padding-top:26px;border-top:1px solid var(--line)}
+.lesson-section-heading{margin-bottom:16px}
+.lesson-section-heading h2{margin:5px 0;color:var(--ink);font-size:1.25rem}
+.lesson-section-heading p{margin:0;color:var(--muted);font-size:.8rem}
+.lesson-material-grid{display:grid;gap:12px}
+.lesson-material-card{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.lesson-material-icon{width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#eef2f7;color:var(--ink);font-size:.72rem;font-weight:900;flex:0 0 auto}
+.lesson-material-info{min-width:0;flex:1}
+.lesson-material-info strong{display:block;color:var(--ink);font-size:.84rem}
+.lesson-material-info span{display:block;margin-top:4px;color:var(--muted);font-size:.7rem}
+.lesson-material-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.lesson-download-locked{padding:7px 9px;color:var(--muted);font-size:.7rem;font-weight:700}
+.lesson-pdf-viewer{overflow:hidden;border:1px solid var(--line);border-radius:12px;background:#f8fafc}
+.lesson-pdf-viewer iframe{display:block;width:100%;height:620px;border:0}
+@media(max-width:800px){
+    .admin-material-upload-grid{grid-template-columns:1fr}
+    .admin-media-choice,.admin-media-upload,.admin-current-media{align-items:flex-start;flex-direction:column}
+    .admin-material-item,.admin-material-item>form:first-child{align-items:stretch;flex-direction:column}
+    .admin-material-controls{justify-content:flex-start}
+    .lesson-material-card{align-items:flex-start;flex-wrap:wrap}
+    .lesson-material-actions{width:100%;justify-content:flex-start}
+}
+@media(max-width:640px){
+    .lesson-pdf-viewer iframe{height:480px}
+}
