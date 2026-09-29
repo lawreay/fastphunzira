@@ -45,7 +45,14 @@ return [
     }],
     ['GET', '/admin/courses', [$courseController, 'adminIndex']],
     ['GET', '/admin/courses/create', [$courseController, 'createForm']],
-    ['GET', '/admin/courses/{id}/edit', [$courseController, 'editForm']],
+    ['GET', '/admin/courses/{id}/edit', function (string $id) use ($courseController) {
+        if (!ctype_digit($id)) {
+            http_response_code(404);
+            return ['view' => 'errors/not_found', 'title' => 'Course not found'];
+        }
+
+        return $courseController->editForm((int) $id);
+    }],
     ['POST', '/admin/courses/store', function () use ($courseController) {
         if (!Csrf::validate($_POST['_token'] ?? null)) {
             $_SESSION['flash_error'] = 'Invalid security token.';
