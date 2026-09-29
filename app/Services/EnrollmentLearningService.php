@@ -278,6 +278,41 @@ final class EnrollmentLearningService
         return $lesson;
     }
 
+    public function getNextLessonForStudent(int $studentId, int $lessonId): ?array
+    {
+        $currentLesson = $this->getLessonForStudent($studentId, $lessonId);
+        if ($currentLesson === null) {
+            return null;
+        }
+
+        $modules = $this->moduleRepository->findByCourse((int) ($currentLesson['course_id'] ?? 0));
+        usort($modules, static fn (array $left, array $right): int =>
+            ((int) ($left['sort_order'] ?? 0) <=> (int) ($right['sort_order'] ?? 0))
+            ?: ((int) ($left['id'] ?? 0) <=> (int) ($right['id'] ?? 0))
+        );
+
+        $currentFound = false;
+        foreach ($modules as $module) {
+            $lessons = $this->lessonRepository->findByModule((int) ($module['id'] ?? 0));
+            usort($lessons, static fn (array $left, array $right): int =>
+                ((int) ($left['sort_order'] ?? 0) <=> (int) ($right['sort_order'] ?? 0))
+                ?: ((int) ($left['id'] ?? 0) <=> (int) ($right['id'] ?? 0))
+            );
+
+            foreach ($lessons as $lesson) {
+                if ($currentFound) {
+                    return $lesson;
+                }
+
+                if ((int) ($lesson['id'] ?? 0) === $lessonId) {
+                    $currentFound = true;
+                }
+            }
+        }
+
+        return null;
+    }
+
     public function markLessonComplete(int $studentId, int $lessonId): array
     {
         if (!Auth::check() || (int) Auth::userId() !== $studentId) {
@@ -299,6 +334,7 @@ final class EnrollmentLearningService
             'student_id' => $studentId,
             'course_id' => $courseId,
             'lesson_id' => $lessonId,
+            'completed' => 1,
             'completed_at' => date('Y-m-d H:i:s'),
         ];
 

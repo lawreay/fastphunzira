@@ -142,7 +142,7 @@ return [
         return redirect_to('/admin/courses/' . $courseId . '/edit?tab=modules');
     }],
 
-    ['GET', '/lessons/{lessonId}', function (string $lessonId) use ($studentCanAccessLesson, $progressRepository, $materialRepository, $lessonBlockRepository, $courseRepository) {
+    ['GET', '/lessons/{lessonId}', function (string $lessonId) use ($studentCanAccessLesson, $learningService, $progressRepository, $materialRepository, $lessonBlockRepository, $courseRepository) {
         $lesson = $studentCanAccessLesson((int) $lessonId);
         if ($lesson === null) {
             $_SESSION['flash_error'] = 'You are not enrolled for this lesson.';
@@ -150,12 +150,16 @@ return [
         }
 
         $course = $courseRepository->findById((int) ($lesson['course_id'] ?? 0));
+        $studentId = (int) Auth::userId();
+        $progress = $progressRepository->findByStudentAndLesson($studentId, (int) $lessonId);
         return [
             'view' => 'lessons/view',
             'title' => $lesson['title'],
             'lesson' => $lesson,
             'course' => $course,
-            'completed' => $progressRepository->findByStudentAndLesson((int) Auth::userId(), (int) $lessonId) !== null,
+            'progress' => $progress,
+            'completed' => (int) ($progress['completed'] ?? 0) === 1,
+            'nextLesson' => $learningService->getNextLessonForStudent($studentId, (int) $lessonId),
             'materials' => $materialRepository->findByLesson((int) $lessonId),
             'blocks' => $lessonBlockRepository->findByLesson((int) $lessonId),
         ];

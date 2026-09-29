@@ -22,6 +22,32 @@ $platformSettingsRepository = $app['platformSettingsRepository'];
 $paymentTransactionRepository = $app['paymentTransactionRepository'];
 $studentMembershipRepository = $app['studentMembershipRepository'];
 $paymentsConfig = $app['payments'];
+$completeLesson = static function (string $lessonId) use ($learningService): array {
+    if (!ctype_digit($lessonId) || (int) $lessonId <= 0) {
+        http_response_code(404);
+        return ['view' => 'errors/not_found', 'title' => 'Lesson not found'];
+    }
+
+    $studentId = Auth::userId();
+    if ($studentId === null) {
+        $_SESSION['flash_error'] = 'Please log in to continue.';
+        return redirect_to('/login');
+    }
+
+    if (!Csrf::validate($_POST['_token'] ?? null)) {
+        $_SESSION['flash_error'] = 'Invalid security token.';
+        return redirect_to('/lessons/' . (int) $lessonId);
+    }
+
+    $result = $learningService->markLessonComplete((int) $studentId, (int) $lessonId);
+    if (!$result['success']) {
+        $_SESSION['flash_error'] = $result['message'];
+        return redirect_to('/lessons/' . (int) $lessonId);
+    }
+
+    $_SESSION['flash_success'] = 'Lesson marked complete.';
+    return redirect_to('/lessons/' . (int) $lessonId);
+};
 
 use App\Core\Auth;
 use App\Support\Csrf;
@@ -307,34 +333,8 @@ return [
             'completed' => $progressRepository->findByStudentAndLesson($studentId, (int) $lessonId) !== null,
         ];
     }],
-    ['POST', '/lessons/{id}/complete', function (string $lessonId) use ($learningService) {
-        $studentId = Auth::userId();
-
-        if ($studentId === null) {
-            $_SESSION['flash_error'] = 'Please log in to continue.';
-
-            return redirect_to('/login');
-        }
-
-        $token = $_POST['_token'] ?? null;
-        if (!Csrf::validate($token)) {
-            $_SESSION['flash_error'] = 'Invalid security token.';
-
-            return redirect_to('/lessons/' . (int) $lessonId);
-        }
-
-        $result = $learningService->markLessonComplete($studentId, (int) $lessonId);
-
-        if (!$result['success']) {
-            $_SESSION['flash_error'] = $result['message'];
-
-            return redirect_to('/lessons/' . (int) $lessonId);
-        }
-
-        $_SESSION['flash_success'] = 'Lesson marked complete.';
-
-        return redirect_to('/lessons/' . (int) $lessonId);
-    }],
+    ['POST', '/student/lessons/{lessonId}/complete', $completeLesson],
+    ['POST', '/lessons/{id}/complete', $completeLesson],
 
     ['GET', '/courses/{id}/quizzes', function (string $courseId) use ($courseRepository, $quizRepository, $enrollmentRepository) {
         if (!Auth::check()) {

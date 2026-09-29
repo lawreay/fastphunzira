@@ -9,6 +9,9 @@ $lessonSummary = trim((string) ($lesson['summary'] ?? ''));
 $lessonContent = (string) ($lesson['content'] ?? '');
 $videoUrl = trim((string) ($lesson['video_url'] ?? ''));
 $localVideo = trim((string) ($lesson['file_path'] ?? ''));
+$progress = $progress ?? null;
+$isCompleted = !empty($progress['completed']) || !empty($completed);
+$completedAt = trim((string) ($progress['completed_at'] ?? ''));
 $materials = $materials ?? [];
 $blocks = $blocks ?? [];
 $youtubeId = null;
@@ -154,7 +157,7 @@ if ($videoUrl !== '') {
             <?php endif; ?>
 
             <div class="lesson-completion">
-                <?php if (!empty($completed)): ?>
+                <?php if ($isCompleted): ?>
                     <div class="lesson-completed-state">
                         <span class="lesson-completed-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg>
@@ -162,15 +165,25 @@ if ($videoUrl !== '') {
                         <div>
                             <strong>Lesson completed</strong>
                             <span>Your progress has been recorded.</span>
+                            <?php if ($completedAt !== ''): ?>
+                                <time datetime="<?= htmlspecialchars(str_replace(' ', 'T', $completedAt), ENT_QUOTES, 'UTF-8') ?>">Completed <?= htmlspecialchars($completedAt, ENT_QUOTES, 'UTF-8') ?></time>
+                            <?php endif; ?>
                         </div>
                     </div>
-                    <a class="btn secondary" href="<?= htmlspecialchars(base_url('courses/' . $courseId . '/learn'), ENT_QUOTES, 'UTF-8') ?>">Continue course</a>
+                    <?php if (!empty($nextLesson['id'])): ?>
+                        <a class="btn secondary" href="<?= htmlspecialchars(base_url('lessons/' . (int) $nextLesson['id']), ENT_QUOTES, 'UTF-8') ?>">
+                            Continue to <?= htmlspecialchars((string) ($nextLesson['title'] ?? 'next lesson'), ENT_QUOTES, 'UTF-8') ?>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13m-5-5 5 5-5 5"/></svg>
+                        </a>
+                    <?php else: ?>
+                        <a class="btn secondary" href="<?= htmlspecialchars(base_url('courses/' . $courseId . '/learn'), ENT_QUOTES, 'UTF-8') ?>">Return to course</a>
+                    <?php endif; ?>
                 <?php else: ?>
                     <div>
                         <span class="eyebrow">Ready to move on?</span>
                         <strong>Mark this lesson complete</strong>
                     </div>
-                    <form method="POST" action="<?= htmlspecialchars(base_url('lessons/' . $lessonId . '/complete'), ENT_QUOTES, 'UTF-8') ?>">
+                    <form method="POST" action="<?= htmlspecialchars(base_url('student/lessons/' . $lessonId . '/complete'), ENT_QUOTES, 'UTF-8') ?>">
                         <input type="hidden" name="_token" value="<?= htmlspecialchars(Csrf::token(), ENT_QUOTES, 'UTF-8') ?>">
                         <button class="btn" type="submit">
                             Mark complete
