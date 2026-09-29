@@ -62,6 +62,34 @@ $redirectToLessonEditor = static function (int $courseId): array {
 };
 
 return [
+    ['GET', '/admin/modules/{moduleId}/lessons/create-media', function (string $moduleId) use ($moduleRepository) {
+        if (!Auth::userCan('courses.manage')) return redirect_to('/login');
+        $module = $moduleRepository->findById((int) $moduleId);
+        if ($module === null) return ['view' => 'errors/not_found', 'title' => 'Module not found'];
+        return [
+            'view' => 'admin/lesson-form',
+            'title' => 'Create Lesson',
+            'moduleId' => (int) $moduleId,
+            'courseId' => (int) ($module['course_id'] ?? 0),
+            'lesson' => null,
+            'materials' => [],
+        ];
+    }],
+    ['GET', '/admin/lessons/{lessonId}/edit-media', function (string $lessonId) use ($lessonRepository, $moduleRepository, $materialRepository) {
+        if (!Auth::userCan('courses.manage')) return redirect_to('/login');
+        $lesson = $lessonRepository->findById((int) $lessonId);
+        if ($lesson === null) return ['view' => 'errors/not_found', 'title' => 'Lesson not found'];
+        $module = $moduleRepository->findById((int) ($lesson['module_id'] ?? 0));
+        if ($module === null) return ['view' => 'errors/not_found', 'title' => 'Module not found'];
+        return [
+            'view' => 'admin/lesson-form',
+            'title' => 'Edit Lesson',
+            'lesson' => $lesson,
+            'moduleId' => (int) ($lesson['module_id'] ?? 0),
+            'courseId' => (int) ($module['course_id'] ?? 0),
+            'materials' => $materialRepository->findByLesson((int) $lessonId),
+        ];
+    }],
     ['POST', '/admin/modules/{moduleId}/lessons/store-media', function (string $moduleId) use ($learningService, $moduleRepository, $lessonRepository, $mediaStorage, $mediaConfig, $materialRepository, $materialType, $redirectToLessonEditor) {
         if (!Auth::userCan('courses.manage')) return redirect_to('/login');
         if (!Csrf::validate($_POST['_token'] ?? null)) {
