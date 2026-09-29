@@ -491,6 +491,62 @@ return [
         $_SESSION[$result['success'] ? 'flash_success' : 'flash_error'] = $result['message'];
         return redirect_to('/admin/courses/' . $courseId . '/edit');
     }],
+    ['GET', '/admin/lessons/{lessonId}/edit', function (string $lessonId) use ($lessonRepository, $moduleRepository) {
+        if (!Auth::userCan('courses.manage')) return redirect_to('/login');
+
+        $lesson = $lessonRepository->findById((int) $lessonId);
+        if ($lesson === null) return ['view' => 'errors/not_found', 'title' => 'Lesson not found'];
+
+        $module = $moduleRepository->findById((int) ($lesson['module_id'] ?? 0));
+        if ($module === null) return ['view' => 'errors/not_found', 'title' => 'Module not found'];
+
+        return [
+            'view' => 'admin/lesson-form',
+            'title' => 'Edit Lesson',
+            'lesson' => $lesson,
+            'moduleId' => (int) ($lesson['module_id'] ?? 0),
+            'courseId' => (int) ($module['course_id'] ?? 0),
+        ];
+    }],
+    ['POST', '/admin/lessons/{lessonId}/update', function (string $lessonId) use ($learningService, $lessonRepository, $moduleRepository) {
+        if (!Auth::userCan('courses.manage')) return redirect_to('/login');
+
+        $lesson = $lessonRepository->findById((int) $lessonId);
+        $module = $lesson !== null ? $moduleRepository->findById((int) ($lesson['module_id'] ?? 0)) : null;
+        $courseId = (int) ($module['course_id'] ?? 0);
+
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+            return redirect_to('/admin/courses/' . $courseId . '/edit?tab=modules');
+        }
+
+        $result = $learningService->updateLesson((int) $lessonId, [
+            'title' => trim((string) ($_POST['title'] ?? '')),
+            'summary' => trim((string) ($_POST['summary'] ?? '')),
+            'content' => trim((string) ($_POST['content'] ?? '')),
+            'video_url' => trim((string) ($_POST['video_url'] ?? '')),
+            'sort_order' => (int) ($_POST['sort_order'] ?? 0),
+        ]);
+
+        $_SESSION[$result['success'] ? 'flash_success' : 'flash_error'] = $result['message'];
+        return redirect_to('/admin/courses/' . $courseId . '/edit?tab=modules');
+    }],
+    ['POST', '/admin/lessons/{lessonId}/delete', function (string $lessonId) use ($learningService, $lessonRepository, $moduleRepository) {
+        if (!Auth::userCan('courses.manage')) return redirect_to('/login');
+
+        $lesson = $lessonRepository->findById((int) $lessonId);
+        $module = $lesson !== null ? $moduleRepository->findById((int) ($lesson['module_id'] ?? 0)) : null;
+        $courseId = (int) ($module['course_id'] ?? 0);
+
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+            return redirect_to('/admin/courses/' . $courseId . '/edit?tab=modules');
+        }
+
+        $result = $learningService->deleteLesson((int) $lessonId);
+        $_SESSION[$result['success'] ? 'flash_success' : 'flash_error'] = $result['message'];
+        return redirect_to('/admin/courses/' . $courseId . '/edit?tab=modules');
+    }],
     ['GET', '/admin/modules/{moduleId}/lessons/create', function (string $moduleId) use ($moduleRepository) {
         if (!Auth::userCan('courses.manage')) {
             return redirect_to('/login');
