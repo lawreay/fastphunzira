@@ -449,6 +449,48 @@ return [
         ];
     }],
 
+    ['POST', '/admin/courses/{courseId}/modules/store', function (string $courseId) use ($learningService) {
+        if (!Auth::userCan('courses.manage')) return redirect_to('/login');
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+            return redirect_to('/admin/courses/' . (int) $courseId . '/edit');
+        }
+        $result = $learningService->createModule((int) $courseId, [
+            'title' => trim((string) ($_POST['title'] ?? '')),
+            'description' => trim((string) ($_POST['description'] ?? '')),
+            'sort_order' => (int) ($_POST['sort_order'] ?? 0),
+        ], (int) Auth::userId());
+        $_SESSION[$result['success'] ? 'flash_success' : 'flash_error'] = $result['message'];
+        return redirect_to('/admin/courses/' . (int) $courseId . '/edit');
+    }],
+    ['POST', '/admin/modules/{moduleId}/update', function (string $moduleId) use ($learningService, $moduleRepository) {
+        if (!Auth::userCan('courses.manage')) return redirect_to('/login');
+        $module = $moduleRepository->findById((int) $moduleId);
+        $courseId = (int) ($module['course_id'] ?? 0);
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+            return redirect_to('/admin/courses/' . $courseId . '/edit');
+        }
+        $result = $learningService->updateModule((int) $moduleId, [
+            'title' => trim((string) ($_POST['title'] ?? '')),
+            'description' => trim((string) ($_POST['description'] ?? '')),
+            'sort_order' => (int) ($_POST['sort_order'] ?? 0),
+        ]);
+        $_SESSION[$result['success'] ? 'flash_success' : 'flash_error'] = $result['message'];
+        return redirect_to('/admin/courses/' . $courseId . '/edit');
+    }],
+    ['POST', '/admin/modules/{moduleId}/delete', function (string $moduleId) use ($learningService, $moduleRepository) {
+        if (!Auth::userCan('courses.manage')) return redirect_to('/login');
+        $module = $moduleRepository->findById((int) $moduleId);
+        $courseId = (int) ($module['course_id'] ?? 0);
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+            return redirect_to('/admin/courses/' . $courseId . '/edit');
+        }
+        $result = $learningService->deleteModule((int) $moduleId);
+        $_SESSION[$result['success'] ? 'flash_success' : 'flash_error'] = $result['message'];
+        return redirect_to('/admin/courses/' . $courseId . '/edit');
+    }],
     ['GET', '/admin/modules/{moduleId}/lessons/create', function (string $moduleId) use ($moduleRepository) {
         if (!Auth::userCan('courses.manage')) {
             return redirect_to('/login');
@@ -601,6 +643,18 @@ return [
         $_SESSION[$result['success'] ? 'flash_success' : 'flash_error'] = $result['message'];
 
         return redirect_to('/admin/quizzes/' . (int) $quizId . '/questions/create');
+    }],
+    ['POST', '/admin/quizzes/{id}/archive', function (string $quizId) use ($quizService, $quizRepository) {
+        if (!Auth::userCan('courses.manage')) return redirect_to('/login');
+        $quiz = $quizRepository->findById((int) $quizId);
+        $courseId = (int) ($quiz['course_id'] ?? 0);
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+            return redirect_to('/admin/courses/' . $courseId . '/edit');
+        }
+        $result = $quizRepository->updateStatus((int) $quizId, 'archived');
+        $_SESSION[$result !== null ? 'flash_success' : 'flash_error'] = $result !== null ? 'Quiz archived.' : 'Quiz could not be archived.';
+        return redirect_to('/admin/courses/' . $courseId . '/edit');
     }],
     ['GET', '/courses/{id}/exams', function (string $courseId) use ($courseRepository, $examRepository, $enrollmentRepository) {
         if (!Auth::check()) {
@@ -863,6 +917,18 @@ return [
         return redirect_to('/admin/exams/' . (int) $examId . '/questions/create');
     }],
 
+    ['POST', '/admin/exams/{id}/archive', function (string $examId) use ($examRepository) {
+        if (!Auth::userCan('courses.manage')) return redirect_to('/login');
+        $exam = $examRepository->findById((int) $examId);
+        $courseId = (int) ($exam['course_id'] ?? 0);
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+            return redirect_to('/admin/courses/' . $courseId . '/edit');
+        }
+        $result = $examRepository->updateStatus((int) $examId, 'archived');
+        $_SESSION[$result !== null ? 'flash_success' : 'flash_error'] = $result !== null ? 'Exam archived.' : 'Exam could not be archived.';
+        return redirect_to('/admin/courses/' . $courseId . '/edit');
+    }],
     ['GET', '/student/certificates', function () use ($certificateService) {
         if (!Auth::check()) {
             $_SESSION['flash_error'] = 'Please log in to continue.';
