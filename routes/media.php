@@ -155,7 +155,7 @@ return [
             'materials' => $materialRepository->findByLesson((int) $lessonId),
         ];
     }],
-    ['POST', '/admin/modules/{moduleId}/lessons/store-media', function (string $moduleId) use ($learningService, $moduleRepository, $lessonRepository, $mediaStorage, $mediaConfig, $materialRepository, $materialType, $redirectToLessonEditor) {
+    ['POST', '/admin/modules/{moduleId}/lessons/store-media', function (string $moduleId) use ($learningService, $moduleRepository, $lessonRepository, $mediaStorage, $mediaConfig, $materialRepository, $materialType, $lessonBlockRepository, $redirectToLessonEditor) {
         if (!Auth::userCan('courses.manage')) return redirect_to('/login');
         if (!Csrf::validate($_POST['_token'] ?? null)) {
             $_SESSION['flash_error'] = 'Invalid security token.';
@@ -181,32 +181,20 @@ return [
 
         $lessonId = (int) ($result['data']['id'] ?? 0);
         try {
-            if (!empty($_FILES['video_file']['name'])) {
-                $upload = $mediaStorage->store($_FILES['video_file'], 'videos', $mediaConfig['video_mimes'], (int) $mediaConfig['max_upload_bytes']);
-                $lessonRepository->update($lessonId, [
-                    'video_url' => null,
-                    'video_original_name' => $upload['original_name'],
-                    'video_mime_type' => $upload['mime_type'],
-                    'video_file_size' => $upload['file_size'],
-                    'file_path' => $upload['storage_path'],
-                ]);
-            }
-
-            if (!empty($_FILES['material_file']['name'])) {
-                $upload = $mediaStorage->store($_FILES['material_file'], 'materials', $mediaConfig['material_mimes'], (int) $mediaConfig['max_upload_bytes']);
-                $title = trim((string) ($_POST['material_title'] ?? '')) ?: $upload['original_name'];
-                $materialRepository->create([
-                    'lesson_id' => $lessonId,
-                    'title' => $title,
-                    'type' => $materialType($upload['mime_type']),
-                    'original_name' => $upload['original_name'],
-                    'stored_name' => $upload['stored_name'],
-                    'mime_type' => $upload['mime_type'],
-                    'file_size' => $upload['file_size'],
-                    'storage_path' => $upload['storage_path'],
-                    'download_allowed' => isset($_POST['download_allowed']) ? 1 : 0,
-                    'sort_order' => (int) ($_POST['material_sort_order'] ?? 0),
-                ]);
+            $blocks = is_array($_POST['blocks'] ?? null) ? $_POST['blocks'] : [];
+            foreach ($blocks as $index => $block) {
+                if (!is_array($block)) continue;
+                $type=(string)($block['type']??'text');
+                if(!in_array($type,['text','youtube','video','material'],true)) continue;
+                $data=['lesson_id'=>$lessonId,'type'=>$type,'title'=>trim((string)($block['title']??'')),'content'=>trim((string)($block['content']??'')),'download_allowed'=>isset($block['download_allowed'])?1:0,'sort_order'=>(int)($block['sort_order']??$index)];
+                if($type==='youtube' && $data['content']==='') throw new RuntimeException('YouTube blocks require a video URL.');
+                if(in_array($type,['video','material'],true)){
+                    if(empty($_FILES['block_files']['name'][$index])) throw new RuntimeException(ucfirst($type).' blocks require a file.');
+                    $fileData=['name'=>$_FILES['block_files']['name'][$index],'type'=>$_FILES['block_files']['type'][$index]??'','tmp_name'=>$_FILES['block_files']['tmp_name'][$index],'error'=>$_FILES['block_files']['error'][$index]??UPLOAD_ERR_NO_FILE,'size'=>$_FILES['block_files']['size'][$index]??0];
+                    $upload=$mediaStorage->store($fileData,$type==='video'?'videos':'materials',$type==='video'?$mediaConfig['video_mimes']:$mediaConfig['material_mimes'],(int)$mediaConfig['max_upload_bytes']);
+                    $data['storage_path']=$upload['storage_path'];$data['original_name']=$upload['original_name'];$data['mime_type']=$upload['mime_type'];$data['file_size']=$upload['file_size'];
+                }
+                $lessonBlockRepository->create($data);
             }
         } catch (Throwable $e) {
             error_log('Lesson media upload failed: ' . $e->getMessage());
