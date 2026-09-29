@@ -43,7 +43,7 @@ use App\Support\Csrf;
     </form>
 </section>
 
-<?php if ($isEditing): ?>
+<?php if (!empty($course)): ?>
 <section class="admin-content-manager">
     <div class="admin-content-heading">
         <div><span class="eyebrow">Course structure</span><h2>Build the learning path</h2><p>Add, edit and remove modules. Manage practice quizzes and exams from the same course workspace.</p></div>
