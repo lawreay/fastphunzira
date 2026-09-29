@@ -62,6 +62,23 @@ $redirectToLessonEditor = static function (int $courseId): array {
 };
 
 return [
+    ['GET', '/lessons/{lessonId}', function (string $lessonId) use ($studentCanAccessLesson, $progressRepository, $materialRepository) {
+        $lesson = $studentCanAccessLesson((int) $lessonId);
+        if ($lesson === null) {
+            $_SESSION['flash_error'] = 'You are not enrolled for this lesson.';
+            return redirect_to('/courses');
+        }
+
+        $course = $app['courseRepository']->findById((int) ($lesson['course_id'] ?? 0));
+        return [
+            'view' => 'lessons/view',
+            'title' => $lesson['title'],
+            'lesson' => $lesson,
+            'course' => $course,
+            'completed' => $progressRepository->findByStudentAndLesson((int) Auth::userId(), (int) $lessonId) !== null,
+            'materials' => $materialRepository->findByLesson((int) $lessonId),
+        ];
+    }],
     ['GET', '/admin/modules/{moduleId}/lessons/create-media', function (string $moduleId) use ($moduleRepository) {
         if (!Auth::userCan('courses.manage')) return redirect_to('/login');
         $module = $moduleRepository->findById((int) $moduleId);
