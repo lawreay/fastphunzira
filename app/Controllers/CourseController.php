@@ -5,6 +5,9 @@ namespace App\Controllers;
 use App\Core\Auth;
 use App\Services\CourseService;
 use App\Repositories\EnrollmentRepositoryInterface;
+use App\Repositories\CourseModuleRepositoryInterface;
+use App\Repositories\QuizRepositoryInterface;
+use App\Repositories\ExamRepositoryInterface;
 use App\Repositories\StudentMembershipRepository;
 use App\Support\Csrf;
 
@@ -13,7 +16,10 @@ final class CourseController
     public function __construct(
         private CourseService $courseService,
         private ?StudentMembershipRepository $membershipRepository = null,
-        private ?EnrollmentRepositoryInterface $enrollmentRepository = null
+        private ?EnrollmentRepositoryInterface $enrollmentRepository = null,
+        private ?CourseModuleRepositoryInterface $moduleRepository = null,
+        private ?QuizRepositoryInterface $quizRepository = null,
+        private ?ExamRepositoryInterface $examRepository = null
     ) {
     }
 
@@ -118,6 +124,9 @@ final class CourseController
             'view' => 'admin/courses/form',
             'title' => 'Edit Course',
             'course' => $course,
+            'modules' => $this->moduleRepository?->findByCourse($id) ?? [],
+            'quizzes' => $this->quizRepository?->findByCourse($id) ?? [],
+            'exams' => $this->examRepository?->findByCourse($id) ?? [],
         ];
     }
 
