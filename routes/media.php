@@ -4,7 +4,6 @@ use App\Core\Auth;
 use App\Support\Csrf;
 use App\Services\MediaStorageInterface;
 
-$app = require __DIR__ . '/../bootstrap/app.php';
 $learningService = $app['enrollmentLearningService'];
 $lessonRepository = $app['lessonRepository'];
 $moduleRepository = $app['moduleRepository'];
