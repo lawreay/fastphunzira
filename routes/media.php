@@ -399,9 +399,15 @@ return [
         header('X-Content-Type-Options: nosniff');
 
         if (isset($_SERVER['HTTP_RANGE']) && preg_match('/bytes=(\d*)-(\d*)/', $_SERVER['HTTP_RANGE'], $m)) {
-            if ($m[1] !== '') $start = (int) $m[1];
-            if ($m[2] !== '') $end = (int) $m[2];
-            if ($m[1] !== '' && $m[2] === '') $end = min($start + 2 * 1024 * 1024 - 1, $size - 1);
+            if ($m[1] === '' && $m[2] !== '') {
+                $suffixLength = min((int) $m[2], $size);
+                $start = $size - $suffixLength;
+                $end = $size - 1;
+            } else {
+                if ($m[1] !== '') $start = (int) $m[1];
+                if ($m[2] !== '') $end = (int) $m[2];
+                if ($m[1] !== '' && $m[2] === '') $end = min($start + 2 * 1024 * 1024 - 1, $size - 1);
+            }
             if ($start > $end || $start >= $size) { http_response_code(416); header('Content-Range: bytes */' . $size); exit; }
             http_response_code(206);
             header('Content-Range: bytes ' . $start . '-' . $end . '/' . $size);
