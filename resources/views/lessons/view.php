@@ -8,6 +8,8 @@ $lessonTitle = trim((string) ($lesson['title'] ?? 'Lesson'));
 $lessonSummary = trim((string) ($lesson['summary'] ?? ''));
 $lessonContent = (string) ($lesson['content'] ?? '');
 $videoUrl = trim((string) ($lesson['video_url'] ?? ''));
+$localVideo = trim((string) ($lesson['file_path'] ?? ''));
+$materials = $materials ?? [];
 $youtubeId = null;
 
 if ($videoUrl !== '') {
@@ -47,7 +49,15 @@ if ($videoUrl !== '') {
 
     <div class="lesson-workspace-grid">
         <article class="lesson-main-card">
-            <?php if ($youtubeId !== null): ?>
+            <?php if ($localVideo !== ''): ?>
+                <div class="lesson-media">
+                    <video controls controlsList="nodownload noplaybackrate" disablePictureInPicture preload="metadata" oncontextmenu="return false" playsinline>
+                        <source src="<?= htmlspecialchars(base_url('lessons/' . $lessonId . '/video'), ENT_QUOTES, 'UTF-8') ?>" type="<?= htmlspecialchars((string) ($lesson['video_mime_type'] ?? 'video/mp4'), ENT_QUOTES, 'UTF-8') ?>">
+                        Your browser does not support HTML5 video.
+                    </video>
+                </div>
+                <p class="lesson-media-note">Local course video. Download controls are disabled as a deterrent, not as DRM.</p>
+            <?php elseif ($youtubeId !== null): ?>
                 <div class="lesson-media youtube-shell">
                     <iframe
                         src="https://www.youtube-nocookie.com/embed/<?= htmlspecialchars($youtubeId, ENT_QUOTES, 'UTF-8') ?>?rel=0&modestbranding=1"
@@ -72,6 +82,43 @@ if ($videoUrl !== '') {
                     <?= nl2br(htmlspecialchars($lessonContent, ENT_QUOTES, 'UTF-8')) ?>
                 </div>
             </div>
+
+            <?php if (!empty($materials)): ?>
+                <section class="lesson-materials">
+                    <div class="lesson-section-heading">
+                        <div>
+                            <span class="eyebrow">Study materials</span>
+                            <h2>Resources for this lesson</h2>
+                            <p>Open supported files in FastPhunzira. Downloads are available only when the instructor has enabled them.</p>
+                        </div>
+                    </div>
+                    <div class="lesson-material-grid">
+                        <?php foreach ($materials as $material): ?>
+                            <?php $materialType = strtolower((string) ($material['type'] ?? 'other')); ?>
+                            <article class="lesson-material-card">
+                                <div class="lesson-material-icon" aria-hidden="true"><?= htmlspecialchars(strtoupper(substr($materialType, 0, 1)), ENT_QUOTES, 'UTF-8') ?></div>
+                                <div class="lesson-material-info">
+                                    <strong><?= htmlspecialchars((string) ($material['title'] ?? $material['original_name'] ?? 'Study material'), ENT_QUOTES, 'UTF-8') ?></strong>
+                                    <span><?= htmlspecialchars(strtoupper($materialType), ENT_QUOTES, 'UTF-8') ?> · <?= number_format(((int) ($material['file_size'] ?? 0)) / 1048576, 2) ?> MB</span>
+                                </div>
+                                <div class="lesson-material-actions">
+                                    <a class="btn secondary" target="_blank" rel="noopener" href="<?= htmlspecialchars(base_url('lesson-materials/' . (int) $material['id'] . '/view'), ENT_QUOTES, 'UTF-8') ?>">View</a>
+                                    <?php if (!empty($material['download_allowed'])): ?>
+                                        <a class="btn secondary" href="<?= htmlspecialchars(base_url('lesson-materials/' . (int) $material['id'] . '/download'), ENT_QUOTES, 'UTF-8') ?>">Download</a>
+                                    <?php else: ?>
+                                        <span class="lesson-download-locked">Download disabled</span>
+                                    <?php endif; ?>
+                                </div>
+                            </article>
+                            <?php if ($materialType === 'pdf'): ?>
+                                <div class="lesson-pdf-viewer">
+                                    <iframe src="<?= htmlspecialchars(base_url('lesson-materials/' . (int) $material['id'] . '/view') . '#toolbar=0&navpanes=0', ENT_QUOTES, 'UTF-8') ?>" title="<?= htmlspecialchars((string) ($material['title'] ?? 'PDF'), ENT_QUOTES, 'UTF-8') ?>" loading="lazy"></iframe>
+                                </div>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </div>
+                </section>
+            <?php endif; ?>
 
             <div class="lesson-completion">
                 <?php if (!empty($completed)): ?>
