@@ -63,6 +63,51 @@ $redirectToLessonEditor = static function (int $courseId): array {
 };
 
 return [
+    ['POST', '/admin/lessons/{lessonId}/delete', function (string $lessonId) use ($learningService, $lessonRepository, $moduleRepository, $materialRepository, $mediaStorage, $redirectToLessonEditor) {
+        if (!Auth::userCan('courses.manage')) return redirect_to('/login');
+        $lesson = $lessonRepository->findById((int) $lessonId);
+        $module = $lesson !== null ? $moduleRepository->findById((int) ($lesson['module_id'] ?? 0)) : null;
+        if ($lesson === null || $module === null) return ['view' => 'errors/not_found', 'title' => 'Lesson not found'];
+
+        $courseId = (int) ($module['course_id'] ?? 0);
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+            return $redirectToLessonEditor($courseId);
+        }
+
+        foreach ($materialRepository->findByLesson((int) $lessonId) as $material) {
+            if (!empty($material['storage_path'])) $mediaStorage->delete((string) $material['storage_path']);
+        }
+        if (!empty($lesson['file_path'])) $mediaStorage->delete((string) $lesson['file_path']);
+
+        $result = $learningService->deleteLesson((int) $lessonId);
+        $_SESSION[$result['success'] ? 'flash_success' : 'flash_error'] = $result['message'];
+        return $redirectToLessonEditor($courseId);
+    }],
+
+    ['POST', '/admin/modules/{moduleId}/delete', function (string $moduleId) use ($learningService, $moduleRepository, $lessonRepository, $materialRepository, $mediaStorage) {
+        if (!Auth::userCan('courses.manage')) return redirect_to('/login');
+        $module = $moduleRepository->findById((int) $moduleId);
+        if ($module === null) return ['view' => 'errors/not_found', 'title' => 'Module not found'];
+        $courseId = (int) ($module['course_id'] ?? 0);
+
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+            return redirect_to('/admin/courses/' . $courseId . '/edit?tab=modules');
+        }
+
+        foreach ($lessonRepository->findByModule((int) $moduleId) as $lesson) {
+            foreach ($materialRepository->findByLesson((int) ($lesson['id'] ?? 0)) as $material) {
+                if (!empty($material['storage_path'])) $mediaStorage->delete((string) $material['storage_path']);
+            }
+            if (!empty($lesson['file_path'])) $mediaStorage->delete((string) $lesson['file_path']);
+        }
+
+        $result = $learningService->deleteModule((int) $moduleId);
+        $_SESSION[$result['success'] ? 'flash_success' : 'flash_error'] = $result['message'];
+        return redirect_to('/admin/courses/' . $courseId . '/edit?tab=modules');
+    }],
+
     ['GET', '/lessons/{lessonId}', function (string $lessonId) use ($studentCanAccessLesson, $progressRepository, $materialRepository, $courseRepository) {
         $lesson = $studentCanAccessLesson((int) $lessonId);
         if ($lesson === null) {
