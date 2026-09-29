@@ -10,6 +10,7 @@ $lessonContent = (string) ($lesson['content'] ?? '');
 $videoUrl = trim((string) ($lesson['video_url'] ?? ''));
 $localVideo = trim((string) ($lesson['file_path'] ?? ''));
 $materials = $materials ?? [];
+$blocks = $blocks ?? [];
 $youtubeId = null;
 
 if ($videoUrl !== '') {
@@ -116,6 +117,38 @@ if ($videoUrl !== '') {
                                 </div>
                             <?php endif; ?>
                         <?php endforeach; ?>
+                    </div>
+                </section>
+            <?php endif; ?>
+
+            <?php if (!empty($blocks)): ?>
+                <section class="lesson-content-blocks">
+                    <div class="lesson-section-heading"><span class="eyebrow">Lesson resources</span><h2>Continue the lesson</h2><p>Work through each item in the order provided by your instructor.</p></div>
+                    <div class="student-content-blocks">
+                    <?php foreach ($blocks as $block): ?>
+                        <?php $type=(string)($block['type']??'text'); ?>
+                        <article class="student-content-block">
+                            <?php if($type==='text'): ?>
+                                <?php if(trim((string)($block['title']??''))!==''): ?><h3><?= htmlspecialchars((string)$block['title'],ENT_QUOTES,'UTF-8') ?></h3><?php endif; ?>
+                                <div class="student-block-text"><?= nl2br(htmlspecialchars((string)($block['content']??''),ENT_QUOTES,'UTF-8')) ?></div>
+                            <?php elseif($type==='youtube'): ?>
+                                <?php
+                                $url=(string)($block['content']??''); $youtubeId=null;
+                                if(preg_match('/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/',$url,$m)) $youtubeId=$m[1];
+                                ?>
+                                <?php if($youtubeId): ?>
+                                    <?php if(trim((string)($block['title']??''))!==''): ?><h3><?= htmlspecialchars((string)$block['title'],ENT_QUOTES,'UTF-8') ?></h3><?php endif; ?>
+                                    <div class="lesson-video-frame"><iframe src="https://www.youtube-nocookie.com/embed/<?= htmlspecialchars($youtubeId,ENT_QUOTES,'UTF-8') ?>" title="<?= htmlspecialchars((string)($block['title']??'YouTube video'),ENT_QUOTES,'UTF-8') ?>" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+                                <?php endif; ?>
+                            <?php elseif($type==='video'): ?>
+                                <h3><?= htmlspecialchars((string)($block['title']??$block['original_name']??'Video'),ENT_QUOTES,'UTF-8') ?></h3>
+                                <video controls controlsList="nodownload noplaybackrate" disablePictureInPicture preload="metadata" playsinline><source src="<?= htmlspecialchars(base_url('lesson-blocks/'.(int)$block['id'].'/video'),ENT_QUOTES,'UTF-8') ?>" type="<?= htmlspecialchars((string)($block['mime_type']??'video/mp4'),ENT_QUOTES,'UTF-8') ?>"></video>
+                            <?php elseif($type==='material'): ?>
+                                <div class="student-resource-row"><div><strong><?= htmlspecialchars((string)($block['title']??$block['original_name']??'Learning resource'),ENT_QUOTES,'UTF-8') ?></strong><span><?= htmlspecialchars(strtoupper((string)($block['mime_type']??'file')),ENT_QUOTES,'UTF-8') ?> · <?= number_format(((int)($block['file_size']??0))/1048576,2) ?> MB</span></div><div class="lesson-material-actions"><a class="btn secondary" target="_blank" rel="noopener" href="<?= htmlspecialchars(base_url('lesson-blocks/'.(int)$block['id'].'/view'),ENT_QUOTES,'UTF-8') ?>">View</a><?php if(!empty($block['download_allowed'])): ?><a class="btn secondary" href="<?= htmlspecialchars(base_url('lesson-blocks/'.(int)$block['id'].'/download'),ENT_QUOTES,'UTF-8') ?>">Download</a><?php else: ?><span class="lesson-download-locked">Download disabled</span><?php endif; ?></div></div>
+                                <?php if(($block['mime_type']??'')==='application/pdf'): ?><div class="lesson-pdf-viewer"><iframe src="<?= htmlspecialchars(base_url('lesson-blocks/'.(int)$block['id'].'/view').'#toolbar=0&navpanes=0',ENT_QUOTES,'UTF-8') ?>" title="<?= htmlspecialchars((string)($block['title']??'PDF'),ENT_QUOTES,'UTF-8') ?>" loading="lazy"></iframe></div><?php endif; ?>
+                            <?php endif; ?>
+                        </article>
+                    <?php endforeach; ?>
                     </div>
                 </section>
             <?php endif; ?>
