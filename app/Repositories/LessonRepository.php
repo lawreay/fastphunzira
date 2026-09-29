@@ -62,6 +62,14 @@ final class LessonRepository implements LessonRepositoryInterface
         return $this->findById($id);
     }
 
+    public function delete(int $id): bool
+    {
+        $statement = $this->pdo->prepare('DELETE FROM lessons WHERE id = :id');
+        $statement->execute([':id' => $id]);
+
+        return $statement->rowCount() > 0;
+    }
+
     public function findById(int $id): ?array
     {
         $statement = $this->pdo->prepare(
