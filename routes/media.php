@@ -63,14 +63,14 @@ $redirectToLessonEditor = static function (int $courseId): array {
 };
 
 return [
-    ['GET', '/lessons/{lessonId}', function (string $lessonId) use ($studentCanAccessLesson, $progressRepository, $materialRepository) {
+    ['GET', '/lessons/{lessonId}', function (string $lessonId) use ($studentCanAccessLesson, $progressRepository, $materialRepository, $courseRepository) {
         $lesson = $studentCanAccessLesson((int) $lessonId);
         if ($lesson === null) {
             $_SESSION['flash_error'] = 'You are not enrolled for this lesson.';
             return redirect_to('/courses');
         }
 
-        $course = $app['courseRepository']->findById((int) ($lesson['course_id'] ?? 0));
+        $course = $courseRepository->findById((int) ($lesson['course_id'] ?? 0));
         return [
             'view' => 'lessons/view',
             'title' => $lesson['title'],
