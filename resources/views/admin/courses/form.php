@@ -101,7 +101,7 @@ $tabUrl = static fn(string $tab): string => base_url('admin/courses/' . $courseI
                             <div class="admin-module-content">
                                 <div class="admin-module-lessons-heading">
                                     <div><strong>Lessons</strong><span><?= count($lessons) ?> lesson<?= count($lessons) === 1 ? '' : 's' ?></span></div>
-                                    <a class="btn" href="<?= htmlspecialchars(base_url('admin/modules/' . $moduleId . '/lessons/create'), ENT_QUOTES, 'UTF-8') ?>">+ Add lesson</a>
+                                    <a class="btn" href="<?= htmlspecialchars(base_url('admin/modules/' . $moduleId . '/lessons/create-media'), ENT_QUOTES, 'UTF-8') ?>">+ Add lesson</a>
                                 </div>
                                 <?php if (empty($lessons)): ?>
                                     <div class="admin-module-empty">No lessons yet. Add the first lesson to this module.</div>
@@ -114,7 +114,7 @@ $tabUrl = static fn(string $tab): string => base_url('admin/courses/' . $courseI
                                                     <span><?= (int) ($lesson['sort_order'] ?? 0) ?></span>
                                                 </div>
                                                 <div class="admin-module-lesson-actions">
-                                                    <a class="btn secondary" href="<?= htmlspecialchars(base_url('admin/lessons/' . (int) ($lesson['id'] ?? 0) . '/edit'), ENT_QUOTES, 'UTF-8') ?>">Edit</a>
+                                                    <a class="btn secondary" href="<?= htmlspecialchars(base_url('admin/lessons/' . (int) ($lesson['id'] ?? 0) . '/edit-media'), ENT_QUOTES, 'UTF-8') ?>">Edit</a>
                                                     <form method="post" action="<?= htmlspecialchars(base_url('admin/lessons/' . (int) ($lesson['id'] ?? 0) . '/delete'), ENT_QUOTES, 'UTF-8') ?>" onsubmit="return confirm('Delete this lesson? This cannot be undone.');">
                                                         <?= Csrf::input() ?>
                                                         <button class="btn danger" type="submit">Delete</button>
