@@ -59,6 +59,13 @@ final class CourseModuleRepository implements CourseModuleRepositoryInterface
         return $this->findById($id);
     }
 
+    public function delete(int $id): bool
+    {
+        $statement = $this->pdo->prepare('DELETE FROM course_modules WHERE id = :id');
+        $statement->execute([':id' => $id]);
+        return $statement->rowCount() > 0;
+    }
+
     public function findById(int $id): ?array
     {
         $statement = $this->pdo->prepare('SELECT * FROM course_modules WHERE id = :id LIMIT 1');
