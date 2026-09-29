@@ -214,10 +214,22 @@ return [
                 unset($updates['video_url']);
             }
 
+            $metadataUpdates = [];
+            foreach (['video_original_name', 'video_mime_type', 'video_file_size', 'file_path'] as $field) {
+                if (array_key_exists($field, $updates)) {
+                    $metadataUpdates[$field] = $updates[$field];
+                    unset($updates[$field]);
+                }
+            }
+
             $result = $learningService->updateLesson((int) $lessonId, $updates);
             if (!$result['success']) {
                 $_SESSION['flash_error'] = $result['message'];
                 return $redirectToLessonEditor($courseId);
+            }
+
+            if ($metadataUpdates !== []) {
+                $lessonRepository->update((int) $lessonId, $metadataUpdates);
             }
 
             if (($videoUploaded || $externalVideo !== '' || $removeVideo) && $existingVideoPath !== '') {
