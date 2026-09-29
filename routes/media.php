@@ -95,7 +95,7 @@ return [
         }
         $length=$end-$start+1;header('Content-Length: '.$length);$h=fopen($path,'rb');fseek($h,$start);$remaining=$length;while($remaining>0&&!feof($h)){$chunk=fread($h,min(8192,$remaining));if($chunk===false||$chunk==='')break;echo $chunk;$remaining-=strlen($chunk);flush();}fclose($h);exit;
     }],
-    ['POST', '/admin/lessons/{lessonId}/delete', function (string $lessonId) use ($learningService, $lessonRepository, $moduleRepository, $materialRepository, $mediaStorage, $redirectToLessonEditor) {
+    ['POST', '/admin/lessons/{lessonId}/delete', function (string $lessonId) use ($learningService, $lessonRepository, $moduleRepository, $materialRepository, $lessonBlockRepository, $mediaStorage, $redirectToLessonEditor) {
         if (!Auth::userCan('courses.manage')) return redirect_to('/login');
         $lesson = $lessonRepository->findById((int) $lessonId);
         $module = $lesson !== null ? $moduleRepository->findById((int) ($lesson['module_id'] ?? 0)) : null;
@@ -111,13 +111,14 @@ return [
             if (!empty($material['storage_path'])) $mediaStorage->delete((string) $material['storage_path']);
         }
         if (!empty($lesson['file_path'])) $mediaStorage->delete((string) $lesson['file_path']);
+        foreach ($lessonBlockRepository->findByLesson((int) $lessonId) as $block) { if (!empty($block['storage_path'])) $mediaStorage->delete((string) $block['storage_path']); }
 
         $result = $learningService->deleteLesson((int) $lessonId);
         $_SESSION[$result['success'] ? 'flash_success' : 'flash_error'] = $result['message'];
         return $redirectToLessonEditor($courseId);
     }],
 
-    ['POST', '/admin/modules/{moduleId}/delete', function (string $moduleId) use ($learningService, $moduleRepository, $lessonRepository, $materialRepository, $mediaStorage) {
+    ['POST', '/admin/modules/{moduleId}/delete', function (string $moduleId) use ($learningService, $moduleRepository, $lessonRepository, $materialRepository, $lessonBlockRepository, $mediaStorage) {
         if (!Auth::userCan('courses.manage')) return redirect_to('/login');
         $module = $moduleRepository->findById((int) $moduleId);
         if ($module === null) return ['view' => 'errors/not_found', 'title' => 'Module not found'];
@@ -129,6 +130,7 @@ return [
         }
 
         foreach ($lessonRepository->findByModule((int) $moduleId) as $lesson) {
+            foreach ($lessonBlockRepository->findByLesson((int) ($lesson['id'] ?? 0)) as $block) { if (!empty($block['storage_path'])) $mediaStorage->delete((string) $block['storage_path']); }
             foreach ($materialRepository->findByLesson((int) ($lesson['id'] ?? 0)) as $material) {
                 if (!empty($material['storage_path'])) $mediaStorage->delete((string) $material['storage_path']);
             }
