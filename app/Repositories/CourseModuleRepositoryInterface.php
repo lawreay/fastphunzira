@@ -11,4 +11,6 @@ interface CourseModuleRepositoryInterface
     public function findById(int $id): ?array;
 
     public function findByCourse(int $courseId): array;
+
+    public function delete(int $id): bool;
 }
