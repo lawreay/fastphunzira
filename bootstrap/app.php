@@ -117,7 +117,8 @@ $courseController = new CourseController(
     $enrollmentRepository,
     $moduleRepository,
     $quizRepository,
-    $examRepository
+    $examRepository,
+    $lessonRepository
 );
 $quizService = new QuizService(
     $courseRepository,
