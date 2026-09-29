@@ -17,7 +17,7 @@ function base_url(string $path = ''): string
 
 $app = require __DIR__ . '/../bootstrap/app.php';
 $routes = require __DIR__ . '/../routes/web.php';
-$routes = array_merge($routes, require __DIR__ . '/../routes/media.php');
+$routes = array_merge(require __DIR__ . '/../routes/media.php', $routes);
 
 $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
 $scriptName = $_SERVER['SCRIPT_NAME'] ?? $_SERVER['PHP_SELF'] ?? '';
