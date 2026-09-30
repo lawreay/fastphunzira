@@ -82,9 +82,9 @@ Landing
 
 ### Password recovery status
 
-The forgot-password screen has been added as a frontend state, but the actual reset-token/email delivery workflow is not implemented in the current application. The submit control therefore remains disabled rather than pretending to perform a recovery action that does not exist.
+The forgot-password screen and reset-token workflow are implemented for the current session-backed recovery path. The application generates a one-hour token, validates the new password, updates the account, and invalidates the token after use. External email delivery is still pending; the service returns the generated token for the delivery adapter and test flow.
 
-When the backend reset flow is implemented, the intended path is:
+The intended user path is:
 
 ```text
 Login
@@ -95,7 +95,7 @@ Enter email
   ↓
 Secure reset token generated
   ↓
-Email reset link
+Reset link delivered by the configured mail adapter
   ↓
 Reset password page
   ↓
