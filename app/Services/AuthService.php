@@ -124,6 +124,89 @@ final class AuthService
         ];
     }
 
+    public function requestPasswordReset(array $data): array
+    {
+        $email = strtolower(trim((string) ($data['email'] ?? '')));
+
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return ['success' => false, 'message' => 'A valid email is required.'];
+        }
+
+        $user = $this->userRepository->findByEmail($email);
+        if ($user === null) {
+            return [
+                'success' => true,
+                'message' => 'If an account exists for that email, a reset link has been sent.',
+                'data' => ['email' => $email],
+            ];
+        }
+
+        $token = bin2hex(random_bytes(24));
+        $expiresAt = time() + 3600;
+
+        $_SESSION['password_reset_tokens'] = $_SESSION['password_reset_tokens'] ?? [];
+        $_SESSION['password_reset_tokens'][$token] = [
+            'email' => $email,
+            'expires_at' => $expiresAt,
+        ];
+
+        return [
+            'success' => true,
+            'message' => 'If an account exists for that email, a reset link has been sent.',
+            'data' => ['email' => $email, 'token' => $token],
+        ];
+    }
+
+    public function resetPassword(string $token, array $data): array
+    {
+        $normalizedToken = trim((string) $token);
+        $password = (string) ($data['password'] ?? '');
+        $passwordConfirmation = (string) ($data['password_confirmation'] ?? '');
+
+        if ($normalizedToken === '') {
+            return ['success' => false, 'message' => 'A valid reset token is required.'];
+        }
+
+        $resetTokens = $_SESSION['password_reset_tokens'] ?? [];
+
+        if (!isset($resetTokens[$normalizedToken])) {
+            return ['success' => false, 'message' => 'This reset link is invalid or has expired.'];
+        }
+
+        $record = $resetTokens[$normalizedToken];
+        if ((int) ($record['expires_at'] ?? 0) < time()) {
+            unset($resetTokens[$normalizedToken]);
+            $_SESSION['password_reset_tokens'] = $resetTokens;
+
+            return ['success' => false, 'message' => 'This reset link has expired.'];
+        }
+
+        if ($password === '' || strlen($password) < 8) {
+            return ['success' => false, 'message' => 'Password must be at least 8 characters long.'];
+        }
+
+        if ($password !== $passwordConfirmation) {
+            return ['success' => false, 'message' => 'Passwords do not match.'];
+        }
+
+        $user = $this->userRepository->findByEmail((string) ($record['email'] ?? ''));
+        if ($user === null) {
+            return ['success' => false, 'message' => 'We could not find that account.'];
+        }
+
+        $newHash = password_hash($password, PASSWORD_DEFAULT);
+        $updated = $this->userRepository->updatePassword((int) ($user['id'] ?? 0), $newHash);
+
+        unset($resetTokens[$normalizedToken]);
+        $_SESSION['password_reset_tokens'] = $resetTokens;
+
+        if (!$updated) {
+            return ['success' => false, 'message' => 'Password reset failed. Please try again.'];
+        }
+
+        return ['success' => true, 'message' => 'Your password has been reset successfully.'];
+    }
+
     public function logout(): void
     {
         Auth::logout();

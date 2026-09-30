@@ -97,6 +97,22 @@ final class UserRepository implements UserRepositoryInterface
         return $user;
     }
 
+    public function updatePassword(int $id, string $passwordHash): bool
+    {
+        $statement = $this->pdo->prepare(
+            'UPDATE users
+             SET password_hash = :password_hash,
+                 force_password_change = 0,
+                 updated_at = NOW()
+             WHERE id = :id AND deleted_at IS NULL'
+        );
+
+        return $statement->execute([
+            ':password_hash' => $passwordHash,
+            ':id' => $id,
+        ]);
+    }
+
     public function userExists(string $email): bool
     {
         return $this->findByEmail($email) !== null;

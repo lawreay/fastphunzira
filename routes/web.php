@@ -120,6 +120,52 @@ return [
             'title' => 'Forgot Password',
         ];
     }],
+    ['POST', '/forgot-password', function () use ($authService) {
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+
+            return redirect_to('/forgot-password');
+        }
+
+        $result = $authService->requestPasswordReset([
+            'email' => trim((string) ($_POST['email'] ?? '')),
+        ]);
+
+        if (!$result['success']) {
+            $_SESSION['flash_error'] = $result['message'];
+            return redirect_to('/forgot-password');
+        }
+
+        $_SESSION['flash_success'] = $result['message'];
+
+        return redirect_to('/login');
+    }],
+    ['GET', '/reset-password/{token}', function (string $token) {
+        return [
+            'view' => 'auth/reset-password',
+            'title' => 'Reset Password',
+            'token' => $token,
+        ];
+    }],
+    ['POST', '/reset-password/{token}', function (string $token) use ($authService) {
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid security token.';
+            return redirect_to('/reset-password/' . rawurlencode($token));
+        }
+
+        $result = $authService->resetPassword($token, [
+            'password' => (string) ($_POST['password'] ?? ''),
+            'password_confirmation' => (string) ($_POST['password_confirmation'] ?? ''),
+        ]);
+
+        if (!$result['success']) {
+            $_SESSION['flash_error'] = $result['message'];
+            return redirect_to('/reset-password/' . rawurlencode($token));
+        }
+
+        $_SESSION['flash_success'] = $result['message'];
+        return redirect_to('/login');
+    }],
     ['POST', '/login', function () use ($authService, $auditLogService) {
         $email = strtolower(trim((string) ($_POST['email'] ?? '')));
         $password = (string) ($_POST['password'] ?? '');

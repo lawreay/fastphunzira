@@ -10,5 +10,7 @@ interface UserRepositoryInterface
 
     public function findById(int $id): ?array;
 
+    public function updatePassword(int $id, string $passwordHash): bool;
+
     public function userExists(string $email): bool;
 }
