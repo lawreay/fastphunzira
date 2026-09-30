@@ -21,17 +21,23 @@ unset($_SESSION['flash_error'], $_SESSION['flash_success']);
     <header class="site-header">
         <div class="container">
             <nav class="site-nav" aria-label="Main navigation">
-                <a class="site-brand" href="<?= htmlspecialchars(base_url(), ENT_QUOTES, 'UTF-8') ?>" aria-label="FastPhunzira home">
-                    <span class="brand-mark" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" focusable="false"><path d="M6 4h13v4H10v3h8v4h-8v5H6V4Z"/></svg>
-                    </span>
-                    <span class="brand-copy">
-                        <strong>FastPhunzira</strong>
-                        <small>Learn. Practice. Achieve.</small>
-                    </span>
-                </a>
+                <div class="site-nav-head">
+                    <a class="site-brand" href="<?= htmlspecialchars(base_url(), ENT_QUOTES, 'UTF-8') ?>" aria-label="FastPhunzira home">
+                        <span class="brand-mark" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" focusable="false"><path d="M6 4h13v4H10v3h8v4h-8v5H6V4Z"/></svg>
+                        </span>
+                        <span class="brand-copy">
+                            <strong>FastPhunzira</strong>
+                            <small>Learn. Practice. Achieve.</small>
+                        </span>
+                    </a>
+                    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-navigation-menu">
+                        <span class="menu-toggle-label">Menu</span>
+                        <span class="menu-toggle-icon" aria-hidden="true"><span></span><span></span><span></span></span>
+                    </button>
+                </div>
 
-                <div class="site-nav-links">
+                <div class="site-nav-links" id="site-navigation-menu">
                     <a href="<?= htmlspecialchars(base_url(), ENT_QUOTES, 'UTF-8') ?>">
                         <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10Z"/></svg>
                         <span>Home</span>
