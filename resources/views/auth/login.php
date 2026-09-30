@@ -2,16 +2,20 @@
 
 use App\Support\Csrf;
 ?>
-<section class="auth-page">
+<section class="auth-page auth-page-login" data-reveal>
     <div class="auth-shell">
         <div class="auth-intro">
             <span class="eyebrow">Welcome back</span>
             <h1>Continue your learning journey.</h1>
             <p>Sign in to access your courses, progress, assessments, results, and certificates.</p>
             <div class="auth-points"><span>✓ Your courses and progress</span><span>✓ Quizzes and final exams</span><span>✓ Certificates and verification</span></div>
+            <div class="auth-visual-strip">
+                <img src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&amp;fit=crop&amp;w=900&amp;q=88" alt="Black students collaborating during a workshop" loading="lazy">
+                <span>Keep learning with people who are moving forward too.</span>
+            </div>
         </div>
         <div class="auth-card">
-            <div class="auth-card-heading"><h2>Sign in</h2><p>Use the email address connected to your account.</p></div>
+            <div class="auth-card-heading"><span class="auth-step">01 / Account access</span><h2>Sign in</h2><p>Use the email address connected to your account.</p></div>
             <form method="POST" action="<?= htmlspecialchars(base_url('login'), ENT_QUOTES, 'UTF-8') ?>">
                 <input type="hidden" name="_token" value="<?= htmlspecialchars(Csrf::token(), ENT_QUOTES, 'UTF-8') ?>">
                 <div class="form-group"><label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required></div>
