@@ -32,6 +32,7 @@ unset($_SESSION['flash_error'], $_SESSION['flash_success']);
                 </a>
 
                 <div class="site-nav-links">
+                    <span class="nav-context"><span class="nav-context-dot"></span>Learning platform</span>
                     <a href="<?= htmlspecialchars(base_url(), ENT_QUOTES, 'UTF-8') ?>">
                         <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10Z"/></svg>
                         <span>Home</span>
@@ -160,6 +161,7 @@ unset($_SESSION['flash_error'], $_SESSION['flash_success']);
 
             <div class="footer-bottom">
                 <span>&copy; <?= date('Y') ?> FastPhunzira. All rights reserved.</span>
+                <span class="footer-developer"><span>Developed by</span><strong>Lawreay</strong><span class="footer-divider" aria-hidden="true"></span><span>Learning technology for Malawi</span></span>
                 <span class="footer-promise">
                     <svg class="footer-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.2 5.1L20 10l-5.8 1.9L12 17l-2.2-5.1L4 10l5.8-1.9L12 3Zm6 11 .9 2.1L21 17l-2.1.9L18 20l-.9-2.1L15 17l2.1-.9L18 14Z"/></svg>
                     Learn · Practice · Examine · Certify
