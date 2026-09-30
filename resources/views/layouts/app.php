@@ -32,7 +32,6 @@ unset($_SESSION['flash_error'], $_SESSION['flash_success']);
                 </a>
 
                 <div class="site-nav-links">
-                    <span class="nav-context"><span class="nav-context-dot"></span>Learning platform</span>
                     <a href="<?= htmlspecialchars(base_url(), ENT_QUOTES, 'UTF-8') ?>">
                         <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10Z"/></svg>
                         <span>Home</span>

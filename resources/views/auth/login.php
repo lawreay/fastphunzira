@@ -15,7 +15,7 @@ use App\Support\Csrf;
             </div>
         </div>
         <div class="auth-card">
-            <div class="auth-card-heading"><span class="auth-step">01 / Account access</span><h2>Sign in</h2><p>Use the email address connected to your account.</p></div>
+            <div class="auth-card-heading"><h2>Sign in</h2><p>Use the email address connected to your account.</p></div>
             <form method="POST" action="<?= htmlspecialchars(base_url('login'), ENT_QUOTES, 'UTF-8') ?>">
                 <input type="hidden" name="_token" value="<?= htmlspecialchars(Csrf::token(), ENT_QUOTES, 'UTF-8') ?>">
                 <div class="form-group"><label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required></div>

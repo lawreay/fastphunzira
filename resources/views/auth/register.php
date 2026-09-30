@@ -15,7 +15,7 @@ use App\Support\Csrf;
             </div>
         </div>
         <div class="auth-card auth-card-wide">
-            <div class="auth-card-heading"><span class="auth-step">01 / Create account</span><h2>Start learning with FastPhunzira.</h2><p>Set up your account to browse courses, enroll, learn, take assessments, and earn certificates.</p></div>
+            <div class="auth-card-heading"><h2>Start learning with FastPhunzira.</h2><p>Set up your account to browse courses, enroll, learn, take assessments, and earn certificates.</p></div>
             <form method="POST" action="<?= htmlspecialchars(base_url('register'), ENT_QUOTES, 'UTF-8') ?>">
                 <input type="hidden" name="_token" value="<?= htmlspecialchars(Csrf::token(), ENT_QUOTES, 'UTF-8') ?>">
                 <div class="form-group"><label for="full_name">Full name</label><input id="full_name" name="full_name" type="text" autocomplete="name" placeholder="Your full name" required></div>

@@ -389,26 +389,6 @@ textarea { min-height: 120px; }
     outline-offset: 3px;
 }
 
-.nav-context {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    margin-right: 5px;
-    color: #94a3b8;
-    font-size: .68rem;
-    font-weight: 800;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    white-space: nowrap;
-}
-.nav-context-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #fbbf24;
-    box-shadow: 0 0 0 4px rgba(251,191,36,.14);
-}
-
 .site-nav-links .nav-register {
     box-shadow: 0 6px 18px rgba(255,255,255,.08);
 }
@@ -455,11 +435,6 @@ textarea { min-height: 120px; }
     .site-nav-links > a span,
     .site-nav-links .btn span {
         display: inline;
-    }
-
-    .nav-context {
-        width: 100%;
-        margin: 0 0 2px;
     }
 
     .footer-links a {
@@ -2581,15 +2556,6 @@ html.motion-ready [data-reveal].is-visible {
 .auth-intro h1,
 .auth-card-heading h1,
 .auth-card-heading h2 { letter-spacing: -.045em; }
-.auth-step {
-    display: block;
-    margin-bottom: 8px;
-    color: var(--accent);
-    font-size: .7rem;
-    font-weight: 900;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-}
 .auth-card-heading h2 {
     margin: 0 0 8px;
     color: var(--ink);
