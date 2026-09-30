@@ -75,7 +75,7 @@ try {
 } catch (Throwable $e) {
     error_log('Database connection failed: ' . $e->getMessage());
 
-    if (($config['app_env'] ?? 'local') === 'production') {
+    if (($config['app_env'] ?? 'local') !== 'local') {
         http_response_code(500);
         exit('Service temporarily unavailable.');
     }

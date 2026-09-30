@@ -1,5 +1,6 @@
 vendor/
 .env
+.env.staging
 .phpunit.result.cache
 .DS_Store
 coverage/

@@ -73,6 +73,14 @@ have the correct write permissions for the web server user.
 6. Check critical user flows manually
 7. Confirm HTTPS and security settings
 
+### InfinityFree staging layout
+
+For `staging-fastphunzira.lovestoblog.com`, keep application code, `vendor/`, `storage/`, and the server `.env` file outside the public `htdocs/` directory. Copy the contents of `public/` into `htdocs/` so that `htdocs/index.php` can load the application from its parent directory.
+
+Before uploading, copy `.env.staging` to `.env` in the account root, update `DB_PASSWORD` only on the server, and keep that file outside version control. The staging environment must use `APP_ENV=staging`, `APP_DEBUG=false`, `APP_URL=https://staging-fastphunzira.lovestoblog.com`, and `REQUIRE_HTTPS=true`.
+
+The staging database must be imported through the InfinityFree control panel's phpMyAdmin interface. InfinityFree free-hosting databases do not permit external MySQL connections.
+
 ## 9. Backup and Recovery
 
 * Schedule database backups
