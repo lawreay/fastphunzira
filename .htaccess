@@ -1,0 +1,14 @@
+RewriteEngine On
+
+# The flat shared-hosting package keeps application files in htdocs. They must
+# remain reachable only through index.php and the authenticated media routes.
+RewriteRule ^(?:app|bootstrap|config|database|resources|routes|storage|vendor|tests|docs|share)(?:/|$) - [F,L,NC]
+RewriteRule ^(?:\.env(?:\..*)?|composer\.(?:json|lock)|phpunit\.xml|AGENTS\.md|CHANGELOG\.md|README\.md)$ - [F,L,NC]
+
+# Serve existing files directly.
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Route all other requests through the front controller.
+RewriteRule ^ index.php [QSA,L]

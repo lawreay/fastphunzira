@@ -15,9 +15,11 @@ function base_url(string $path = ''): string
     return $base . '/' . ltrim($path, '/');
 }
 
-$app = require __DIR__ . '/../bootstrap/app.php';
-$routes = require __DIR__ . '/../routes/web.php';
-$routes = array_merge(require __DIR__ . '/../routes/media.php', $routes);
+$projectRoot = is_file(__DIR__ . '/../bootstrap/app.php') ? dirname(__DIR__) : __DIR__;
+
+$app = require $projectRoot . '/bootstrap/app.php';
+$routes = require $projectRoot . '/routes/web.php';
+$routes = array_merge(require $projectRoot . '/routes/media.php', $routes);
 
 $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
 $scriptName = $_SERVER['SCRIPT_NAME'] ?? $_SERVER['PHP_SELF'] ?? '';
@@ -72,7 +74,7 @@ extract($result, EXTR_SKIP);
 $view = $result['view'] ?? 'landing';
 $title = $result['title'] ?? 'FastPhunzira';
 
-$viewPath = __DIR__ . '/../resources/views/' . $view . '.php';
+$viewPath = $projectRoot . '/resources/views/' . $view . '.php';
 if (!is_file($viewPath)) {
     http_response_code(500);
     echo 'View not found: ' . htmlspecialchars($view, ENT_QUOTES, 'UTF-8');
@@ -83,4 +85,4 @@ ob_start();
 require $viewPath;
 $body = ob_get_clean();
 
-require __DIR__ . '/../resources/views/layouts/app.php';
+require $projectRoot . '/resources/views/layouts/app.php';
