@@ -116,6 +116,24 @@ label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--color
     gap: 12px;
 }
 .field-label-row label { margin-bottom: 8px; }
+.field-label-row a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 4px 0;
+    color: #c9553b;
+    font-size: .78rem;
+    font-weight: 800;
+    line-height: 1.2;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.field-label-row a:hover { color: #9f3f2d; }
+.field-label-row a:focus-visible {
+    border-radius: 4px;
+    outline: 3px solid rgba(231,111,81,.2);
+    outline-offset: 3px;
+}
 input, textarea, select {
     width: 100%;
     padding: 11px 12px;
