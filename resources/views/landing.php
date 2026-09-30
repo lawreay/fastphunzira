@@ -3,9 +3,9 @@
 use App\Core\Auth;
 ?>
 <section class="landing-page">
-    <div class="hero">
+    <div class="hero" data-reveal>
         <div class="hero-copy">
-            <span class="eyebrow">Learn • Practice • Examine • Certify</span>
+            <span class="eyebrow">Learn / Practice / Certify</span>
             <h1>Learn skills. Prove what you know.</h1>
             <p class="hero-lead">FastPhunzira brings courses, quizzes, final exams, results, and digital certificates into one simple learning journey.</p>
             <div class="hero-actions">
@@ -20,6 +20,10 @@ use App\Core\Auth;
             <p class="hero-note">A clear path from learning to verified achievement.</p>
         </div>
         <div class="hero-panel" aria-label="FastPhunzira learning journey">
+            <figure class="hero-visual">
+                <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&amp;fit=crop&amp;w=1200&amp;q=88" alt="Black students collaborating around a laptop" loading="eager">
+                <figcaption class="hero-visual-caption"><span class="signal-dot"></span> Learning together, moving forward</figcaption>
+            </figure>
             <div class="journey-card">
                 <span class="journey-label">Your learning journey</span>
                 <div class="journey-step is-active"><span>01</span><strong>Learn</strong><small>Lessons and course content</small></div>
@@ -30,12 +34,24 @@ use App\Core\Auth;
         </div>
     </div>
 
-    <section class="section-block">
+    <section class="section-block" data-reveal>
         <div class="section-heading"><span class="eyebrow">Why FastPhunzira</span><h2>Everything important stays in one learning flow.</h2><p>No maze of disconnected tools. Just the parts a learner actually needs.</p></div>
         <div class="feature-grid">
             <article class="feature-card"><span class="feature-number">01</span><h3>Learn at your pace</h3><p>Access structured courses, modules, and lessons from one place.</p></article>
             <article class="feature-card"><span class="feature-number">02</span><h3>Practice before the exam</h3><p>Use quizzes to reinforce concepts and prepare for formal assessment.</p></article>
             <article class="feature-card"><span class="feature-number">03</span><h3>Earn a verifiable certificate</h3><p>Successful learners can receive digital certificates with public verification.</p></article>
+        </div>
+    </section>
+
+    <section class="learner-story" data-reveal>
+        <div class="learner-story-image">
+            <img src="https://images.unsplash.com/photo-1529390079861-591de354faf5?auto=format&amp;fit=crop&amp;w=1000&amp;q=88" alt="White students studying together in a bright classroom" loading="lazy">
+        </div>
+        <div class="learner-story-copy">
+            <span class="eyebrow">Made for momentum</span>
+            <h2>Keep the next step visible.</h2>
+            <p>From the first lesson to the final certificate, your progress stays clear, practical, and easy to return to.</p>
+            <a class="text-link" href="<?= htmlspecialchars(base_url('courses'), ENT_QUOTES, 'UTF-8') ?>">Find your next course <span aria-hidden="true">↗</span></a>
         </div>
     </section>
 
