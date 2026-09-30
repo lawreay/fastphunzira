@@ -403,7 +403,47 @@ textarea { min-height: 120px; }
 
 /* Landing page visual polish */
 .landing-page {
+    --landing-paper: #f5f1e9;
+    --landing-ink: #17212b;
+    --landing-accent: #e76f51;
+    --landing-accent-soft: #f4b860;
+    margin: -24px;
+    padding: 0 24px 64px;
     overflow: hidden;
+    background: var(--landing-paper);
+    color: var(--landing-ink);
+}
+.landing-page .eyebrow,
+.landing-page .feature-number {
+    color: var(--landing-accent);
+}
+.landing-page .btn:not(.secondary):not(.light) {
+    border-color: var(--landing-accent);
+    background: var(--landing-accent);
+    color: #fff;
+    box-shadow: 0 10px 24px rgba(231,111,81,.2);
+}
+.landing-page .btn:not(.secondary):not(.light):hover {
+    border-color: #c9553b;
+    background: #c9553b;
+}
+.landing-page .btn.secondary {
+    border-color: rgba(23,33,43,.22);
+    background: rgba(255,255,255,.42);
+    color: var(--landing-ink);
+}
+.landing-page .btn.secondary:hover {
+    border-color: var(--landing-accent);
+    background: #fffaf3;
+    color: var(--landing-ink);
+}
+.landing-page .journey-card,
+.landing-page .verification-cta {
+    background: var(--landing-ink);
+}
+.landing-page .feature-card,
+.landing-page .course-card {
+    background: #fffdf9;
 }
 .landing-page .hero {
     position: relative;
@@ -538,7 +578,78 @@ textarea { min-height: 120px; }
 .text-link:hover span {
     transform: translate(3px, -3px);
 }
+.learning-mosaic {
+    padding: 18px 0 76px;
+}
+.mosaic-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 30px;
+    margin-bottom: 24px;
+}
+.mosaic-heading h2 {
+    max-width: 560px;
+    margin: 0;
+    color: var(--landing-ink);
+    font-size: clamp(1.8rem, 3vw, 2.7rem);
+    line-height: 1.05;
+    letter-spacing: -.04em;
+}
+.mosaic-grid {
+    display: grid;
+    grid-template-columns: 1.1fr .9fr 1fr;
+    gap: 16px;
+}
+.mosaic-card {
+    position: relative;
+    min-height: 270px;
+    margin: 0;
+    overflow: hidden;
+    border-radius: 20px;
+    background: var(--landing-ink);
+    box-shadow: 0 16px 38px rgba(23,33,43,.12);
+}
+.mosaic-card-tall {
+    min-height: 390px;
+}
+.mosaic-card-light {
+    background: var(--landing-accent-soft);
+}
+.mosaic-card::after {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 40%, rgba(23,33,43,.78));
+    content: "";
+}
+.mosaic-card img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: inherit;
+    object-fit: cover;
+    transition: transform .65s cubic-bezier(.2,.7,.2,1), filter .65s ease;
+}
+.mosaic-card:hover img {
+    filter: saturate(1.08);
+    transform: scale(1.06);
+}
+.mosaic-card figcaption {
+    position: absolute;
+    right: 20px;
+    bottom: 18px;
+    left: 20px;
+    z-index: 1;
+    color: #fff;
+    font-size: .86rem;
+    font-weight: 800;
+}
 @media (max-width: 850px) {
+    .landing-page {
+        margin: -18px;
+        padding-right: 18px;
+        padding-left: 18px;
+    }
     .landing-page .hero {
         min-height: auto;
         padding-bottom: 56px;
@@ -557,6 +668,13 @@ textarea { min-height: 120px; }
         grid-template-columns: 1fr;
         gap: 30px;
     }
+    .mosaic-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .mosaic-card-tall {
+        grid-column: span 2;
+        min-height: 360px;
+    }
 }
 @media (max-width: 560px) {
     .hero-visual {
@@ -571,6 +689,20 @@ textarea { min-height: 120px; }
     .learner-story-image {
         height: 250px;
     }
+    .mosaic-heading {
+        display: block;
+    }
+    .mosaic-heading h2 {
+        margin-top: 8px;
+    }
+    .mosaic-grid {
+        grid-template-columns: 1fr;
+    }
+    .mosaic-card,
+    .mosaic-card-tall {
+        grid-column: auto;
+        min-height: 270px;
+    }
 }
 @media (prefers-reduced-motion: reduce) {
     .hero-visual img,
@@ -579,6 +711,9 @@ textarea { min-height: 120px; }
     .landing-page .feature-card,
     .landing-page .course-card,
     .text-link span {
+        transition: none;
+    }
+    .mosaic-card img {
         transition: none;
     }
 }
