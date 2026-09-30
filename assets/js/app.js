@@ -2,6 +2,43 @@ document.addEventListener('DOMContentLoaded', function () {
     var root = document.documentElement;
     var revealItems = document.querySelectorAll('[data-reveal]');
     var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var siteNav = document.querySelector('.site-nav');
+    var menuToggle = document.querySelector('.menu-toggle');
+    var navigationMenu = document.querySelector('#site-navigation-menu');
+
+    if (siteNav && menuToggle && navigationMenu) {
+        var closeMenu = function () {
+            siteNav.classList.remove('menu-open');
+            menuToggle.setAttribute('aria-expanded', 'false');
+        };
+
+        menuToggle.addEventListener('click', function () {
+            var isOpen = siteNav.classList.toggle('menu-open');
+            menuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+
+        navigationMenu.querySelectorAll('a').forEach(function (link) {
+            link.addEventListener('click', closeMenu);
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!siteNav.contains(event.target)) {
+                closeMenu();
+            }
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                closeMenu();
+            }
+        });
+
+        window.addEventListener('resize', function () {
+            if (window.innerWidth > 600) {
+                closeMenu();
+            }
+        });
+    }
 
     if (revealItems.length === 0) {
         return;
