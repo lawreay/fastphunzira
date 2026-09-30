@@ -90,6 +90,11 @@ final class QuizAttemptRepository implements QuizAttemptRepositoryInterface
             ':passed' => !empty($result['passed']) ? 1 : 0,
             ':submitted_at' => date('Y-m-d H:i:s'),
         ]);
+
+        if ($statement->rowCount() !== 1) {
+            return null;
+        }
+
         return $this->findById($attemptId);
     }
 

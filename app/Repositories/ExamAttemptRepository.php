@@ -159,6 +159,10 @@ final class ExamAttemptRepository implements ExamAttemptRepositoryInterface
             ':id' => $attemptId,
         ]);
 
+        if ($statement->rowCount() !== 1) {
+            return null;
+        }
+
         return $this->findById($attemptId);
     }
 }
