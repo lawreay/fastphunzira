@@ -55,6 +55,27 @@ use App\Core\Auth;
         </div>
     </section>
 
+    <section class="learning-mosaic" data-reveal aria-label="Learners in action">
+        <div class="mosaic-heading">
+            <span class="eyebrow">A place to grow</span>
+            <h2>Different starting points. One shared direction.</h2>
+        </div>
+        <div class="mosaic-grid">
+            <figure class="mosaic-card mosaic-card-tall">
+                <img src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&amp;fit=crop&amp;w=900&amp;q=88" alt="Black students working together during a workshop" loading="lazy">
+                <figcaption>Build with people who are learning too.</figcaption>
+            </figure>
+            <figure class="mosaic-card">
+                <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&amp;fit=crop&amp;w=900&amp;q=88" alt="Black learner studying online with focused attention" loading="lazy">
+                <figcaption>Make progress that feels like yours.</figcaption>
+            </figure>
+            <figure class="mosaic-card mosaic-card-light">
+                <img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&amp;fit=crop&amp;w=900&amp;q=88" alt="White students learning together in a bright classroom" loading="lazy">
+                <figcaption>Keep showing up for the next lesson.</figcaption>
+            </figure>
+        </div>
+    </section>
+
     <?php if (!empty($featured_courses)): ?>
         <section class="section-block">
             <div class="section-heading"><span class="eyebrow">Featured learning</span><h2>Start with a course.</h2><p>Explore published courses and choose where you want to begin.</p></div>
