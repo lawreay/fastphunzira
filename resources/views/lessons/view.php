@@ -15,6 +15,25 @@ $completedAt = trim((string) ($progress['completed_at'] ?? ''));
 $materials = $materials ?? [];
 $blocks = $blocks ?? [];
 $youtubeId = null;
+$renderLessonText = static function (string $text): string {
+    $escapedText = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+    $linkedText = preg_replace_callback(
+        '~https?://[^\s<]+~i',
+        static function (array $matches): string {
+            $url = rtrim($matches[0], '.,;:)');
+            $suffix = substr($matches[0], strlen($url));
+
+            if ($url === '') {
+                return $matches[0];
+            }
+
+            return '<a href="' . $url . '" target="_blank" rel="noopener noreferrer">' . $url . '</a>' . $suffix;
+        },
+        $escapedText
+    );
+
+    return nl2br($linkedText ?? $escapedText);
+};
 
 if ($videoUrl !== '') {
     $parsed = parse_url($videoUrl);
@@ -83,7 +102,7 @@ if ($videoUrl !== '') {
             <div class="lesson-reading">
                 <span class="eyebrow">Lesson content</span>
                 <div class="lesson-body">
-                    <?= nl2br(htmlspecialchars($lessonContent, ENT_QUOTES, 'UTF-8')) ?>
+                    <?= $renderLessonText($lessonContent) ?>
                 </div>
             </div>
 
@@ -133,7 +152,7 @@ if ($videoUrl !== '') {
                         <article class="student-content-block">
                             <?php if($type==='text'): ?>
                                 <?php if(trim((string)($block['title']??''))!==''): ?><h3><?= htmlspecialchars((string)$block['title'],ENT_QUOTES,'UTF-8') ?></h3><?php endif; ?>
-                                <div class="student-block-text"><?= nl2br(htmlspecialchars((string)($block['content']??''),ENT_QUOTES,'UTF-8')) ?></div>
+                                <div class="student-block-text"><?= $renderLessonText((string) ($block['content'] ?? '')) ?></div>
                             <?php elseif($type==='youtube'): ?>
                                 <?php
                                 $url=(string)($block['content']??''); $youtubeId=null;
