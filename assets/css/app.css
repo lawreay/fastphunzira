@@ -2714,7 +2714,9 @@ html.motion-ready [data-reveal].is-visible {
         background: rgba(2,6,23,.94);
         box-shadow: 0 18px 35px rgba(2,6,23,.22);
     }
-    .site-nav.menu-open .site-nav-links { display: flex; }
+    .site-nav.menu-open .site-nav-links {
+        display: flex;
+    }
     .site-nav-links > a,
     .site-nav-links .btn,
     .site-nav-links .inline-form,
