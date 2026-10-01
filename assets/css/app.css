@@ -780,34 +780,34 @@ html.motion-ready [data-reveal].is-visible {
 
 /* Course catalogue */
 .catalogue-page {
-    padding: 42px 0 64px;
+    padding: 28px 0 64px;
 }
 .catalogue-hero {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-    gap: 30px;
-    padding: 18px 0 38px;
+    gap: 22px;
+    padding: 8px 0 28px;
 }
 .catalogue-hero h1 {
     max-width: 720px;
-    margin: 0 0 12px;
+    margin: 0 0 10px;
     color: var(--ink);
-    font-size: clamp(2.25rem, 5vw, 4rem);
-    line-height: 1.03;
+    font-size: clamp(2rem, 4vw, 3.4rem);
+    line-height: 1.04;
     letter-spacing: -.05em;
 }
 .catalogue-hero p {
     max-width: 680px;
     margin: 0;
     color: var(--muted);
-    font-size: 1.05rem;
+    font-size: 1rem;
 }
 .catalogue-count {
-    min-width: 150px;
-    padding: 18px 20px;
+    min-width: 138px;
+    padding: 14px 16px;
     border: 1px solid var(--line);
-    border-radius: 16px;
+    border-radius: 14px;
     background: #fff;
     box-shadow: var(--shadow-sm);
 }
@@ -817,13 +817,13 @@ html.motion-ready [data-reveal].is-visible {
 }
 .catalogue-count strong {
     color: var(--ink);
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     line-height: 1;
 }
 .catalogue-count span {
-    margin-top: 6px;
+    margin-top: 5px;
     color: var(--muted);
-    font-size: .8rem;
+    font-size: .75rem;
 }
 .catalogue-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -832,12 +832,12 @@ html.motion-ready [data-reveal].is-visible {
 .catalogue-card {
     display: flex;
     flex-direction: column;
-    min-height: 330px;
-    padding: 22px;
+    min-height: 290px;
+    padding: 18px 18px 16px;
     transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
 .catalogue-card:hover {
-    transform: translateY(-4px);
+    transform: translateY(-3px);
     border-color: #cbd5e1;
     box-shadow: var(--shadow-md);
 }
@@ -852,8 +852,8 @@ html.motion-ready [data-reveal].is-visible {
     align-items: center;
     gap: 6px;
     border-radius: 999px;
-    padding: 5px 9px;
-    font-size: .72rem;
+    padding: 4px 9px;
+    font-size: .68rem;
     font-weight: 800;
 }
 .course-type.standard {
@@ -865,8 +865,8 @@ html.motion-ready [data-reveal].is-visible {
     background: #fffbeb;
 }
 .course-type svg {
-    width: 13px;
-    height: 13px;
+    width: 12px;
+    height: 12px;
     fill: none;
     stroke: currentColor;
     stroke-width: 1.8;
@@ -876,21 +876,21 @@ html.motion-ready [data-reveal].is-visible {
 .catalogue-card .status-badge {
     margin: 0;
     padding: 4px 8px;
-    font-size: .7rem;
+    font-size: .68rem;
 }
 .catalogue-card-icon {
     display: grid;
     place-items: center;
-    width: 48px;
-    height: 48px;
-    margin: 24px 0 18px;
-    border-radius: 14px;
+    width: 42px;
+    height: 42px;
+    margin: 18px 0 14px;
+    border-radius: 12px;
     background: var(--ink);
     color: #fff;
 }
 .catalogue-card-icon svg {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
     fill: none;
     stroke: currentColor;
     stroke-width: 1.7;
@@ -898,20 +898,20 @@ html.motion-ready [data-reveal].is-visible {
     stroke-linejoin: round;
 }
 .catalogue-card h2 {
-    margin: 0 0 9px;
+    margin: 0 0 8px;
     color: var(--ink);
-    font-size: 1.25rem;
-    line-height: 1.2;
+    font-size: 1.14rem;
+    line-height: 1.25;
 }
 .catalogue-card p {
     margin: 0;
     color: var(--muted);
-    font-size: .9rem;
-    line-height: 1.65;
+    font-size: .88rem;
+    line-height: 1.6;
 }
 .catalogue-card-footer {
     margin-top: auto;
-    padding-top: 22px;
+    padding-top: 18px;
 }
 .catalogue-card-footer .btn {
     width: 100%;
@@ -931,10 +931,10 @@ html.motion-ready [data-reveal].is-visible {
     align-items: center;
     justify-content: space-between;
     gap: 22px;
-    margin-top: 24px;
-    padding: 18px 20px;
+    margin-top: 22px;
+    padding: 16px 18px;
     border: 1px solid var(--line);
-    border-radius: 14px;
+    border-radius: 12px;
     background: #fff;
 }
 .catalogue-admin strong,
