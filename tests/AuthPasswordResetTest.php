@@ -53,7 +53,7 @@ final class AuthPasswordResetTest extends TestCase
 
         $this->assertTrue($result['success']);
         $this->assertSame(
-            'If an account exists for that email, a reset link has been sent.',
+            'If an account exists for that email, password reset instructions will be sent when email delivery is available.',
             $result['message']
         );
         $this->assertArrayNotHasKey('token', $result['data']);

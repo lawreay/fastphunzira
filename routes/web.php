@@ -22,6 +22,9 @@ $platformSettingsRepository = $app['platformSettingsRepository'];
 $paymentTransactionRepository = $app['paymentTransactionRepository'];
 $studentMembershipRepository = $app['studentMembershipRepository'];
 $paymentsConfig = $app['payments'];
+$mailConfig = $app['mail'];
+$smtpMailer = $app['smtpMailer'];
+$appConfig = $app['config'];
 $completeLesson = static function (string $lessonId) use ($learningService): array {
     if (!ctype_digit($lessonId) || (int) $lessonId <= 0) {
         http_response_code(404);
@@ -120,7 +123,7 @@ return [
             'title' => 'Forgot Password',
         ];
     }],
-    ['POST', '/forgot-password', function () use ($authService) {
+    ['POST', '/forgot-password', function () use ($authService, $smtpMailer, $appConfig) {
         if (!Csrf::validate($_POST['_token'] ?? null)) {
             $_SESSION['flash_error'] = 'Invalid security token.';
 
@@ -134,6 +137,23 @@ return [
         if (!$result['success']) {
             $_SESSION['flash_error'] = $result['message'];
             return redirect_to('/forgot-password');
+        }
+
+        $resetToken = (string) ($result['data']['token'] ?? '');
+        if ($resetToken !== '' && $smtpMailer->configured()) {
+            $resetUrl = base_url('reset-password/' . rawurlencode($resetToken));
+            $safeResetUrl = htmlspecialchars($resetUrl, ENT_QUOTES, 'UTF-8');
+            $appName = htmlspecialchars((string) ($appConfig['app_name'] ?? 'FastPhunzira'), ENT_QUOTES, 'UTF-8');
+            try {
+                $smtpMailer->send(
+                    (string) $result['data']['email'],
+                    'Reset your ' . (string) ($appConfig['app_name'] ?? 'FastPhunzira') . ' password',
+                    '<p>We received a request to reset your password.</p><p><a href="' . $safeResetUrl . '">Reset your password</a></p><p>This link expires in one hour. If you did not request it, you can ignore this message.</p><p>' . $appName . '</p>',
+                    "We received a request to reset your password.\n\nReset your password: {$resetUrl}\n\nThis link expires in one hour. If you did not request it, you can ignore this message."
+                );
+            } catch (Throwable $exception) {
+                error_log('Password reset email delivery failed.');
+            }
         }
 
         $_SESSION['flash_success'] = $result['message'];
@@ -1130,7 +1150,7 @@ return [
             'logs' => $auditLogService->getRecentForAdmin(),
         ];
     }],
-    ['GET', '/admin/settings', function () use ($platformSettingsRepository, $paymentsConfig, $payChanguService) {
+    ['GET', '/admin/settings', function () use ($platformSettingsRepository, $paymentsConfig, $payChanguService, $mailConfig, $smtpMailer) {
         if (!Auth::userCan('courses.manage')) {
             return redirect_to('/login');
         }
@@ -1147,8 +1167,12 @@ return [
             'premiumDurationDays' => (int) ($platformSettingsRepository->get('premium_duration_days', '30') ?? '30'),
             'payChanguEnabled' => $payChanguService?->enabled() ?? false,
             'payChanguMode' => (string) ($paymentsConfig['mode'] ?? 'test'),
+            'payChanguPublicConfigured' => trim((string) ($paymentsConfig['public_key'] ?? '')) !== '',
             'payChanguSecretConfigured' => trim((string) ($paymentsConfig['secret_key'] ?? '')) !== '',
             'payChanguWebhookConfigured' => trim((string) ($paymentsConfig['webhook_secret'] ?? '')) !== '',
+            'payChanguCurrency' => (string) ($paymentsConfig['currency'] ?? 'MWK'),
+            'mailConfig' => $mailConfig,
+            'smtpConfigured' => $smtpMailer->configured(),
         ];
     }],
     ['POST', '/admin/settings', function () use ($platformSettingsRepository) {
@@ -1177,6 +1201,37 @@ return [
         $platformSettingsRepository->set('premium_duration_days', (string) $duration);
 
         $_SESSION['flash_success'] = 'Platform settings updated.';
+
+        return redirect_to('/admin/settings');
+    }],
+    ['POST', '/admin/settings/test-email', function () use ($smtpMailer) {
+        if (!Auth::userCan('courses.manage')) {
+            return redirect_to('/login');
+        }
+
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            $_SESSION['flash_error'] = 'Invalid settings request.';
+            return redirect_to('/admin/settings');
+        }
+
+        $recipient = trim((string) ($_POST['test_email'] ?? ''));
+        if (filter_var($recipient, FILTER_VALIDATE_EMAIL) === false) {
+            $_SESSION['flash_error'] = 'Enter a valid email address for the test message.';
+            return redirect_to('/admin/settings');
+        }
+
+        try {
+            $smtpMailer->send(
+                $recipient,
+                'FastPhunzira SMTP test',
+                '<p>Your FastPhunzira SMTP settings are working.</p>',
+                'Your FastPhunzira SMTP settings are working.'
+            );
+            $_SESSION['flash_success'] = 'Test email sent successfully.';
+        } catch (Throwable $exception) {
+            error_log('SMTP test email failed.');
+            $_SESSION['flash_error'] = 'Test email failed. Check the SMTP server configuration and application logs.';
+        }
 
         return redirect_to('/admin/settings');
     }],

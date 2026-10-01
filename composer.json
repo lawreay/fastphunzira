@@ -3,7 +3,8 @@
   "description": "FastPhunzira learning, exam, and certification platform foundation",
   "type": "project",
   "require": {
-    "php": ">=8.0"
+    "php": ">=8.0",
+    "phpmailer/phpmailer": "^6.10"
   },
   "require-dev": {
     "phpunit/phpunit": "^9.6"

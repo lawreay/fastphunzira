@@ -52,6 +52,7 @@ use App\Services\LoginSecurityService;
 use App\Services\LocalMediaStorage;
 use App\Services\QuizService;
 use App\Services\PayChanguService;
+use App\Services\SmtpMailer;
 
 Env::load(__DIR__ . '/../.env');
 
@@ -59,6 +60,7 @@ $config = require __DIR__ . '/../config/app.php';
 $dbConfig = require __DIR__ . '/../config/database.php';
 $securityConfig = require __DIR__ . '/../config/security.php';
 $paymentsConfig = require __DIR__ . '/../config/payments.php';
+$mailConfig = require __DIR__ . '/../config/mail.php';
 $mediaConfig = require __DIR__ . '/../config/media.php';
 
 Session::start($securityConfig);
@@ -99,6 +101,7 @@ $authService = new AuthService($userRepository, $loginSecurityService, $auditLog
 $payChanguService = ($platformSettingsRepository !== null && $paymentTransactionRepository !== null)
     ? new PayChanguService($paymentsConfig, $paymentTransactionRepository, $platformSettingsRepository)
     : null;
+$smtpMailer = new SmtpMailer($mailConfig);
 
 $courseRepository = $pdo !== null ? new CourseRepository($pdo) : new \App\Repositories\InMemoryCourseRepository();
 $moduleRepository = $pdo !== null ? new CourseModuleRepository($pdo) : new InMemoryCourseModuleRepository();
@@ -167,6 +170,8 @@ return [
     'db' => $pdo,
     'security' => $securityConfig,
     'payments' => $paymentsConfig,
+    'mail' => $mailConfig,
+    'smtpMailer' => $smtpMailer,
     'media' => $mediaConfig,
     'lessonMaterialRepository' => $lessonMaterialRepository,
     'lessonBlockRepository' => $lessonBlockRepository,

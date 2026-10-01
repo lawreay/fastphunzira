@@ -27,6 +27,14 @@ The secret and webhook credentials must never be placed in GitHub or the platfor
 
 The admin Settings screen controls the Premium price, currency, and membership duration. PayChangu credential status is displayed there without exposing secret values.
 
+Payment activation requires private server environment values for `PAYCHANGU_ENABLED`, `PAYCHANGU_MODE`, `PAYCHANGU_CURRENCY`, `PAYCHANGU_PUBLIC_KEY`, `PAYCHANGU_SECRET_KEY`, and `PAYCHANGU_WEBHOOK_SECRET`. Use test credentials and `PAYCHANGU_MODE=test` before switching to live credentials. The return and webhook URLs shown in admin Settings must be reachable over HTTPS in production.
+
+## SMTP email delivery
+
+Password reset emails and the admin test-email action use SMTP through PHPMailer. Configure `MAIL_ENABLED=true`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_ENCRYPTION`, `MAIL_FROM_ADDRESS`, and `MAIL_FROM_NAME` in the private server environment. Port 587 with TLS is the default recommendation; port 465 with SSL is also supported. SMTP credentials are never stored in the settings table or displayed in admin Settings.
+
+The forgot-password response stays generic whether or not an account exists. If SMTP is unavailable, delivery errors are logged without exposing reset tokens or provider responses to the user. Configure the SMTP values before relying on email-based password resets in production.
+
 ### Payment security
 
 A successful browser redirect is not trusted by itself. The server calls PayChangu's verification endpoint and checks:

@@ -136,7 +136,7 @@ final class AuthService
         if ($user === null) {
             return [
                 'success' => true,
-                'message' => 'If an account exists for that email, a reset link has been sent.',
+                'message' => 'If an account exists for that email, password reset instructions will be sent when email delivery is available.',
                 'data' => ['email' => $email],
             ];
         }
@@ -152,7 +152,7 @@ final class AuthService
 
         return [
             'success' => true,
-            'message' => 'If an account exists for that email, a reset link has been sent.',
+            'message' => 'If an account exists for that email, password reset instructions will be sent when email delivery is available.',
             'data' => ['email' => $email, 'token' => $token],
         ];
     }

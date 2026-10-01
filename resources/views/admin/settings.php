@@ -6,7 +6,7 @@ use App\Support\Csrf;
         <div>
             <span class="eyebrow">Administration</span>
             <h1>Platform Settings</h1>
-            <p>Configure membership pricing and review the PayChangu integration status.</p>
+            <p>Configure membership pricing, payments, and email delivery.</p>
         </div>
     </div>
 
@@ -49,13 +49,15 @@ use App\Support\Csrf;
             <div class="settings-status">
                 <div><span>Integration</span><strong><?= $payChanguEnabled ? 'Enabled' : 'Disabled' ?></strong></div>
                 <div><span>Mode</span><strong><?= htmlspecialchars(strtoupper((string) $payChanguMode), ENT_QUOTES, 'UTF-8') ?></strong></div>
+                <div><span>Public key</span><strong><?= $payChanguPublicConfigured ? 'Configured' : 'Not configured' ?></strong></div>
                 <div><span>Secret key</span><strong><?= $payChanguSecretConfigured ? 'Configured' : 'Not configured' ?></strong></div>
                 <div><span>Webhook secret</span><strong><?= $payChanguWebhookConfigured ? 'Configured' : 'Not configured' ?></strong></div>
+                <div><span>Currency</span><strong><?= htmlspecialchars((string) $payChanguCurrency, ENT_QUOTES, 'UTF-8') ?></strong></div>
             </div>
 
             <div class="notice-panel">
                 <strong>Server configuration</strong>
-                <span>Set PAYCHANGU_ENABLED, PAYCHANGU_MODE, PAYCHANGU_PUBLIC_KEY, PAYCHANGU_SECRET_KEY and PAYCHANGU_WEBHOOK_SECRET in the server environment. Never store these secrets in GitHub or in the settings table.</span>
+                <span>Set PAYCHANGU_ENABLED, PAYCHANGU_MODE, PAYCHANGU_CURRENCY, PAYCHANGU_PUBLIC_KEY, PAYCHANGU_SECRET_KEY and PAYCHANGU_WEBHOOK_SECRET in the private server environment. Never store provider secrets in GitHub or in the settings table.</span>
             </div>
 
             <div class="settings-links">
@@ -68,11 +70,39 @@ use App\Support\Csrf;
                 <div><dt>Webhook URL</dt><dd><?= htmlspecialchars(base_url('payments/paychangu/webhook'), ENT_QUOTES, 'UTF-8') ?></dd></div>
             </dl>
         </section>
+
+        <section class="settings-card">
+            <div class="settings-card-heading">
+                <span class="settings-icon">03</span>
+                <div><h2>Email delivery (SMTP)</h2><p>SMTP credentials stay in the private server environment.</p></div>
+            </div>
+
+            <div class="settings-status">
+                <div><span>Delivery</span><strong><?= $smtpConfigured ? 'Ready' : 'Not configured' ?></strong></div>
+                <div><span>SMTP host</span><strong><?= htmlspecialchars((string) ($mailConfig['host'] ?? 'Not set'), ENT_QUOTES, 'UTF-8') ?></strong></div>
+                <div><span>Port / encryption</span><strong><?= (int) ($mailConfig['port'] ?? 0) ?> / <?= htmlspecialchars(strtoupper((string) ($mailConfig['encryption'] ?? 'none')), ENT_QUOTES, 'UTF-8') ?></strong></div>
+                <div><span>Authentication</span><strong><?= trim((string) ($mailConfig['username'] ?? '')) !== '' ? 'Configured' : 'Not configured' ?></strong></div>
+            </div>
+
+            <div class="notice-panel">
+                <strong>Private server configuration</strong>
+                <span>Set MAIL_ENABLED=true, MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD, MAIL_ENCRYPTION and MAIL_FROM_ADDRESS in .env or your host's secret manager. Never paste credentials into this screen.</span>
+            </div>
+
+            <form method="POST" action="<?= htmlspecialchars(base_url('admin/settings/test-email'), ENT_QUOTES, 'UTF-8') ?>">
+                <input type="hidden" name="_token" value="<?= htmlspecialchars(Csrf::token(), ENT_QUOTES, 'UTF-8') ?>">
+                <div class="form-group">
+                    <label for="test_email">Send a test email to</label>
+                    <input id="test_email" name="test_email" type="email" autocomplete="email" required>
+                </div>
+                <button class="btn secondary" type="submit" <?= $smtpConfigured ? '' : 'disabled' ?>>Send test email</button>
+            </form>
+        </section>
     </div>
 
     <section class="settings-card settings-note">
         <div class="settings-card-heading">
-            <span class="settings-icon">03</span>
+            <span class="settings-icon">04</span>
             <div><h2>Access model</h2><p>Use the course editor to mark individual courses as Regular or Premium.</p></div>
         </div>
         <div class="access-model">
