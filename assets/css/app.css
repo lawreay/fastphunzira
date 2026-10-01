@@ -2738,21 +2738,31 @@ html.motion-ready [data-reveal].is-visible {
 
 /* Dashboard composition */
 .dashboard-page .dashboard-welcome {
-    padding: 18px 0 26px;
+    padding: 10px 0 18px;
+    margin-bottom: 18px;
     border-bottom: 1px solid var(--line);
 }
 .dashboard-page .dashboard-welcome h1 {
     max-width: 760px;
-    font-size: clamp(2.4rem, 5vw, 4.1rem);
-    line-height: .98;
+    font-size: clamp(2.05rem, 4vw, 3.2rem);
+    line-height: 1.02;
+    letter-spacing: -.04em;
+    margin: 0;
 }
 .dashboard-page .dashboard-welcome h1 span {
     display: inline-block;
     transform: rotate(-8deg);
 }
+.dashboard-page .dashboard-welcome p {
+    margin: 8px 0 0;
+    font-size: .98rem;
+    color: var(--muted);
+}
 .dashboard-page .membership-banner {
     position: relative;
     overflow: hidden;
+    padding: 18px 20px;
+    border-radius: 18px;
     border-color: #f2c0b1;
     background: #fff7f2;
 }
@@ -2766,6 +2776,16 @@ html.motion-ready [data-reveal].is-visible {
     border-radius: 50%;
     content: "";
 }
+.dashboard-page .membership-banner h2 {
+    margin: 8px 0 6px;
+    font-size: clamp(1.3rem, 2vw, 1.8rem);
+    line-height: 1.15;
+}
+.dashboard-page .membership-banner p {
+    margin: 0;
+    max-width: 650px;
+    color: var(--muted);
+}
 .dashboard-page .membership-banner .eyebrow {
     color: #c9553b;
 }
@@ -2774,13 +2794,18 @@ html.motion-ready [data-reveal].is-visible {
     background: #f0fdf4;
 }
 .dashboard-page .dashboard-grid {
-    gap: 20px;
-    margin-top: 28px;
+    gap: 16px;
+    margin-top: 22px;
 }
 .dashboard-page .dashboard-card {
-    min-height: 245px;
-    padding: 26px;
-    border-radius: 18px;
+    min-height: 205px;
+    padding: 20px 20px 18px;
+    border-radius: 16px;
+    transition: transform .16s ease, box-shadow .16s ease;
+}
+.dashboard-page .dashboard-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 26px rgba(15, 23, 42, .08);
 }
 .dashboard-page .dashboard-card-primary {
     border-color: #f2c0b1;
@@ -2789,16 +2814,16 @@ html.motion-ready [data-reveal].is-visible {
 .dashboard-page .dashboard-icon {
     display: grid;
     place-items: center;
-    width: 44px;
-    height: 44px;
-    margin-bottom: 26px;
-    border-radius: 13px;
+    width: 40px;
+    height: 40px;
+    margin-bottom: 18px;
+    border-radius: 12px;
     background: #17212b;
     color: #fff;
 }
 .dashboard-page .dashboard-icon svg {
-    width: 21px;
-    height: 21px;
+    width: 20px;
+    height: 20px;
     fill: none;
     stroke: currentColor;
     stroke-linecap: round;
@@ -2807,12 +2832,20 @@ html.motion-ready [data-reveal].is-visible {
 }
 .dashboard-page .dashboard-card h2 {
     margin: 0 0 9px;
-    font-size: 1.35rem;
+    font-size: 1.15rem;
+    line-height: 1.2;
+}
+.dashboard-page .dashboard-card p {
+    margin: 0 0 16px;
+    color: var(--muted);
+    line-height: 1.55;
 }
 .dashboard-page .dashboard-card a {
     display: inline-flex;
     align-items: center;
     gap: 7px;
+    font-weight: 700;
+    font-size: .92rem;
 }
 .dashboard-page .dashboard-card a span {
     transition: transform .2s ease;
@@ -2823,7 +2856,8 @@ html.motion-ready [data-reveal].is-visible {
 .dashboard-page .admin-panel {
     position: relative;
     overflow: hidden;
-    margin-top: 32px;
+    margin-top: 22px;
+    padding: 18px 20px;
     border: 0;
     background: #17212b;
     color: #fff;
@@ -2839,10 +2873,15 @@ html.motion-ready [data-reveal].is-visible {
     border-radius: 50%;
     content: "";
 }
-.dashboard-page .admin-panel h2 { color: #fff; }
-.dashboard-page .admin-panel p { color: #cbd5e1; }
+.dashboard-page .admin-panel h2 {
+    margin: 8px 0 8px;
+    color: #fff;
+}
+.dashboard-page .admin-panel p {
+    color: #cbd5e1;
+}
 .dashboard-page .admin-panel .eyebrow { color: #f4b860; }
-.dashboard-page .admin-panel .actions { position: relative; z-index: 1; }
+.dashboard-page .admin-panel .actions { position: relative; z-index: 1; gap: 10px; }
 .dashboard-page .admin-panel .btn.secondary {
     border-color: rgba(255,255,255,.2);
     background: rgba(255,255,255,.08);
@@ -2854,7 +2893,10 @@ html.motion-ready [data-reveal].is-visible {
     color: #17212b;
 }
 @media (max-width: 560px) {
-    .dashboard-page .dashboard-welcome h1 { font-size: 2.7rem; }
+    .dashboard-page .dashboard-welcome { padding-top: 4px; }
+    .dashboard-page .dashboard-welcome h1 { font-size: 2.5rem; }
+    .dashboard-page .membership-banner { padding: 16px 16px 18px; }
     .dashboard-page .membership-banner::after { right: -45px; }
+    .dashboard-page .admin-panel { padding: 16px 18px; }
     .dashboard-page .admin-panel::after { right: -70px; }
 }
