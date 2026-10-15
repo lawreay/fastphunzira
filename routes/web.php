@@ -359,46 +359,6 @@ return [
             'progress' => $learningService->getCourseProgress($studentId, (int) $courseId),
         ];
     }],
-    ['GET', '/lessons/{id}', function (string $lessonId) use ($lessonRepository, $enrollmentRepository, $courseRepository, $progressRepository, $studentMembershipRepository) {
-        if (!Auth::check()) {
-            $_SESSION['flash_error'] = 'Please log in to continue.';
-
-            return redirect_to('/login');
-        }
-
-        $studentId = (int) Auth::userId();
-        $lesson = $lessonRepository->findById((int) $lessonId);
-
-        if ($lesson === null) {
-            return ['view' => 'errors/not_found', 'title' => 'Lesson not found'];
-        }
-
-        $courseId = (int) ($lesson['course_id'] ?? 0);
-        $course = $courseRepository->findById($courseId);
-
-        if ($course === null || $enrollmentRepository->findByStudentAndCourse($studentId, $courseId) === null) {
-            $_SESSION['flash_error'] = 'You are not enrolled for this lesson.';
-
-            return redirect_to('/courses');
-        }
-
-        if (
-            strtolower((string) ($course['access_tier'] ?? 'regular')) === 'premium'
-            && ($studentMembershipRepository === null || !$studentMembershipRepository->isPremiumActive($studentId))
-        ) {
-            $_SESSION['flash_error'] = 'Your Premium membership is required to access this lesson.';
-
-            return redirect_to('/courses/' . $courseId . '?from=my-courses');
-        }
-
-        return [
-            'view' => 'lessons/view',
-            'title' => $lesson['title'],
-            'lesson' => $lesson,
-            'course' => $course,
-            'completed' => $progressRepository->findByStudentAndLesson($studentId, (int) $lessonId) !== null,
-        ];
-    }],
     ['POST', '/student/lessons/{lessonId}/complete', $completeLesson],
     ['POST', '/lessons/{id}/complete', $completeLesson],
 
@@ -557,23 +517,12 @@ return [
         $_SESSION[$result['success'] ? 'flash_success' : 'flash_error'] = $result['message'];
         return redirect_to('/admin/courses/' . $courseId . '/edit');
     }],
-    ['GET', '/admin/lessons/{lessonId}/edit', function (string $lessonId) use ($lessonRepository, $moduleRepository) {
-        if (!Auth::userCan('courses.manage')) return redirect_to('/login');
-
-        $lesson = $lessonRepository->findById((int) $lessonId);
-        if ($lesson === null) return ['view' => 'errors/not_found', 'title' => 'Lesson not found'];
-
-        $module = $moduleRepository->findById((int) ($lesson['module_id'] ?? 0));
-        if ($module === null) return ['view' => 'errors/not_found', 'title' => 'Module not found'];
-
-        return [
-            'view' => 'admin/lesson-form',
-            'title' => 'Edit Lesson',
-            'lesson' => $lesson,
-            'moduleId' => (int) ($lesson['module_id'] ?? 0),
-            'courseId' => (int) ($module['course_id'] ?? 0),
-        ];
+    // Keep the legacy URL, but route it to the complete media-aware editor.
+    // Rendering the shared form without its blocks can otherwise delete existing lesson content on save.
+    ['GET', '/admin/lessons/{lessonId}/edit', function (string $lessonId) {
+        return redirect_to('/admin/lessons/' . (int) $lessonId . '/edit-media');
     }],
+
     ['POST', '/admin/lessons/{lessonId}/update', function (string $lessonId) use ($learningService, $lessonRepository, $moduleRepository) {
         if (!Auth::userCan('courses.manage')) return redirect_to('/login');
 

@@ -325,6 +325,26 @@ final class EnrollmentLearningService
         }
 
         $courseId = (int) ($lesson['course_id'] ?? 0);
+        if ($courseId <= 0) {
+            // Lessons belong to modules in the persisted schema; resolve their course through the module.
+            $module = $this->moduleRepository->findById((int) ($lesson['module_id'] ?? 0));
+            $courseId = (int) ($module['course_id'] ?? 0);
+        }
+        if ($courseId <= 0) {
+            return ['success' => false, 'code' => 'not_found', 'message' => 'Lesson course not found.'];
+        }
+
+        $course = $this->courseRepository->findById($courseId);
+        if ($course === null || strtolower((string) ($course['status'] ?? 'draft')) !== 'published') {
+            return ['success' => false, 'code' => 'course_unavailable', 'message' => 'This course is not available.'];
+        }
+        if (
+            strtolower((string) ($course['access_tier'] ?? 'regular')) === 'premium'
+            && ($this->membershipRepository === null || !$this->membershipRepository->isPremiumActive($studentId))
+        ) {
+            return ['success' => false, 'code' => 'premium_required', 'message' => 'An active Premium membership is required to update lesson progress.'];
+        }
+
         $enrollment = $this->enrollmentRepository->findByStudentAndCourse($studentId, $courseId);
         if ($enrollment === null) {
             return ['success' => false, 'code' => 'forbidden', 'message' => 'You must enroll in the course before completing lessons.'];
@@ -360,7 +380,12 @@ final class EnrollmentLearningService
         $lessons = $this->lessonRepository->findByCourse($courseId);
         $completed = 0;
         foreach ($lessons as $lesson) {
-            if ($this->progressRepository->findByStudentAndLesson($studentId, (int) ($lesson['id'] ?? 0)) !== null) {
+            $progress = $this->progressRepository->findByStudentAndLesson(
+                $studentId,
+                (int) ($lesson['id'] ?? 0)
+            );
+
+            if ($progress !== null && (int) ($progress['completed'] ?? 0) === 1) {
                 $completed++;
             }
         }

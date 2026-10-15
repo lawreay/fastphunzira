@@ -11,6 +11,7 @@ $blocks=$blocks??[];
 
  <form id="lesson-builder-form" class="lesson-builder" method="POST" enctype="multipart/form-data" action="<?= htmlspecialchars(base_url($isEditing?'admin/lessons/'.$lessonId.'/save-media':'admin/modules/'.$moduleId.'/lessons/store-media'),ENT_QUOTES,'UTF-8') ?>">
   <input type="hidden" name="_token" value="<?= htmlspecialchars(Csrf::token(),ENT_QUOTES,'UTF-8') ?>">
+  <input type="hidden" name="blocks_submitted" value="1">
 
   <section class="admin-editor-card lesson-core">
    <div class="lesson-step-heading"><span class="lesson-step-number">1</span><div><span class="eyebrow">Lesson information</span><h2>Start with the basics</h2><p>These fields are always part of the lesson.</p></div></div>

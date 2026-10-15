@@ -16,13 +16,17 @@ $lessonBlockRepository = $app['lessonBlockRepository'];
 $mediaStorage = $app['mediaStorage'];
 $mediaConfig = $app['media'];
 
-$studentCanAccessLesson = static function (int $lessonId) use ($lessonRepository, $courseRepository, $enrollmentRepository, $studentMembershipRepository): ?array {
+$studentCanAccessLesson = static function (int $lessonId) use ($lessonRepository, $moduleRepository, $courseRepository, $enrollmentRepository, $studentMembershipRepository): ?array {
     if (!Auth::check()) return null;
 
     $lesson = $lessonRepository->findById($lessonId);
     if ($lesson === null) return null;
 
-    $courseId = (int) ($lesson['course_id'] ?? 0);
+    // Lessons belong to modules, so resolve the course through the module.
+    $module = $moduleRepository->findById((int) ($lesson['module_id'] ?? 0));
+    if ($module === null) return null;
+
+    $courseId = (int) ($module['course_id'] ?? 0);
     $course = $courseRepository->findById($courseId);
     if ($course === null || strtolower((string) ($course['status'] ?? 'draft')) !== 'published') return null;
 
@@ -90,7 +94,7 @@ return [
         $size=filesize($path);$start=0;$end=$size-1;$mime=(string)($block['mime_type']??'video/mp4');
         header('Content-Type: '.$mime);header('Accept-Ranges: bytes');header('X-Content-Type-Options: nosniff');
         if(isset($_SERVER['HTTP_RANGE'])&&preg_match('/bytes=(\d*)-(\d*)/',$_SERVER['HTTP_RANGE'],$m)){
-          if($m[1]===''&&$m[2]!==''){$len=min((int)$m[2],$size);$start=$size-$len;$end=$size-1;}else{if($m[1]!=='')$start=(int)$m[1];if($m[2]!=='')$end=(int)$m[2];if($m[1]!==''&&$m[2]==='')$end=min($start+2097152-1,$size-1);}
+          if($m[1]===''&&$m[2]!==''){$len=min((int)$m[2],$size);$start=$size-$len;$end=$size-1;}else{if($m[1]!=='')$start=(int)$m[1];if($m[2]!=='')$end=min((int)$m[2],$size-1);if($m[1]!==''&&$m[2]==='')$end=min($start+2097152-1,$size-1);}
           if($start>$end||$start>=$size){http_response_code(416);header('Content-Range: bytes */'.$size);exit;}http_response_code(206);header('Content-Range: bytes '.$start.'-'.$end.'/'.$size);
         }
         $length=$end-$start+1;header('Content-Length: '.$length);$h=fopen($path,'rb');fseek($h,$start);$remaining=$length;while($remaining>0&&!feof($h)){$chunk=fread($h,min(8192,$remaining));if($chunk===false||$chunk==='')break;echo $chunk;$remaining-=strlen($chunk);flush();}fclose($h);exit;
@@ -142,14 +146,15 @@ return [
         return redirect_to('/admin/courses/' . $courseId . '/edit?tab=modules');
     }],
 
-    ['GET', '/lessons/{lessonId}', function (string $lessonId) use ($studentCanAccessLesson, $learningService, $progressRepository, $materialRepository, $lessonBlockRepository, $courseRepository) {
+    ['GET', '/lessons/{lessonId}', function (string $lessonId) use ($studentCanAccessLesson, $learningService, $progressRepository, $materialRepository, $lessonBlockRepository, $courseRepository, $moduleRepository) {
         $lesson = $studentCanAccessLesson((int) $lessonId);
         if ($lesson === null) {
             $_SESSION['flash_error'] = 'You are not enrolled for this lesson.';
             return redirect_to('/courses');
         }
 
-        $course = $courseRepository->findById((int) ($lesson['course_id'] ?? 0));
+        $module = $moduleRepository->findById((int) ($lesson['module_id'] ?? 0));
+        $course = $module !== null ? $courseRepository->findById((int) ($module['course_id'] ?? 0)) : null;
         $studentId = (int) Auth::userId();
         $progress = $progressRepository->findByStudentAndLesson($studentId, (int) $lessonId);
         return [
@@ -257,6 +262,12 @@ return [
             return $redirectToLessonEditor($courseId);
         }
 
+        // Do not interpret a missing block payload as an intentional request to delete all lesson content.
+        if (($_POST['blocks_submitted'] ?? null) !== '1') {
+            $_SESSION['flash_error'] = 'The lesson content form was incomplete. No changes were saved.';
+            return $redirectToLessonEditor($courseId);
+        }
+
         $updates = [
             'title' => trim((string) ($_POST['title'] ?? '')),
             'summary' => trim((string) ($_POST['summary'] ?? '')),
@@ -294,7 +305,50 @@ return [
                 }
 
                 if ($id > 0 && isset($existing[$id])) {
-                    $lessonBlockRepository->update($id, $data);
+                    $oldBlock = $existing[$id];
+                    if ((string) ($oldBlock['type'] ?? '') !== $type) {
+                        throw new RuntimeException('A saved content block cannot change type. Remove it and add a new block instead.');
+                    }
+
+                    $replacement = null;
+                    if (in_array($type, ['video', 'material'], true)) {
+                        $uploadName = $_FILES['block_files']['name'][$index] ?? '';
+                        if (is_string($uploadName) && $uploadName !== '') {
+                            $fileData = [
+                                'name' => $uploadName,
+                                'type' => $_FILES['block_files']['type'][$index] ?? '',
+                                'tmp_name' => $_FILES['block_files']['tmp_name'][$index] ?? '',
+                                'error' => $_FILES['block_files']['error'][$index] ?? UPLOAD_ERR_NO_FILE,
+                                'size' => $_FILES['block_files']['size'][$index] ?? 0,
+                            ];
+                            $allowed = $type === 'video' ? $mediaConfig['video_mimes'] : $mediaConfig['material_mimes'];
+                            $replacement = $mediaStorage->store(
+                                $fileData,
+                                $type === 'video' ? 'videos' : 'materials',
+                                $allowed,
+                                (int) $mediaConfig['max_upload_bytes']
+                            );
+                        }
+                    }
+
+                    if ($replacement !== null) {
+                        $data['lesson_id'] = (int) $lessonId;
+                        $data['type'] = $type;
+                        $data['storage_path'] = $replacement['storage_path'];
+                        $data['original_name'] = $replacement['original_name'];
+                        $data['mime_type'] = $replacement['mime_type'];
+                        $data['file_size'] = $replacement['file_size'];
+                        $lessonBlockRepository->create($data);
+
+                        // Keep the original file until the replacement has been stored.
+                        if (!empty($oldBlock['storage_path'])) {
+                            $mediaStorage->delete((string) $oldBlock['storage_path']);
+                        }
+                        $lessonBlockRepository->delete($id);
+                    } else {
+                        $lessonBlockRepository->update($id, $data);
+                    }
+
                     unset($existing[$id]);
                     continue;
                 }
