@@ -16,13 +16,18 @@ $lessonBlockRepository = $app['lessonBlockRepository'];
 $mediaStorage = $app['mediaStorage'];
 $mediaConfig = $app['media'];
 
-$studentCanAccessLesson = static function (int $lessonId) use ($lessonRepository, $courseRepository, $enrollmentRepository, $studentMembershipRepository): ?array {
+$studentCanAccessLesson = static function (int $lessonId) use ($lessonRepository, $moduleRepository, $courseRepository, $enrollmentRepository, $studentMembershipRepository): ?array {
     if (!Auth::check()) return null;
 
     $lesson = $lessonRepository->findById($lessonId);
     if ($lesson === null) return null;
 
-    $courseId = (int) ($lesson['course_id'] ?? 0);
+    // Lessons belong to modules; resolve the course through the module instead
+    // of assuming the lesson row contains a course_id column.
+    $module = $moduleRepository->findById((int) ($lesson['module_id'] ?? 0));
+    if ($module === null) return null;
+
+    $courseId = (int) ($module['course_id'] ?? 0);
     $course = $courseRepository->findById($courseId);
     if ($course === null || strtolower((string) ($course['status'] ?? 'draft')) !== 'published') return null;
 
@@ -290,7 +295,51 @@ return [
                 }
 
                 if ($id > 0 && isset($existing[$id])) {
-                    $lessonBlockRepository->update($id, $data);
+                    $oldBlock = $existing[$id];
+                    if ((string) ($oldBlock['type'] ?? '') !== $type) {
+                        throw new RuntimeException('A saved content block cannot change type. Remove it and add a new block instead.');
+                    }
+
+                    $replacement = null;
+                    if (in_array($type, ['video', 'material'], true)) {
+                        $uploadName = $_FILES['block_files']['name'][$index] ?? '';
+                        if (is_string($uploadName) && $uploadName !== '') {
+                            $fileData = [
+                                'name' => $uploadName,
+                                'type' => $_FILES['block_files']['type'][$index] ?? '',
+                                'tmp_name' => $_FILES['block_files']['tmp_name'][$index] ?? '',
+                                'error' => $_FILES['block_files']['error'][$index] ?? UPLOAD_ERR_NO_FILE,
+                                'size' => $_FILES['block_files']['size'][$index] ?? 0,
+                            ];
+                            $allowed = $type === 'video' ? $mediaConfig['video_mimes'] : $mediaConfig['material_mimes'];
+                            $replacement = $mediaStorage->store(
+                                $fileData,
+                                $type === 'video' ? 'videos' : 'materials',
+                                $allowed,
+                                (int) $mediaConfig['max_upload_bytes']
+                            );
+                        }
+                    }
+
+                    if ($replacement !== null) {
+                        $data['lesson_id'] = (int) $lessonId;
+                        $data['type'] = $type;
+                        $data['storage_path'] = $replacement['storage_path'];
+                        $data['original_name'] = $replacement['original_name'];
+                        $data['mime_type'] = $replacement['mime_type'];
+                        $data['file_size'] = $replacement['file_size'];
+                        $newBlock = $lessonBlockRepository->create($data);
+
+                        // Only remove the old file/row after the replacement has been stored.
+                        if (!empty($oldBlock['storage_path'])) {
+                            $mediaStorage->delete((string) $oldBlock['storage_path']);
+                        }
+                        $lessonBlockRepository->delete($id);
+                        $existing[(int) $newBlock['id']] = $newBlock;
+                    } else {
+                        $lessonBlockRepository->update($id, $data);
+                    }
+
                     unset($existing[$id]);
                     continue;
                 }
