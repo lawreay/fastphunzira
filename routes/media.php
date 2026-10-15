@@ -335,7 +335,6 @@ return [
                             $mediaStorage->delete((string) $oldBlock['storage_path']);
                         }
                         $lessonBlockRepository->delete($id);
-                        $existing[(int) $newBlock['id']] = $newBlock;
                     } else {
                         $lessonBlockRepository->update($id, $data);
                     }
