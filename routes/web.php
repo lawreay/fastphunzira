@@ -557,23 +557,12 @@ return [
         $_SESSION[$result['success'] ? 'flash_success' : 'flash_error'] = $result['message'];
         return redirect_to('/admin/courses/' . $courseId . '/edit');
     }],
-    ['GET', '/admin/lessons/{lessonId}/edit', function (string $lessonId) use ($lessonRepository, $moduleRepository) {
-        if (!Auth::userCan('courses.manage')) return redirect_to('/login');
-
-        $lesson = $lessonRepository->findById((int) $lessonId);
-        if ($lesson === null) return ['view' => 'errors/not_found', 'title' => 'Lesson not found'];
-
-        $module = $moduleRepository->findById((int) ($lesson['module_id'] ?? 0));
-        if ($module === null) return ['view' => 'errors/not_found', 'title' => 'Module not found'];
-
-        return [
-            'view' => 'admin/lesson-form',
-            'title' => 'Edit Lesson',
-            'lesson' => $lesson,
-            'moduleId' => (int) ($lesson['module_id'] ?? 0),
-            'courseId' => (int) ($module['course_id'] ?? 0),
-        ];
+    // Keep the legacy URL, but route it to the complete media-aware editor.
+    // Rendering the shared form without its blocks can otherwise delete existing lesson content on save.
+    ['GET', '/admin/lessons/{lessonId}/edit', function (string $lessonId) {
+        return redirect_to('/admin/lessons/' . (int) $lessonId . '/edit-media');
     }],
+
     ['POST', '/admin/lessons/{lessonId}/update', function (string $lessonId) use ($learningService, $lessonRepository, $moduleRepository) {
         if (!Auth::userCan('courses.manage')) return redirect_to('/login');
 
