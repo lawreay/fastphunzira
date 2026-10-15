@@ -359,46 +359,6 @@ return [
             'progress' => $learningService->getCourseProgress($studentId, (int) $courseId),
         ];
     }],
-    ['GET', '/lessons/{id}', function (string $lessonId) use ($lessonRepository, $enrollmentRepository, $courseRepository, $progressRepository, $studentMembershipRepository) {
-        if (!Auth::check()) {
-            $_SESSION['flash_error'] = 'Please log in to continue.';
-
-            return redirect_to('/login');
-        }
-
-        $studentId = (int) Auth::userId();
-        $lesson = $lessonRepository->findById((int) $lessonId);
-
-        if ($lesson === null) {
-            return ['view' => 'errors/not_found', 'title' => 'Lesson not found'];
-        }
-
-        $courseId = (int) ($lesson['course_id'] ?? 0);
-        $course = $courseRepository->findById($courseId);
-
-        if ($course === null || $enrollmentRepository->findByStudentAndCourse($studentId, $courseId) === null) {
-            $_SESSION['flash_error'] = 'You are not enrolled for this lesson.';
-
-            return redirect_to('/courses');
-        }
-
-        if (
-            strtolower((string) ($course['access_tier'] ?? 'regular')) === 'premium'
-            && ($studentMembershipRepository === null || !$studentMembershipRepository->isPremiumActive($studentId))
-        ) {
-            $_SESSION['flash_error'] = 'Your Premium membership is required to access this lesson.';
-
-            return redirect_to('/courses/' . $courseId . '?from=my-courses');
-        }
-
-        return [
-            'view' => 'lessons/view',
-            'title' => $lesson['title'],
-            'lesson' => $lesson,
-            'course' => $course,
-            'completed' => $progressRepository->findByStudentAndLesson($studentId, (int) $lessonId) !== null,
-        ];
-    }],
     ['POST', '/student/lessons/{lessonId}/complete', $completeLesson],
     ['POST', '/lessons/{id}/complete', $completeLesson],
 
