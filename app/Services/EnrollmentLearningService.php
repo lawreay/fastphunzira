@@ -325,6 +325,15 @@ final class EnrollmentLearningService
         }
 
         $courseId = (int) ($lesson['course_id'] ?? 0);
+        if ($courseId <= 0) {
+            // Lessons belong to modules in the persisted schema; resolve their course through the module.
+            $module = $this->moduleRepository->findById((int) ($lesson['module_id'] ?? 0));
+            $courseId = (int) ($module['course_id'] ?? 0);
+        }
+        if ($courseId <= 0) {
+            return ['success' => false, 'code' => 'not_found', 'message' => 'Lesson course not found.'];
+        }
+
         $enrollment = $this->enrollmentRepository->findByStudentAndCourse($studentId, $courseId);
         if ($enrollment === null) {
             return ['success' => false, 'code' => 'forbidden', 'message' => 'You must enroll in the course before completing lessons.'];
