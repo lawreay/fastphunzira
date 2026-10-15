@@ -262,6 +262,12 @@ return [
             return $redirectToLessonEditor($courseId);
         }
 
+        // Do not interpret a missing block payload as an intentional request to delete all lesson content.
+        if (($_POST['blocks_submitted'] ?? null) !== '1') {
+            $_SESSION['flash_error'] = 'The lesson content form was incomplete. No changes were saved.';
+            return $redirectToLessonEditor($courseId);
+        }
+
         $updates = [
             'title' => trim((string) ($_POST['title'] ?? '')),
             'summary' => trim((string) ($_POST['summary'] ?? '')),
