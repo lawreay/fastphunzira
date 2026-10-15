@@ -21,6 +21,6 @@
   },
   "scripts": {
     "test": "phpunit --configuration phpunit.xml",
-    "check": "php -l public/index.php && php -l bootstrap/app.php"
+    "check": "php -l index.php && php -l bootstrap/app.php"
   }
 }
