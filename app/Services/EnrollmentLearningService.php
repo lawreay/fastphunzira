@@ -380,7 +380,12 @@ final class EnrollmentLearningService
         $lessons = $this->lessonRepository->findByCourse($courseId);
         $completed = 0;
         foreach ($lessons as $lesson) {
-            if ($this->progressRepository->findByStudentAndLesson($studentId, (int) ($lesson['id'] ?? 0)) !== null) {
+            $progress = $this->progressRepository->findByStudentAndLesson(
+                $studentId,
+                (int) ($lesson['id'] ?? 0)
+            );
+
+            if ($progress !== null && (int) ($progress['completed'] ?? 0) === 1) {
                 $completed++;
             }
         }
