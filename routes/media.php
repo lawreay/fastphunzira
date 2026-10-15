@@ -94,7 +94,7 @@ return [
         $size=filesize($path);$start=0;$end=$size-1;$mime=(string)($block['mime_type']??'video/mp4');
         header('Content-Type: '.$mime);header('Accept-Ranges: bytes');header('X-Content-Type-Options: nosniff');
         if(isset($_SERVER['HTTP_RANGE'])&&preg_match('/bytes=(\d*)-(\d*)/',$_SERVER['HTTP_RANGE'],$m)){
-          if($m[1]===''&&$m[2]!==''){$len=min((int)$m[2],$size);$start=$size-$len;$end=$size-1;}else{if($m[1]!=='')$start=(int)$m[1];if($m[2]!=='')$end=(int)$m[2];if($m[1]!==''&&$m[2]==='')$end=min($start+2097152-1,$size-1);}
+          if($m[1]===''&&$m[2]!==''){$len=min((int)$m[2],$size);$start=$size-$len;$end=$size-1;}else{if($m[1]!=='')$start=(int)$m[1];if($m[2]!=='')$end=min((int)$m[2],$size-1);if($m[1]!==''&&$m[2]==='')$end=min($start+2097152-1,$size-1);}
           if($start>$end||$start>=$size){http_response_code(416);header('Content-Range: bytes */'.$size);exit;}http_response_code(206);header('Content-Range: bytes '.$start.'-'.$end.'/'.$size);
         }
         $length=$end-$start+1;header('Content-Length: '.$length);$h=fopen($path,'rb');fseek($h,$start);$remaining=$length;while($remaining>0&&!feof($h)){$chunk=fread($h,min(8192,$remaining));if($chunk===false||$chunk==='')break;echo $chunk;$remaining-=strlen($chunk);flush();}fclose($h);exit;
@@ -146,14 +146,15 @@ return [
         return redirect_to('/admin/courses/' . $courseId . '/edit?tab=modules');
     }],
 
-    ['GET', '/lessons/{lessonId}', function (string $lessonId) use ($studentCanAccessLesson, $learningService, $progressRepository, $materialRepository, $lessonBlockRepository, $courseRepository) {
+    ['GET', '/lessons/{lessonId}', function (string $lessonId) use ($studentCanAccessLesson, $learningService, $progressRepository, $materialRepository, $lessonBlockRepository, $courseRepository, $moduleRepository) {
         $lesson = $studentCanAccessLesson((int) $lessonId);
         if ($lesson === null) {
             $_SESSION['flash_error'] = 'You are not enrolled for this lesson.';
             return redirect_to('/courses');
         }
 
-        $course = $courseRepository->findById((int) ($lesson['course_id'] ?? 0));
+        $module = $moduleRepository->findById((int) ($lesson['module_id'] ?? 0));
+        $course = $module !== null ? $courseRepository->findById((int) ($module['course_id'] ?? 0)) : null;
         $studentId = (int) Auth::userId();
         $progress = $progressRepository->findByStudentAndLesson($studentId, (int) $lessonId);
         return [
