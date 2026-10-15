@@ -334,6 +334,17 @@ final class EnrollmentLearningService
             return ['success' => false, 'code' => 'not_found', 'message' => 'Lesson course not found.'];
         }
 
+        $course = $this->courseRepository->findById($courseId);
+        if ($course === null || strtolower((string) ($course['status'] ?? 'draft')) !== 'published') {
+            return ['success' => false, 'code' => 'course_unavailable', 'message' => 'This course is not available.'];
+        }
+        if (
+            strtolower((string) ($course['access_tier'] ?? 'regular')) === 'premium'
+            && ($this->membershipRepository === null || !$this->membershipRepository->isPremiumActive($studentId))
+        ) {
+            return ['success' => false, 'code' => 'premium_required', 'message' => 'An active Premium membership is required to update lesson progress.'];
+        }
+
         $enrollment = $this->enrollmentRepository->findByStudentAndCourse($studentId, $courseId);
         if ($enrollment === null) {
             return ['success' => false, 'code' => 'forbidden', 'message' => 'You must enroll in the course before completing lessons.'];
